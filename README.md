@@ -7,6 +7,7 @@ requirements.txt zu sharen.
 Diese sollte zentral gepflegt werden und nur vereinzelt committet !!
 
 Wie generiere ich requirements.txt in einer Shell (bash e.g.):
+
             pip freeze > requirements.txt
 
 
