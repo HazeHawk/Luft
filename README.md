@@ -12,7 +12,7 @@ Wie generiere ich requirements.txt in einer Shell (bash e.g.):
 
 
 Wie setze ich eine Virtualenv auf?
-
+Die folgenden Befehle sind in der Console deiner Wahl einzugeben (bash, cmd, PowerShell etc.)
     - installiere in deiner Python Umgebung deiner Wahl virtualenv
             pip install virtualenv
     - führe im gewünschten Python interpreter den folgenden Befehl aus:
