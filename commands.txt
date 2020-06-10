@@ -1,0 +1,12 @@
+# Die aktuellen Commands per Hand die ausgeführt werden zum starten.
+set -a
+source .env
+
+docker run --name air-mongo --network-alias air-mongole --network some-network \
+-dp 8888:27017 \
+-v "$AIR_LOG_PATH:/var/log/mongodb" \
+-v "named-vol-air-mongo://data/db" \
+-v "$AIR_CONF_PATH://etc/mongo" \
+-e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
+-e MONGO_INITDB_ROOT_PASSWORD=secret \
+mongo --config //etc/mongo/mongod.conf
