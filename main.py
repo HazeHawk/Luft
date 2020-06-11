@@ -25,6 +25,8 @@ class Ui_Form(object):
         self.gridLayout_1.setObjectName(u"gridLayout_1")
         self.tabWidget = QTabWidget(Form)
         self.tabWidget.setObjectName(u"tabWidget")
+
+        # Home Tab
         self.home = QWidget()
         self.home.setObjectName(u"home")
         self.horizontalLayout = QHBoxLayout(self.home)
@@ -59,6 +61,8 @@ class Ui_Form(object):
         self.horizontalLayout.setStretch(0, 1)
         self.horizontalLayout.setStretch(1, 4)
         self.tabWidget.addTab(self.home, "")
+
+        #Analysis tab
         self.analysis = QWidget()
         self.analysis.setObjectName(u"analysis")
         self.horizontalLayout_2 = QHBoxLayout(self.analysis)
@@ -76,6 +80,8 @@ class Ui_Form(object):
         self.horizontalLayout_2.setStretch(0, 1)
         self.horizontalLayout_2.setStretch(1, 4)
         self.tabWidget.addTab(self.analysis, "")
+
+        # Highlights tab
         self.highlights = QWidget()
         self.highlights.setObjectName(u"highlights")
         self.horizontalLayout_3 = QHBoxLayout(self.highlights)
@@ -86,6 +92,8 @@ class Ui_Form(object):
         self.horizontalLayout_3.addWidget(self.widgetHighlights)
 
         self.tabWidget.addTab(self.highlights, "")
+
+        #Forecast Tab
         self.forecast = QWidget()
         self.forecast.setObjectName(u"forecast")
         self.horizontalLayout_4 = QHBoxLayout(self.forecast)
@@ -117,7 +125,10 @@ class Ui_Form(object):
 
         self.horizontalLayout_4.setStretch(0, 1)
         self.horizontalLayout_4.setStretch(1, 4)
+
         self.tabWidget.addTab(self.forecast, "")
+
+        # Personalisation Tab
         self.personalization = QWidget()
         self.personalization.setObjectName(u"personalization")
         self.horizontalLayout_5 = QHBoxLayout(self.personalization)
