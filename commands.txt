@@ -10,3 +10,10 @@ docker run --name air-mongo --network-alias air-mongole --network some-network \
 -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
 -e MONGO_INITDB_ROOT_PASSWORD=secret \
 mongo --config //etc/mongo/mongod.conf
+
+
+docker run --network some-network -dp 8081:8081 \
+-e ME_CONFIG_MONGODB_ADMINUSERNAME=mongoadmin \
+-e ME_CONFIG_MONGODB_ADMINPASSWORD=secret \
+-e ME_CONFIG_MONGODB_SERVER=air-mongo \
+mongo-express

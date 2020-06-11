@@ -3,9 +3,10 @@ version: '3.8'
 services:
     air-mongo:
         image: mongo
-        command: mongo --config /etc/mongo/mongod.conf #ggf. //etc !!!
+        command: mongod --config /etc/mongo/mongod.conf #ggf. //etc !!!
         restart: always
-        ports: 8888:27017
+        ports:
+            - "8888:27017"
         environment:
             MONGO_INITDB_ROOT_USERNAME: mongoadmin
             MONGO_INITDB_ROOT_PASSWORD: secret
@@ -17,7 +18,7 @@ services:
         volumes:
             - "${AIR_LOG_PATH}:/var/log/mongodb"
             - "${AIR_CONF_PATH}://etc/mongo"
-            - "air-net://data/db"
+            - "air-volume://data/db"
 
     mongo-express:
         image: mongo-express
@@ -27,6 +28,7 @@ services:
         environment:
             ME_CONFIG_MONGODB_ADMINUSERNAME: mongoadmin
             ME_CONFIG_MONGODB_ADMINPASSWORD: secret
+            ME_CONFIG_MONGODB_SERVER: air-mongo
         networks:
             air-net:
                 aliases:
@@ -43,5 +45,5 @@ networks:
 
 
 volumes:
-    named-vol-air-mongo:
+    air-volume:
 
