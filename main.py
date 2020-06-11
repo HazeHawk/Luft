@@ -50,6 +50,9 @@ class Ui_Form(object):
         self.widgetMapControlls = QWidget(self.widget_2)
         self.widgetMapControlls.setObjectName(u"widgetMapControlls")
         self.widgetMapControlls.setStyleSheet(u"")
+        self.verticalLayoutMapControlls = QVBoxLayout(self.widgetMapControlls)
+        self.slider = QSlider(Qt.Horizontal)
+        self.verticalLayoutMapControlls.addWidget(self.slider)
 
         self.verticalLayout.addWidget(self.widgetMapControlls)
 
