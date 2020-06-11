@@ -15,7 +15,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(900, 599)
+        Form.resize(900, 600)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -39,33 +39,42 @@ class Ui_Form(object):
         self.widgetMenu.setStyleSheet(u"")
 
         self.verticalLayoutWidgetMenu = QVBoxLayout(self.widgetMenu)
+        self.widgetMenuTop = QWidget(self.widgetMenu)
+        self.verticalLayoutWidgetMenuTop = QVBoxLayout(self.widgetMenuTop)
+        self.widgetMenuBottom = QWidget(self.widgetMenu)
+        self.verticalLayoutWidgetMenuBottom = QVBoxLayout(self.widgetMenuBottom)
+
 
         self.inputPositionLable = QLabel()
         self.inputPositionLable.setText("Input Your Position")
-        self.verticalLayoutWidgetMenu.addWidget(self.inputPositionLable)
+        self.verticalLayoutWidgetMenuTop.addWidget(self.inputPositionLable)
 
         self.inputPosition = QLineEdit()
-        self.verticalLayoutWidgetMenu.addWidget(self.inputPosition)
+        self.verticalLayoutWidgetMenuTop.addWidget(self.inputPosition)
 
         self.medianLabel = QLabel()
         self.medianLabel.setText("Median:")
-        self.verticalLayoutWidgetMenu.addWidget(self.medianLabel)
+        self.verticalLayoutWidgetMenuTop.addWidget(self.medianLabel)
 
         self.minimalLabel = QLabel()
         self.minimalLabel.setText("Minimal:")
-        self.verticalLayoutWidgetMenu.addWidget(self.minimalLabel)
+        self.verticalLayoutWidgetMenuTop.addWidget(self.minimalLabel)
 
         self.maximalLabel = QLabel()
         self.maximalLabel.setText("Maximal:")
-        self.verticalLayoutWidgetMenu.addWidget(self.maximalLabel)
+        self.verticalLayoutWidgetMenuTop.addWidget(self.maximalLabel)
 
         self.averageLabel = QLabel()
         self.averageLabel.setText("Average:")
-        self.verticalLayoutWidgetMenu.addWidget(self.averageLabel)
+        self.verticalLayoutWidgetMenuTop.addWidget(self.averageLabel)
 
         self.sensorCountLabel = QLabel()
         self.sensorCountLabel.setText("Sensor Count:")
-        self.verticalLayoutWidgetMenu.addWidget(self.sensorCountLabel)
+        self.verticalLayoutWidgetMenuTop.addWidget(self.sensorCountLabel)
+
+        self.verticalLayoutWidgetMenu.addWidget(self.widgetMenuTop)
+        self.verticalLayoutWidgetMenu.addWidget(self.widgetMenuBottom)
+
 
         self.horizontalLayout.addWidget(self.widgetMenu)
 
