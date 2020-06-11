@@ -26,14 +26,46 @@ class Ui_Form(object):
         self.tabWidget = QTabWidget(Form)
         self.tabWidget.setObjectName(u"tabWidget")
 
+
         # Home Tab
         self.home = QWidget()
         self.home.setObjectName(u"home")
         self.horizontalLayout = QHBoxLayout(self.home)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+
+        # Kontrollfeld links
         self.widgetMenu = QWidget(self.home)
         self.widgetMenu.setObjectName(u"widgetMenu")
         self.widgetMenu.setStyleSheet(u"")
+
+        self.verticalLayoutWidgetMenu = QVBoxLayout(self.widgetMenu)
+
+        self.inputPositionLable = QLabel()
+        self.inputPositionLable.setText("Input Your Position")
+        self.verticalLayoutWidgetMenu.addWidget(self.inputPositionLable)
+
+        self.inputPosition = QLineEdit()
+        self.verticalLayoutWidgetMenu.addWidget(self.inputPosition)
+
+        self.medianLabel = QLabel()
+        self.medianLabel.setText("Median:")
+        self.verticalLayoutWidgetMenu.addWidget(self.medianLabel)
+
+        self.minimalLabel = QLabel()
+        self.minimalLabel.setText("Minimal:")
+        self.verticalLayoutWidgetMenu.addWidget(self.minimalLabel)
+
+        self.maximalLabel = QLabel()
+        self.maximalLabel.setText("Maximal:")
+        self.verticalLayoutWidgetMenu.addWidget(self.maximalLabel)
+
+        self.averageLabel = QLabel()
+        self.averageLabel.setText("Average:")
+        self.verticalLayoutWidgetMenu.addWidget(self.averageLabel)
+
+        self.sensorCountLabel = QLabel()
+        self.sensorCountLabel.setText("Sensor Count:")
+        self.verticalLayoutWidgetMenu.addWidget(self.sensorCountLabel)
 
         self.horizontalLayout.addWidget(self.widgetMenu)
 
@@ -50,6 +82,8 @@ class Ui_Form(object):
         self.widgetMapControlls = QWidget(self.widget_2)
         self.widgetMapControlls.setObjectName(u"widgetMapControlls")
         self.widgetMapControlls.setStyleSheet(u"")
+
+        #Kontrollfeld unten
         self.verticalLayoutMapControlls = QVBoxLayout(self.widgetMapControlls)
         self.slider = QSlider(Qt.Horizontal)
         self.verticalLayoutMapControlls.addWidget(self.slider)
@@ -64,6 +98,7 @@ class Ui_Form(object):
         self.horizontalLayout.setStretch(0, 1)
         self.horizontalLayout.setStretch(1, 4)
         self.tabWidget.addTab(self.home, "")
+
 
         #Analysis tab
         self.analysis = QWidget()
@@ -84,6 +119,7 @@ class Ui_Form(object):
         self.horizontalLayout_2.setStretch(1, 4)
         self.tabWidget.addTab(self.analysis, "")
 
+
         # Highlights tab
         self.highlights = QWidget()
         self.highlights.setObjectName(u"highlights")
@@ -95,6 +131,7 @@ class Ui_Form(object):
         self.horizontalLayout_3.addWidget(self.widgetHighlights)
 
         self.tabWidget.addTab(self.highlights, "")
+
 
         #Forecast Tab
         self.forecast = QWidget()
@@ -130,6 +167,7 @@ class Ui_Form(object):
         self.horizontalLayout_4.setStretch(1, 4)
 
         self.tabWidget.addTab(self.forecast, "")
+
 
         # Personalisation Tab
         self.personalization = QWidget()
