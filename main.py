@@ -10,7 +10,6 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
 from PySide2.QtWidgets import *
 from PySide2.QtWebEngineWidgets import *
 
-
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
@@ -44,7 +43,7 @@ class Ui_Form(object):
         self.widgetMenuBottom = QWidget(self.widgetMenu)
         self.verticalLayoutWidgetMenuBottom = QVBoxLayout(self.widgetMenuBottom)
 
-
+        #Top
         self.inputPositionLable = QLabel()
         self.inputPositionLable.setText("Input Your Position")
         self.verticalLayoutWidgetMenuTop.addWidget(self.inputPositionLable)
@@ -71,6 +70,82 @@ class Ui_Form(object):
         self.sensorCountLabel = QLabel()
         self.sensorCountLabel.setText("Sensor Count:")
         self.verticalLayoutWidgetMenuTop.addWidget(self.sensorCountLabel)
+
+        #Bottom
+        self.configurationTitle = QLabel()
+        self.configurationTitle.setText("Configuration:")
+        self.verticalLayoutWidgetMenuBottom.addWidget(self.configurationTitle)
+
+        self.configurationTitleYear = QLabel()
+        self.configurationTitleYear.setText("Year:")
+        self.verticalLayoutWidgetMenuBottom.addWidget(self.configurationTitleYear)
+
+        self.comboBoxConfigurationYear = QComboBox()
+        self.comboBoxConfigurationYear.addItem("2020")
+        self.comboBoxConfigurationYear.addItem("2019")
+        self.comboBoxConfigurationYear.addItem("2018")
+        self.comboBoxConfigurationYear.addItem("2017")
+        self.comboBoxConfigurationYear.addItem("2016")
+        self.comboBoxConfigurationYear.addItem("2015")
+        self.verticalLayoutWidgetMenuBottom.addWidget(self.comboBoxConfigurationYear)
+
+        self.configurationTitleMonth = QLabel()
+        self.configurationTitleMonth.setText("Month:")
+        self.verticalLayoutWidgetMenuBottom.addWidget(self.configurationTitleMonth)
+
+        self.comboBoxConfigurationMonth = QComboBox()
+        self.comboBoxConfigurationMonth.addItem("January")
+        self.comboBoxConfigurationMonth.addItem("February")
+        self.comboBoxConfigurationMonth.addItem("March")
+        self.comboBoxConfigurationMonth.addItem("May")
+        self.comboBoxConfigurationMonth.addItem("April")
+        self.comboBoxConfigurationMonth.addItem("June")
+        self.comboBoxConfigurationMonth.addItem("July")
+        self.comboBoxConfigurationMonth.addItem("August")
+        self.comboBoxConfigurationMonth.addItem("September")
+        self.comboBoxConfigurationMonth.addItem("October")
+        self.comboBoxConfigurationMonth.addItem("November")
+        self.comboBoxConfigurationMonth.addItem("December")
+        self.verticalLayoutWidgetMenuBottom.addWidget(self.comboBoxConfigurationMonth)
+
+        self.configurationTitleDay = QLabel()
+        self.configurationTitleDay.setText("Day:")
+        self.verticalLayoutWidgetMenuBottom.addWidget(self.configurationTitleDay)
+
+        self.comboBoxConfigurationDay = QComboBox()
+        self.comboBoxConfigurationDay.addItem("1")
+        self.comboBoxConfigurationDay.addItem("2")
+        self.comboBoxConfigurationDay.addItem("3")
+        self.comboBoxConfigurationDay.addItem("4")
+        self.comboBoxConfigurationDay.addItem("5")
+        self.comboBoxConfigurationDay.addItem("6")
+        self.comboBoxConfigurationDay.addItem("7")
+        self.comboBoxConfigurationDay.addItem("8")
+        self.comboBoxConfigurationDay.addItem("9")
+        self.comboBoxConfigurationDay.addItem("10")
+        self.comboBoxConfigurationDay.addItem("11")
+        self.comboBoxConfigurationDay.addItem("12")
+        self.comboBoxConfigurationDay.addItem("13")
+        self.comboBoxConfigurationDay.addItem("14")
+        self.comboBoxConfigurationDay.addItem("15")
+        self.comboBoxConfigurationDay.addItem("16")
+        self.comboBoxConfigurationDay.addItem("17")
+        self.comboBoxConfigurationDay.addItem("18")
+        self.comboBoxConfigurationDay.addItem("19")
+        self.comboBoxConfigurationDay.addItem("20")
+        self.comboBoxConfigurationDay.addItem("21")
+        self.comboBoxConfigurationDay.addItem("22")
+        self.comboBoxConfigurationDay.addItem("23")
+        self.comboBoxConfigurationDay.addItem("24")
+        self.comboBoxConfigurationDay.addItem("25")
+        self.comboBoxConfigurationDay.addItem("26")
+        self.comboBoxConfigurationDay.addItem("27")
+        self.comboBoxConfigurationDay.addItem("28")
+        self.comboBoxConfigurationDay.addItem("29")
+        self.comboBoxConfigurationDay.addItem("30")
+        self.comboBoxConfigurationDay.addItem("31")
+        self.verticalLayoutWidgetMenuBottom.addWidget(self.comboBoxConfigurationDay)
+
 
         self.verticalLayoutWidgetMenu.addWidget(self.widgetMenuTop)
         self.verticalLayoutWidgetMenu.addWidget(self.widgetMenuBottom)
@@ -132,12 +207,28 @@ class Ui_Form(object):
         # Highlights tab
         self.highlights = QWidget()
         self.highlights.setObjectName(u"highlights")
-        self.horizontalLayout_3 = QHBoxLayout(self.highlights)
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.widgetHighlights = QWidget(self.highlights)
-        self.widgetHighlights.setObjectName(u"widgetHighlights")
 
-        self.horizontalLayout_3.addWidget(self.widgetHighlights)
+        self.scroll = QScrollArea()
+        self.highlightsWidget = QWidget()
+        self.vBox = QVBoxLayout()
+
+        for i in range(1, 50):
+            object = QLabel("Diagramm")
+            self.vBox.addWidget(object)
+
+
+        self.highlightsWidget.setLayout(self.vBox)
+
+
+
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidget(self.highlightsWidget)
+
+        self.vBox2 = QVBoxLayout()
+        self.vBox2.addWidget(self.scroll)
+
+        self.highlights.setLayout(self.vBox2)
 
         self.tabWidget.addTab(self.highlights, "")
 
