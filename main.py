@@ -1,6 +1,9 @@
 import sys
 import io
 import folium
+import pandas
+import numpy
+import pyqtgraph
 
 from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
                             QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
@@ -194,10 +197,17 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.widgetAnalysisControls)
 
-        self.widgeAnalysis = QWidget(self.analysis)
-        self.widgeAnalysis.setObjectName(u"widgeAnalysis")
+        self.widgetAnalysis = pyqtgraph.PlotWidget(self.analysis)
+        self.widgetAnalysis.setObjectName(u"widgeAnalysis")
 
-        self.horizontalLayout_2.addWidget(self.widgeAnalysis)
+        hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
+
+        # plot data: x, y values
+        self.widgetAnalysis.plot(hour, temperature)
+
+
+        self.horizontalLayout_2.addWidget(self.widgetAnalysis)
 
         self.horizontalLayout_2.setStretch(0, 1)
         self.horizontalLayout_2.setStretch(1, 4)
@@ -212,8 +222,12 @@ class Ui_Form(object):
         self.highlightsWidget = QWidget()
         self.vBox = QVBoxLayout()
 
-        for i in range(1, 50):
-            object = QLabel("Diagramm")
+
+        for i in range(1, 10):
+            object = pyqtgraph.PlotWidget(self.analysis)
+            hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
+            object.plot(hour, temperature)
             self.vBox.addWidget(object)
 
 
@@ -223,6 +237,7 @@ class Ui_Form(object):
 
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.highlightsWidget)
 
         self.vBox2 = QVBoxLayout()
