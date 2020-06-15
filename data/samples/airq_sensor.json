@@ -1,11 +1,13 @@
 [
     // Goal docutment for airq_sensor
-
     {
       "sensor_id": 29175,
       "sensor_type": "SPS30",
-      "location_id": 19918,  //moved to location document
-      "timestamp": "2020-06-10T00:03:34",
+      "location": {
+        "type": "Point",
+        "coordinates": [ 9.00258013, 48.8001038 ]  // ACHTUNG longitude first then latitude!!!!
+      },
+      "timestamp": ISODate("2020-06-10T00:03:34"),  //in Pyhton als datetime.datetime object erstellen und speichern gut isch.
       "PM1": 10.64,
       "PM4": 10.64,
       "PM2.5": 10.64,
@@ -19,8 +21,8 @@
 
       //denkbare Attribute
       "d_avg": ,
-      "day_med":
-
+      "d_med":,
+      "d_sd":
     },
 
     // Vorschlag 2
@@ -35,7 +37,10 @@ db.airq_sensor.findMany({"data": 2020-06*})
     {
         "sensor_id": 29175,
         "sensor_type": "SPS30",
-        "location_id": 19918,  //moved to location document
+        "location": {
+            "type": "Point",
+            "coordinates": [ 9.00258013, 48.8001038 ]  // ACHTUNG longitude first then latitude!!!!
+          }, //loss of location_id but can't see usage of it, if we don't normalize.
         "data": {
             "2020-06-10": [
                 {
@@ -135,3 +140,37 @@ db.airq_sensor.findMany({"data": 2020-06*})
       }
 
 ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{
+    "sensor_id": 29175,
+    "sensor_type": "SPS30",
+    "location": {
+      "type": "Point",
+      "coordinates": [ 9.00258013, 48.8001038 ]
+    },
+    "timestamp": "2020-06-10T00:03:34",
+    "PM1": 10.64,
+    "PM4": 10.64,
+    "PM2": 10.64,
+    "PM10": 10.06,
+    "N10": 80.32,
+    "N4": 80.3,
+    "N2": 80.27,
+    "N1": 79.92,
+    "N05": 68.62,
+    "TS": 0.43,
+  }
