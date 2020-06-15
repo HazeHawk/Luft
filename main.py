@@ -298,14 +298,14 @@ class Ui_Form(object):
 
         self.scroll = QScrollArea()
         self.highlightsWidget = QWidget()
-        self.vBox = QVBoxLayout()
-
+        self.vBox = QGridLayout()
 
         for i in range(1, 10):
             object = pyqtgraph.PlotWidget(self.analysis)
             hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
             temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
             object.plot(hour, temperature)
+            self.vBox.setRowMinimumHeight(i-1, 500)
             self.vBox.addWidget(object)
 
 
