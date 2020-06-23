@@ -7,24 +7,48 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
+import logging
+
+logging.basicConfig(filename='logging.log',level=logging.DEBUG)
 
 try:
     to_unicode = unicode
 except NameError:
     to_unicode = str
 
+
 url = "http://archive.luftdaten.info/"
 #index.html downloaden
 myfile = requests.get(url)
 
-date = time.strptime("15/06/2020", "%d/%m/%Y")
+#ab diesem Datum werden Daten heruntergeladen
+#bis in die Gegenwart
+date = time.strptime("22/06/2020", "%d/%m/%Y")
 
 dayList  = []
 csvList  = []
-
-x = {}
 sensorList = []
-i = 0
+x = {}
+
+#Datenbank konfigurieren
+MONGO_HOST='localhost'
+MONGO_PORT=8888
+MONGO_USERNAME='mongoadmin'
+MONGO_PASSWORD='secret'
+
+maxSevSelDelay=1
+
+try:
+    client = MongoClient(host='localhost', port=8888, username='mongoadmin', password='secret',
+                         serverSelectionTimeoutMS=maxSevSelDelay)
+
+except errors.ServerSelectionTimeoutError as err:
+    # do whatever you need
+    # tryagain later
+    print(err)
+#Datenbanke anlegen
+db = client.patricksDB3
+sensoren = db.sensoren
 
 #Ordnerstruktur auslesen in dayList beinhaltet
 #hier eventeull noch Abfrage um Zeitraum zu begrenzen
@@ -116,28 +140,6 @@ for csvEintrag in csvList:
                 }
                 sensorList.append(x)
 
-    #with io.open('2020-06-10_sds011_sensor_10154.json', 'w', encoding='utf8') as outfile:
-     #   str_ = json.dumps(sensorList, indent=4, separators=(',', ': '), ensure_ascii=False)
-      #  outfile.write(to_unicode(str_))
-
-
-MONGO_HOST='localhost'
-MONGO_PORT=8888
-MONGO_USERNAME='mongoadmin'
-MONGO_PASSWORD='secret'
-
-maxSevSelDelay=1
-print("adsf")
-
-try:
-    client = MongoClient(host='localhost', port=8888, username='mongoadmin', password='secret',
-                         serverSelectionTimeoutMS=maxSevSelDelay)
-
-except errors.ServerSelectionTimeoutError as err:
-    # do whatever you need
-    # tryagain later
-    print(err)
-
-db = client.patricksDB3
-sensoren = db.sensoren
-sensoren.insert_many(documents=sensorList)
+    sensoren.insert_many(documents=sensorList)
+    logging.info("Datei in Datenbank gespeichert: " + csvEintrag)
+    sensorList = []
