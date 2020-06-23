@@ -1,17 +1,24 @@
-import sys
 import io
-import folium
-import pandas
-import numpy
-import pyqtgraph
+import logging
+import sys
+import time
 
+import folium
+import numpy
+import pandas
+import pyqtgraph
 from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-                            QObject, QPoint, QRect, QSize, QTime, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-                           QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter,
-                           QPixmap, QRadialGradient)
-from PySide2.QtWidgets import *
+                            QObject, QPoint, QRect, QSize, Qt, QTime, QUrl)
+from PySide2.QtGui import (
+    QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon,
+    QKeySequence, QLinearGradient, QPainter, QPalette, QPixmap,
+    QRadialGradient)
 from PySide2.QtWebEngineWidgets import *
+from PySide2.QtWidgets import *
+
+from src.config import Configuration
+
+_cfg = Configuration()
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -408,6 +415,8 @@ class Ui_Form(object):
         # retranslateUi
 
 if __name__ == "__main__":
+
+    startup_time = time.time()
     app = QApplication(sys.argv)
 
     widget = QWidget()
@@ -416,5 +425,6 @@ if __name__ == "__main__":
     ui.setupUi(widget)
 
     widget.show()
-
+    startup_time = time.time()-startup_time
+    logging.info(f'Startup of AirGoogle took {startup_time}ms.')
     sys.exit(app.exec_())
