@@ -1,0 +1,176 @@
+[
+    // Goal docutment for airq_sensor
+    {
+      "sensor_id": 29175,
+      "sensor_type": "SPS30",
+      "location": {
+        "type": "Point",
+        "coordinates": [ 9.00258013, 48.8001038 ]  // ACHTUNG longitude first then latitude!!!!
+      },
+      "timestamp": ISODate("2020-06-10T00:03:34"),  //in Pyhton als datetime.datetime object erstellen und speichern gut isch.
+      "PM1": 10.64,
+      "PM4": 10.64,
+      "PM2.5": 10.64,
+      "PM10": 10.06,
+      "N10": 80.32,
+      "N4": 80.3,
+      "N2.5": 80.27,
+      "N1": 79.92,
+      "N0.5": 68.62,
+      "TS": 0.43,
+
+      //denkbare Attribute
+      "d_avg": ,
+      "d_med":,
+      "d_sd":
+    },
+
+    // Vorschlag 2
+    // Befürchtung bei Request over time ist der Tag als key, nicht idizierbar und folglich lässt, sich der array schlecht auf zeit auslesen??
+
+db.airq_sensor.findOne({"sensor_id": 29175})
+
+db.airq_sensor.findMany({"data": 2020-06*})
+
+
+
+    {
+        "sensor_id": 29175,
+        "sensor_type": "SPS30",
+        "location": {
+            "type": "Point",
+            "coordinates": [ 9.00258013, 48.8001038 ]  // ACHTUNG longitude first then latitude!!!!
+          }, //loss of location_id but can't see usage of it, if we don't normalize.
+        "data": {
+            "2020-06-10": [
+                {
+                    "timestamp": "2020-06-10T00:03:34",
+                    "PM1": 10.64,
+                    "PM4": 10.64,
+                    "PM2.5": 10.64,
+                    "PM10": 10.06,
+                    "N10": 80.32,
+                    "N4": 80.3,
+                    "N2.5": 80.27,
+                    "N1": 79.92,
+                    "N0.5": 68.62,
+                    "TS": 0.43
+                },
+                {
+                    "timestamp": "2020-06-10T00:05:88",
+                    "PM1": 10.64,
+                    "PM4": 10.64,
+                    "PM2.5": 10.64,
+                    "PM10": 10.06,
+                    "N10": 80.32,
+                    "N4": 80.3,
+                    "N2.5": 80.27,
+                    "N1": 79.92,
+                    "N0.5": 68.62,
+                    "TS": 0.43
+                }
+            ],
+            "2020-06-11": [
+                {
+                    "timestamp": "2020-06-11T00:03:34",
+                    "PM1": 10.64,
+                    "PM4": 10.64,
+                    "PM2.5": 10.64,
+                    "PM10": 10.06,
+                    "N10": 80.32,
+                    "N4": 80.3,
+                    "N2.5": 80.27,
+                    "N1": 79.92,
+                    "N0.5": 68.62,
+                    "TS": 0.43
+                },
+                {
+                    "timestamp": "2020-06-11T00:05:88",
+                    "PM1": 10.64,
+                    "PM4": 10.64,
+                    "PM2.5": 10.64,
+                    "PM10": 10.06,
+                    "N10": 80.32,
+                    "N4": 80.3,
+                    "N2.5": 80.27,
+                    "N1": 79.92,
+                    "N0.5": 68.62,
+                    "TS": 0.43
+                }
+            ]
+
+        }
+
+      }
+
+    //SPS30 Original
+
+    {
+        "sensor_id": 29175,
+        "sensor_type": "SPS30",
+        "location": 19918,
+        "lat": 48.8001038,
+        "lon": 9.00258013,
+        "timestamp": "2020-06-10T00:00:43",
+        "P1": 10.58,
+        "P4": 10.58,
+        "P2": 10.58,
+        "P0": 10,
+        "N10": 79.89,
+        "N4": 79.87,
+        "N25": 79.84,
+        "N1": 79.5,
+        "N05": 68.26,
+        "TS": 0.44
+      }
+    //SDS011 Original
+    {
+        "sensor_id": 10154,
+        "sensor_type": "SDS011",
+        "location": 5118,
+        "lat": 48.57,
+        "lon": 7.916,
+        "timestamp": "2020-06-10T00:01:23",
+        "P1": 8.37,
+        "durP1": "",
+        "ratioP1": "",
+        "P2": 7.67,
+        "durP2": "",
+        "ratioP2": ""
+      }
+
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{
+    "sensor_id": 29175,
+    "sensor_type": "SPS30",
+    "location": {
+      "type": "Point",
+      "coordinates": [ 9.00258013, 48.8001038 ]
+    },
+    "timestamp": "2020-06-10T00:03:34",
+    "PM1": 10.64,
+    "PM4": 10.64,
+    "PM2": 10.64,
+    "PM10": 10.06,
+    "N10": 80.32,
+    "N4": 80.3,
+    "N2": 80.27,
+    "N1": 79.92,
+    "N05": 68.62,
+    "TS": 0.43,
+  }

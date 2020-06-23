@@ -1,0 +1,86 @@
+
+// GeoJSON Format
+
+// von Oben links gegen Uhrzeiger sinn ein 4 eck. 5 Werte weil anfang und start passen müssen.
+{
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            9.02801513671875,
+            48.716337032605665
+          ],
+          [
+            9.349365234375,
+            48.716337032605665
+          ],
+          [
+            9.349365234375,
+            48.826757381274426
+          ],
+          [
+            9.02801513671875,
+            48.826757381274426
+          ],
+          [
+            9.02801513671875,
+            48.716337032605665
+          ]
+        ]
+      ]
+    }
+}
+
+
+{
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            9.0,
+            48.0
+          ],
+          [
+            10.0,
+            48.0
+          ],
+          [
+            10.0,
+            50.0
+          ],
+          [
+            9.0,
+            50.0
+          ],
+          [
+            9.0,
+            48.0
+          ]
+        ]
+      ]
+    }
+}
+
+
+//Alternativ
+{
+    <location field>: {
+       $geoWithin: {
+          $polygon: [ [ <x1> , <y1> ], [ <x2> , <y2> ], [ <x3> , <y3> ], ... ]
+       }
+    }
+ }
+
+//Alternativ
+{
+    <location field>: {
+       $geoWithin: {
+          $box: [
+            [ <bottom left coordinates> ],
+            [ <upper right coordinates> ]
+          ]
+       }
+    }
+  }
