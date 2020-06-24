@@ -18,5 +18,5 @@ if __name__ == "__main__":
     controller.run()
     startup_time = time.time()-startup_time
     logging.info(f'Startup of AirGoogle took {startup_time}ms.')
-    sys.exit(controller.app.exec_()) # @Roman explain why that stuff is there xD ist aus deinem code minimal angepasst
+    sys.exit(controller.app.exec_())
 
