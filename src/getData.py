@@ -1,15 +1,17 @@
 import csv
-import json
 import io
-from datetime import datetime
-from pymongo import MongoClient, errors
-import requests
-from bs4 import BeautifulSoup
+import json
+import logging
 import re
 import time
-import logging
+from datetime import datetime
 
-logging.basicConfig(filename='logging.log',level=logging.DEBUG)
+import requests
+from pymongo import MongoClient, errors
+
+from bs4 import BeautifulSoup
+
+logging.basicConfig(filename='logging.log', level=logging.DEBUG)
 
 try:
     to_unicode = unicode
