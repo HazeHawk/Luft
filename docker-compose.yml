@@ -9,7 +9,7 @@ services:
             - "8888:27017"
         environment:
             MONGO_INITDB_ROOT_USERNAME: mongoadmin
-            MONGO_INITDB_ROOT_PASSWORD: secret
+            MONGO_INITDB_ROOT_PASSWORD: Ze3cr1t!
         networks:
             air-net:
                 aliases:
@@ -18,7 +18,8 @@ services:
         volumes:
             - "${AIR_LOG_PATH}:/var/log/mongodb"
             - "${AIR_CONF_PATH}://etc/mongo"
-            - "air-volume://data/db"
+            - "${AIR_DB_PATH}://data/db"
+            #- "air-volume://data/db" local config
 
     mongo-express:
         image: mongo-express
@@ -27,12 +28,12 @@ services:
             - 8081:8081
         environment:
             ME_CONFIG_MONGODB_ADMINUSERNAME: mongoadmin
-            ME_CONFIG_MONGODB_ADMINPASSWORD: secret
+            ME_CONFIG_MONGODB_ADMINPASSWORD: Ze3cr1t!
             ME_CONFIG_MONGODB_SERVER: air-mongo
         networks:
             air-net:
                 aliases:
-                    - mongo-express
+                    - mongo-expressdocker
                     - db-admin
 
 
@@ -41,9 +42,7 @@ networks:
         driver: bridge
         labels:
             com.some-test.description: "The air-google mongo network"
-        #name: air-net-tigkeiten
 
-
-volumes:
-    air-volume:
+#volumes:
+    #air-volume:
 

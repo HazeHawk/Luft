@@ -23,7 +23,7 @@ _cfg = Configuration()
 
 class AirView(object):
     def __init__(self):
-        print("INIT done")
+        pass
 
     def setupUi(self, Form):
         if not Form.objectName():

@@ -32,6 +32,7 @@ class AirModel(Singleton):
     def get_sensors(self):
         return self.sensors
 
+
     #TODO die GeoQuery sollte direkt nach einem Read ein zu ein, so aufgerufen werden. Also das dict.
     # Überarbeiten wenn das nicht klappt
     def find_sensors_by(self, geometry=None, timestamp=None, day=None, month=None, year=None, timeframe=None):
@@ -45,7 +46,7 @@ class AirModel(Singleton):
 
             Parameters:
                 time-related parameters should be a datetime object.
-                timeframe: Tuple with start and ending date (start, end)
+                timeframe: Tuple with start and ending date (start, end) of type datetimeobj
                 day, month, year filter by just 1 month!
 
 
