@@ -166,9 +166,8 @@ class AirView(object):
     def buildAnalysis(self, analysis):
 
         horizontalLayout_2 = QHBoxLayout(analysis)
-        horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+
         widgetAnalysisControls = QWidget(analysis)
-        widgetAnalysisControls.setObjectName(u"widgetAnalysisControls")
 
         vBox3 = QVBoxLayout()
 
@@ -176,88 +175,38 @@ class AirView(object):
         configurationTitleAnalysis.setText("Configuration:")
         vBox3.addWidget(configurationTitleAnalysis)
 
-        configurationTitleAnalysisYear = QLabel()
-        configurationTitleAnalysisYear.setText("Year:")
-        vBox3.addWidget(configurationTitleAnalysisYear)
+        startLabel = QLabel()
+        startLabel.setText("Start:")
+        vBox3.addWidget(startLabel)
 
-        comboBoxConfigurationAnalysisYear = QComboBox()
-        comboBoxConfigurationAnalysisYear.addItem("2020")
-        comboBoxConfigurationAnalysisYear.addItem("2019")
-        comboBoxConfigurationAnalysisYear.addItem("2018")
-        comboBoxConfigurationAnalysisYear.addItem("2017")
-        comboBoxConfigurationAnalysisYear.addItem("2016")
-        comboBoxConfigurationAnalysisYear.addItem("2015")
-        vBox3.addWidget(comboBoxConfigurationAnalysisYear)
+        dateEditStart = QDateEdit()
+        dateEditStart.setCalendarPopup(True)
+        dateEditStart.setDateTime(QDateTime.currentDateTime())
+        vBox3.addWidget(dateEditStart)
+        self.analysisDateEditStart = dateEditStart
 
-        configurationTitleAnalysisMonth = QLabel()
-        configurationTitleAnalysisMonth.setText("Month:")
-        vBox3.addWidget(configurationTitleAnalysisMonth)
+        endLabel = QLabel()
+        endLabel.setText("End:")
+        vBox3.addWidget(endLabel)
 
-        comboBoxConfigurationAnalysisMonth = QComboBox()
-        comboBoxConfigurationAnalysisMonth.addItem("January")
-        comboBoxConfigurationAnalysisMonth.addItem("February")
-        comboBoxConfigurationAnalysisMonth.addItem("March")
-        comboBoxConfigurationAnalysisMonth.addItem("May")
-        comboBoxConfigurationAnalysisMonth.addItem("April")
-        comboBoxConfigurationAnalysisMonth.addItem("June")
-        comboBoxConfigurationAnalysisMonth.addItem("July")
-        comboBoxConfigurationAnalysisMonth.addItem("August")
-        comboBoxConfigurationAnalysisMonth.addItem("September")
-        comboBoxConfigurationAnalysisMonth.addItem("October")
-        comboBoxConfigurationAnalysisMonth.addItem("November")
-        comboBoxConfigurationAnalysisMonth.addItem("December")
-        vBox3.addWidget(comboBoxConfigurationAnalysisMonth)
-
-        configurationTitleAnalysisDay = QLabel()
-        configurationTitleAnalysisDay.setText("Day:")
-        vBox3.addWidget(configurationTitleAnalysisDay)
-
-        comboBoxConfigurationAnalysisDay = QComboBox()
-        comboBoxConfigurationAnalysisDay.addItem("1")
-        comboBoxConfigurationAnalysisDay.addItem("2")
-        comboBoxConfigurationAnalysisDay.addItem("3")
-        comboBoxConfigurationAnalysisDay.addItem("4")
-        comboBoxConfigurationAnalysisDay.addItem("5")
-        comboBoxConfigurationAnalysisDay.addItem("6")
-        comboBoxConfigurationAnalysisDay.addItem("7")
-        comboBoxConfigurationAnalysisDay.addItem("8")
-        comboBoxConfigurationAnalysisDay.addItem("9")
-        comboBoxConfigurationAnalysisDay.addItem("10")
-        comboBoxConfigurationAnalysisDay.addItem("11")
-        comboBoxConfigurationAnalysisDay.addItem("12")
-        comboBoxConfigurationAnalysisDay.addItem("13")
-        comboBoxConfigurationAnalysisDay.addItem("14")
-        comboBoxConfigurationAnalysisDay.addItem("15")
-        comboBoxConfigurationAnalysisDay.addItem("16")
-        comboBoxConfigurationAnalysisDay.addItem("17")
-        comboBoxConfigurationAnalysisDay.addItem("18")
-        comboBoxConfigurationAnalysisDay.addItem("19")
-        comboBoxConfigurationAnalysisDay.addItem("20")
-        comboBoxConfigurationAnalysisDay.addItem("21")
-        comboBoxConfigurationAnalysisDay.addItem("22")
-        comboBoxConfigurationAnalysisDay.addItem("23")
-        comboBoxConfigurationAnalysisDay.addItem("24")
-        comboBoxConfigurationAnalysisDay.addItem("25")
-        comboBoxConfigurationAnalysisDay.addItem("26")
-        comboBoxConfigurationAnalysisDay.addItem("27")
-        comboBoxConfigurationAnalysisDay.addItem("28")
-        comboBoxConfigurationAnalysisDay.addItem("29")
-        comboBoxConfigurationAnalysisDay.addItem("30")
-        comboBoxConfigurationAnalysisDay.addItem("31")
-        vBox3.addWidget(comboBoxConfigurationAnalysisDay)
+        dateEditEnd = QDateEdit()
+        dateEditEnd.setCalendarPopup(True)
+        dateEditEnd.setDateTime(QDateTime.currentDateTime())
+        vBox3.addWidget(dateEditEnd)
+        self.analysisDateEditEnd = dateEditEnd
 
         widgetAnalysisControls.setLayout(vBox3)
 
         horizontalLayout_2.addWidget(widgetAnalysisControls)
 
         widgetAnalysis = pyqtgraph.PlotWidget(analysis)
-        widgetAnalysis.setObjectName(u"widgeAnalysis")
 
         hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
 
         # plot data: x, y values
         widgetAnalysis.plot(hour, temperature)
+        self.analysisPlotWidget = widgetAnalysis
 
         horizontalLayout_2.addWidget(widgetAnalysis)
 
