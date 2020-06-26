@@ -30,6 +30,7 @@ class AirView(object):
         self.tabWidget = QTabWidget(Form)
         self.tabWidget.setObjectName(u"tabWidget")
 
+        #Home Tab
         self.home = QWidget()
         self.home.setObjectName(u"home")
 
@@ -47,83 +48,15 @@ class AirView(object):
         self.highlights = QWidget()
         self.highlights.setObjectName(u"highlights")
 
-        self.scroll = QScrollArea()
-        self.highlightsWidget = QWidget()
-        self.vBox = QGridLayout()
-
-        for i in range(1, 10):
-            object = pyqtgraph.PlotWidget(self.analysis)
-            hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-            temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
-            object.plot(hour, temperature)
-            self.vBox.setRowMinimumHeight(i-1, 500)
-            self.vBox.addWidget(object)
-
-
-        self.highlightsWidget.setLayout(self.vBox)
-
-
-
-        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setWidget(self.highlightsWidget)
-
-        self.vBox2 = QVBoxLayout()
-        self.vBox2.addWidget(self.scroll)
-
-        self.highlights.setLayout(self.vBox2)
-
-        self.tabWidget.addTab(self.highlights, "")
+        self.tabWidget.addTab(self.buildHighlights(self.highlights), "")
 
 
         #Forecast Tab
         self.forecast = QWidget()
         self.forecast.setObjectName(u"forecast")
-        self.horizontalLayout_4 = QHBoxLayout(self.forecast)
-        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.widgetForecastMenu = QWidget(self.forecast)
-        self.widgetForecastMenu.setObjectName(u"widgetForecastMenu")
 
-        self.horizontalLayout_4.addWidget(self.widgetForecastMenu)
+        self.tabWidget.addTab(self.buildForecast(self.forecast), "")
 
-        self.widget_3 = QWidget(self.forecast)
-        self.widget_3.setObjectName(u"widget_3")
-        self.verticalLayout_2 = QVBoxLayout(self.widget_3)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.widgetForecastMap = QWebEngineView(self.widget_3)
-        self.widgetForecastMap.setObjectName(u"widgetForecastMap")
-        self.widgetForecastMap.setHtml(self.foliumMapData().getvalue().decode())
-
-        self.verticalLayout_2.addWidget(self.widgetForecastMap)
-
-        self.widgetForecastMapControlls = QWidget(self.widget_3)
-        self.widgetForecastMapControlls.setObjectName(u"widgetForecastMapControlls")
-
-        self.verticalLayout_2.addWidget(self.widgetForecastMapControlls)
-
-        self.verticalLayout_2.setStretch(0, 3)
-        self.verticalLayout_2.setStretch(1, 1)
-
-        self.horizontalLayout_4.addWidget(self.widget_3)
-
-        self.horizontalLayout_4.setStretch(0, 1)
-        self.horizontalLayout_4.setStretch(1, 4)
-
-        self.tabWidget.addTab(self.forecast, "")
-
-
-        # Personalisation Tab
-        self.personalization = QWidget()
-        self.personalization.setObjectName(u"personalization")
-        self.horizontalLayout_5 = QHBoxLayout(self.personalization)
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.widgetPersonalization = QWidget(self.personalization)
-        self.widgetPersonalization.setObjectName(u"widgetPersonalization")
-
-        self.horizontalLayout_5.addWidget(self.widgetPersonalization)
-
-        self.tabWidget.addTab(self.personalization, "")
 
         self.gridLayout_1.addWidget(self.tabWidget, 0, 0, 1, 1)
 
@@ -147,108 +80,7 @@ class AirView(object):
 
     # retranslateUi
 
-    def buildAnalysis(self, analysis):
 
-        horizontalLayout_2 = QHBoxLayout(analysis)
-        horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        widgetAnalysisControls = QWidget(analysis)
-        widgetAnalysisControls.setObjectName(u"widgetAnalysisControls")
-
-        vBox3 = QVBoxLayout()
-
-        configurationTitleAnalysis = QLabel()
-        configurationTitleAnalysis.setText("Configuration:")
-        vBox3.addWidget(configurationTitleAnalysis)
-
-        configurationTitleAnalysisYear = QLabel()
-        configurationTitleAnalysisYear.setText("Year:")
-        vBox3.addWidget(configurationTitleAnalysisYear)
-
-        comboBoxConfigurationAnalysisYear = QComboBox()
-        comboBoxConfigurationAnalysisYear.addItem("2020")
-        comboBoxConfigurationAnalysisYear.addItem("2019")
-        comboBoxConfigurationAnalysisYear.addItem("2018")
-        comboBoxConfigurationAnalysisYear.addItem("2017")
-        comboBoxConfigurationAnalysisYear.addItem("2016")
-        comboBoxConfigurationAnalysisYear.addItem("2015")
-        vBox3.addWidget(comboBoxConfigurationAnalysisYear)
-
-        configurationTitleAnalysisMonth = QLabel()
-        configurationTitleAnalysisMonth.setText("Month:")
-        vBox3.addWidget(configurationTitleAnalysisMonth)
-
-        comboBoxConfigurationAnalysisMonth = QComboBox()
-        comboBoxConfigurationAnalysisMonth.addItem("January")
-        comboBoxConfigurationAnalysisMonth.addItem("February")
-        comboBoxConfigurationAnalysisMonth.addItem("March")
-        comboBoxConfigurationAnalysisMonth.addItem("May")
-        comboBoxConfigurationAnalysisMonth.addItem("April")
-        comboBoxConfigurationAnalysisMonth.addItem("June")
-        comboBoxConfigurationAnalysisMonth.addItem("July")
-        comboBoxConfigurationAnalysisMonth.addItem("August")
-        comboBoxConfigurationAnalysisMonth.addItem("September")
-        comboBoxConfigurationAnalysisMonth.addItem("October")
-        comboBoxConfigurationAnalysisMonth.addItem("November")
-        comboBoxConfigurationAnalysisMonth.addItem("December")
-        vBox3.addWidget(comboBoxConfigurationAnalysisMonth)
-
-        configurationTitleAnalysisDay = QLabel()
-        configurationTitleAnalysisDay.setText("Day:")
-        vBox3.addWidget(configurationTitleAnalysisDay)
-
-        comboBoxConfigurationAnalysisDay = QComboBox()
-        comboBoxConfigurationAnalysisDay.addItem("1")
-        comboBoxConfigurationAnalysisDay.addItem("2")
-        comboBoxConfigurationAnalysisDay.addItem("3")
-        comboBoxConfigurationAnalysisDay.addItem("4")
-        comboBoxConfigurationAnalysisDay.addItem("5")
-        comboBoxConfigurationAnalysisDay.addItem("6")
-        comboBoxConfigurationAnalysisDay.addItem("7")
-        comboBoxConfigurationAnalysisDay.addItem("8")
-        comboBoxConfigurationAnalysisDay.addItem("9")
-        comboBoxConfigurationAnalysisDay.addItem("10")
-        comboBoxConfigurationAnalysisDay.addItem("11")
-        comboBoxConfigurationAnalysisDay.addItem("12")
-        comboBoxConfigurationAnalysisDay.addItem("13")
-        comboBoxConfigurationAnalysisDay.addItem("14")
-        comboBoxConfigurationAnalysisDay.addItem("15")
-        comboBoxConfigurationAnalysisDay.addItem("16")
-        comboBoxConfigurationAnalysisDay.addItem("17")
-        comboBoxConfigurationAnalysisDay.addItem("18")
-        comboBoxConfigurationAnalysisDay.addItem("19")
-        comboBoxConfigurationAnalysisDay.addItem("20")
-        comboBoxConfigurationAnalysisDay.addItem("21")
-        comboBoxConfigurationAnalysisDay.addItem("22")
-        comboBoxConfigurationAnalysisDay.addItem("23")
-        comboBoxConfigurationAnalysisDay.addItem("24")
-        comboBoxConfigurationAnalysisDay.addItem("25")
-        comboBoxConfigurationAnalysisDay.addItem("26")
-        comboBoxConfigurationAnalysisDay.addItem("27")
-        comboBoxConfigurationAnalysisDay.addItem("28")
-        comboBoxConfigurationAnalysisDay.addItem("29")
-        comboBoxConfigurationAnalysisDay.addItem("30")
-        comboBoxConfigurationAnalysisDay.addItem("31")
-        vBox3.addWidget(comboBoxConfigurationAnalysisDay)
-
-        widgetAnalysisControls.setLayout(vBox3)
-
-        horizontalLayout_2.addWidget(widgetAnalysisControls)
-
-        widgetAnalysis = pyqtgraph.PlotWidget(analysis)
-        widgetAnalysis.setObjectName(u"widgeAnalysis")
-
-        hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
-
-        # plot data: x, y values
-        widgetAnalysis.plot(hour, temperature)
-
-        horizontalLayout_2.addWidget(widgetAnalysis)
-
-        horizontalLayout_2.setStretch(0, 1)
-        horizontalLayout_2.setStretch(1, 4)
-
-        return analysis
 
     def buildHome(self, home):
 
@@ -406,6 +238,175 @@ class AirView(object):
 
         return home
 
+
+    def buildAnalysis(self, analysis):
+
+        horizontalLayout_2 = QHBoxLayout(analysis)
+        horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        widgetAnalysisControls = QWidget(analysis)
+        widgetAnalysisControls.setObjectName(u"widgetAnalysisControls")
+
+        vBox3 = QVBoxLayout()
+
+        configurationTitleAnalysis = QLabel()
+        configurationTitleAnalysis.setText("Configuration:")
+        vBox3.addWidget(configurationTitleAnalysis)
+
+        configurationTitleAnalysisYear = QLabel()
+        configurationTitleAnalysisYear.setText("Year:")
+        vBox3.addWidget(configurationTitleAnalysisYear)
+
+        comboBoxConfigurationAnalysisYear = QComboBox()
+        comboBoxConfigurationAnalysisYear.addItem("2020")
+        comboBoxConfigurationAnalysisYear.addItem("2019")
+        comboBoxConfigurationAnalysisYear.addItem("2018")
+        comboBoxConfigurationAnalysisYear.addItem("2017")
+        comboBoxConfigurationAnalysisYear.addItem("2016")
+        comboBoxConfigurationAnalysisYear.addItem("2015")
+        vBox3.addWidget(comboBoxConfigurationAnalysisYear)
+
+        configurationTitleAnalysisMonth = QLabel()
+        configurationTitleAnalysisMonth.setText("Month:")
+        vBox3.addWidget(configurationTitleAnalysisMonth)
+
+        comboBoxConfigurationAnalysisMonth = QComboBox()
+        comboBoxConfigurationAnalysisMonth.addItem("January")
+        comboBoxConfigurationAnalysisMonth.addItem("February")
+        comboBoxConfigurationAnalysisMonth.addItem("March")
+        comboBoxConfigurationAnalysisMonth.addItem("May")
+        comboBoxConfigurationAnalysisMonth.addItem("April")
+        comboBoxConfigurationAnalysisMonth.addItem("June")
+        comboBoxConfigurationAnalysisMonth.addItem("July")
+        comboBoxConfigurationAnalysisMonth.addItem("August")
+        comboBoxConfigurationAnalysisMonth.addItem("September")
+        comboBoxConfigurationAnalysisMonth.addItem("October")
+        comboBoxConfigurationAnalysisMonth.addItem("November")
+        comboBoxConfigurationAnalysisMonth.addItem("December")
+        vBox3.addWidget(comboBoxConfigurationAnalysisMonth)
+
+        configurationTitleAnalysisDay = QLabel()
+        configurationTitleAnalysisDay.setText("Day:")
+        vBox3.addWidget(configurationTitleAnalysisDay)
+
+        comboBoxConfigurationAnalysisDay = QComboBox()
+        comboBoxConfigurationAnalysisDay.addItem("1")
+        comboBoxConfigurationAnalysisDay.addItem("2")
+        comboBoxConfigurationAnalysisDay.addItem("3")
+        comboBoxConfigurationAnalysisDay.addItem("4")
+        comboBoxConfigurationAnalysisDay.addItem("5")
+        comboBoxConfigurationAnalysisDay.addItem("6")
+        comboBoxConfigurationAnalysisDay.addItem("7")
+        comboBoxConfigurationAnalysisDay.addItem("8")
+        comboBoxConfigurationAnalysisDay.addItem("9")
+        comboBoxConfigurationAnalysisDay.addItem("10")
+        comboBoxConfigurationAnalysisDay.addItem("11")
+        comboBoxConfigurationAnalysisDay.addItem("12")
+        comboBoxConfigurationAnalysisDay.addItem("13")
+        comboBoxConfigurationAnalysisDay.addItem("14")
+        comboBoxConfigurationAnalysisDay.addItem("15")
+        comboBoxConfigurationAnalysisDay.addItem("16")
+        comboBoxConfigurationAnalysisDay.addItem("17")
+        comboBoxConfigurationAnalysisDay.addItem("18")
+        comboBoxConfigurationAnalysisDay.addItem("19")
+        comboBoxConfigurationAnalysisDay.addItem("20")
+        comboBoxConfigurationAnalysisDay.addItem("21")
+        comboBoxConfigurationAnalysisDay.addItem("22")
+        comboBoxConfigurationAnalysisDay.addItem("23")
+        comboBoxConfigurationAnalysisDay.addItem("24")
+        comboBoxConfigurationAnalysisDay.addItem("25")
+        comboBoxConfigurationAnalysisDay.addItem("26")
+        comboBoxConfigurationAnalysisDay.addItem("27")
+        comboBoxConfigurationAnalysisDay.addItem("28")
+        comboBoxConfigurationAnalysisDay.addItem("29")
+        comboBoxConfigurationAnalysisDay.addItem("30")
+        comboBoxConfigurationAnalysisDay.addItem("31")
+        vBox3.addWidget(comboBoxConfigurationAnalysisDay)
+
+        widgetAnalysisControls.setLayout(vBox3)
+
+        horizontalLayout_2.addWidget(widgetAnalysisControls)
+
+        widgetAnalysis = pyqtgraph.PlotWidget(analysis)
+        widgetAnalysis.setObjectName(u"widgeAnalysis")
+
+        hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
+
+        # plot data: x, y values
+        widgetAnalysis.plot(hour, temperature)
+
+        horizontalLayout_2.addWidget(widgetAnalysis)
+
+        horizontalLayout_2.setStretch(0, 1)
+        horizontalLayout_2.setStretch(1, 4)
+
+        return analysis
+
+
+    def buildHighlights(self, highlights):
+        scroll = QScrollArea()
+        highlightsWidget = QWidget()
+        vBox = QGridLayout()
+
+        for i in range(1, 10):
+            object = pyqtgraph.PlotWidget(highlights)
+            hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
+            object.plot(hour, temperature)
+            vBox.setRowMinimumHeight(i - 1, 500)
+            vBox.addWidget(object)
+
+        highlightsWidget.setLayout(vBox)
+
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(highlightsWidget)
+
+        vBox2 = QVBoxLayout()
+        vBox2.addWidget(scroll)
+
+        highlights.setLayout(vBox2)
+
+        return highlights
+
+
+    def buildForecast(self, forecast):
+
+        horizontalLayout_4 = QHBoxLayout(forecast)
+        horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        widgetForecastMenu = QWidget(forecast)
+        widgetForecastMenu.setObjectName(u"widgetForecastMenu")
+
+        horizontalLayout_4.addWidget(widgetForecastMenu)
+
+        widget_3 = QWidget(forecast)
+        widget_3.setObjectName(u"widget_3")
+        verticalLayout_2 = QVBoxLayout(widget_3)
+        verticalLayout_2.setObjectName(u"verticalLayout_2")
+        widgetForecastMap = QWebEngineView(widget_3)
+        widgetForecastMap.setObjectName(u"widgetForecastMap")
+        widgetForecastMap.setHtml(self.foliumMapData().getvalue().decode())
+
+        verticalLayout_2.addWidget(widgetForecastMap)
+
+        widgetForecastMapControlls = QWidget(widget_3)
+        widgetForecastMapControlls.setObjectName(u"widgetForecastMapControlls")
+
+        verticalLayout_2.addWidget(widgetForecastMapControlls)
+
+        verticalLayout_2.setStretch(0, 3)
+        verticalLayout_2.setStretch(1, 1)
+
+        horizontalLayout_4.addWidget(widget_3)
+
+        horizontalLayout_4.setStretch(0, 1)
+        horizontalLayout_4.setStretch(1, 4)
+
+        return forecast
+
+
+
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.home), QCoreApplication.translate("Form", u"Home", None))
@@ -415,5 +416,4 @@ class AirView(object):
                                   QCoreApplication.translate("Form", u"Highlights", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.forecast),
                                   QCoreApplication.translate("Form", u"Forecast", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.personalization),
-                                  QCoreApplication.translate("Form", u"Personalization", None))
+
