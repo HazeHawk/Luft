@@ -247,24 +247,22 @@ class AirView(object):
     def buildForecast(self, forecast):
 
         horizontalLayout_4 = QHBoxLayout(forecast)
-        horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+
         widgetForecastMenu = QWidget(forecast)
-        widgetForecastMenu.setObjectName(u"widgetForecastMenu")
 
         horizontalLayout_4.addWidget(widgetForecastMenu)
 
         widget_3 = QWidget(forecast)
-        widget_3.setObjectName(u"widget_3")
+
         verticalLayout_2 = QVBoxLayout(widget_3)
-        verticalLayout_2.setObjectName(u"verticalLayout_2")
+
         widgetForecastMap = QWebEngineView(widget_3)
-        widgetForecastMap.setObjectName(u"widgetForecastMap")
         widgetForecastMap.setHtml(self.foliumMapData().getvalue().decode())
 
         verticalLayout_2.addWidget(widgetForecastMap)
 
         widgetForecastMapControlls = QWidget(widget_3)
-        widgetForecastMapControlls.setObjectName(u"widgetForecastMapControlls")
+
 
         verticalLayout_2.addWidget(widgetForecastMapControlls)
 
