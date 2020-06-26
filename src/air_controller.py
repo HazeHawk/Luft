@@ -16,6 +16,7 @@ class AirController(object):
 
         ui = AirView()
         ui.setupUi(self.widget)
+
         print("lulus")
 
 

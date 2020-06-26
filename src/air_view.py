@@ -1,12 +1,10 @@
 import io
 import folium
 import pyqtgraph
-from PySide2.QtCore import (QCoreApplication, QDate, QDateTime, QMetaObject,
-                            QObject, QPoint, QRect, QSize, Qt, QTime, QUrl)
 
+from PySide2.QtCore import (Qt, QDateTime)
 from PySide2.QtWebEngineWidgets import *
 from PySide2.QtWidgets import *
-
 from src.config import Configuration
 
 _cfg = Configuration()
@@ -16,57 +14,37 @@ class AirView(object):
         pass
 
     def setupUi(self, Form):
-        if not Form.objectName():
-            Form.setObjectName(u"Form")
         Form.resize(900, 600)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Form.sizePolicy().hasHeightForWidth())
         Form.setSizePolicy(sizePolicy)
+        Form.setWindowTitle("Airgoogle")
 
-        self.gridLayout_1 = QGridLayout(Form)
-        self.gridLayout_1.setObjectName(u"gridLayout_1")
-        self.tabWidget = QTabWidget(Form)
-        self.tabWidget.setObjectName(u"tabWidget")
+        gridLayoutTabWidget = QGridLayout(Form)
+        tabWidget = QTabWidget(Form)
 
         #Home Tab
-        self.home = QWidget()
-        self.home.setObjectName(u"home")
-
-        self.tabWidget.addTab(self.buildHome(self.home), "")
-
+        self.widgetHome = QWidget()
+        tabWidget.addTab(self.buildHome(self.widgetHome), "Home")
 
         #Analysis tab
-        self.analysis = QWidget()
-        self.analysis.setObjectName(u"analysis")
-
-        self.tabWidget.addTab(self.buildAnalysis(self.analysis), "")
-
+        self.widgetAnalysis = QWidget()
+        tabWidget.addTab(self.buildAnalysis(self.widgetAnalysis), "Analysis")
 
         # Highlights tab
-        self.highlights = QWidget()
-        self.highlights.setObjectName(u"highlights")
-
-        self.tabWidget.addTab(self.buildHighlights(self.highlights), "")
-
+        self.widgetHighlights = QWidget()
+        tabWidget.addTab(self.buildHighlights(self.widgetHighlights), "Highlights")
 
         #Forecast Tab
-        self.forecast = QWidget()
-        self.forecast.setObjectName(u"forecast")
+        self.widgetForecast = QWidget()
+        tabWidget.addTab(self.buildForecast(self.widgetForecast), "Forecast")
 
-        self.tabWidget.addTab(self.buildForecast(self.forecast), "")
+        gridLayoutTabWidget.addWidget(tabWidget, 0, 0, 1, 1)
 
+        tabWidget.setCurrentIndex(0)
 
-        self.gridLayout_1.addWidget(self.tabWidget, 0, 0, 1, 1)
-
-        self.retranslateUi(Form)
-
-        self.tabWidget.setCurrentIndex(4)
-
-        QMetaObject.connectSlotsByName(Form)
-
-    # setupUi
 
     def foliumMapData(self):
         m = folium.Map(
@@ -80,22 +58,16 @@ class AirView(object):
 
     # retranslateUi
 
-
-
     def buildHome(self, home):
-
-        # Home Tab
         horizontalLayout = QHBoxLayout(home)
-        horizontalLayout.setObjectName(u"horizontalLayout")
 
         # Kontrollfeld links
         widgetMenu = QWidget(home)
-        widgetMenu.setObjectName(u"widgetMenu")
-        widgetMenu.setStyleSheet(u"")
-
         verticalLayoutWidgetMenu = QVBoxLayout(widgetMenu)
+
         widgetMenuTop = QWidget(widgetMenu)
         verticalLayoutWidgetMenuTop = QVBoxLayout(widgetMenuTop)
+
         widgetMenuBottom = QWidget(widgetMenu)
         verticalLayoutWidgetMenuBottom = QVBoxLayout(widgetMenuBottom)
 
@@ -106,134 +78,86 @@ class AirView(object):
 
         inputPosition = QLineEdit()
         verticalLayoutWidgetMenuTop.addWidget(inputPosition)
+        self.lineEditPosition = inputPosition
 
         medianLabel = QLabel()
         medianLabel.setText("Median:")
         verticalLayoutWidgetMenuTop.addWidget(medianLabel)
+        self.homeLabelMedian = medianLabel
 
         minimalLabel = QLabel()
         minimalLabel.setText("Minimal:")
         verticalLayoutWidgetMenuTop.addWidget(minimalLabel)
+        self.homeLabelMinimal = minimalLabel
 
         maximalLabel = QLabel()
         maximalLabel.setText("Maximal:")
         verticalLayoutWidgetMenuTop.addWidget(maximalLabel)
+        self.homeLabelMaximal = maximalLabel
 
         averageLabel = QLabel()
         averageLabel.setText("Average:")
         verticalLayoutWidgetMenuTop.addWidget(averageLabel)
+        self.homeLabelAverage = averageLabel
 
         sensorCountLabel = QLabel()
         sensorCountLabel.setText("Sensor Count:")
         verticalLayoutWidgetMenuTop.addWidget(sensorCountLabel)
+        self.homeLabelSencorCount = sensorCountLabel
 
         # Bottom
         configurationTitle = QLabel()
         configurationTitle.setText("Configuration:")
         verticalLayoutWidgetMenuBottom.addWidget(configurationTitle)
 
-        configurationTitleYear = QLabel()
-        configurationTitleYear.setText("Year:")
-        verticalLayoutWidgetMenuBottom.addWidget(configurationTitleYear)
+        startLabel = QLabel()
+        startLabel.setText("Start:")
+        verticalLayoutWidgetMenuBottom.addWidget(startLabel)
 
-        comboBoxConfigurationYear = QComboBox()
-        comboBoxConfigurationYear.addItem("2020")
-        comboBoxConfigurationYear.addItem("2019")
-        comboBoxConfigurationYear.addItem("2018")
-        comboBoxConfigurationYear.addItem("2017")
-        comboBoxConfigurationYear.addItem("2016")
-        comboBoxConfigurationYear.addItem("2015")
-        verticalLayoutWidgetMenuBottom.addWidget(comboBoxConfigurationYear)
+        dateEditStart = QDateEdit()
+        dateEditStart.setCalendarPopup(True)
+        dateEditStart.setDateTime(QDateTime.currentDateTime())
+        verticalLayoutWidgetMenuBottom.addWidget(dateEditStart)
+        self.homeDateEditStart = dateEditStart
 
-        configurationTitleMonth = QLabel()
-        configurationTitleMonth.setText("Month:")
-        verticalLayoutWidgetMenuBottom.addWidget(configurationTitleMonth)
+        endLabel = QLabel()
+        endLabel.setText("End:")
+        verticalLayoutWidgetMenuBottom.addWidget(endLabel)
 
-        comboBoxConfigurationMonth = QComboBox()
-        comboBoxConfigurationMonth.addItem("January")
-        comboBoxConfigurationMonth.addItem("February")
-        comboBoxConfigurationMonth.addItem("March")
-        comboBoxConfigurationMonth.addItem("May")
-        comboBoxConfigurationMonth.addItem("April")
-        comboBoxConfigurationMonth.addItem("June")
-        comboBoxConfigurationMonth.addItem("July")
-        comboBoxConfigurationMonth.addItem("August")
-        comboBoxConfigurationMonth.addItem("September")
-        comboBoxConfigurationMonth.addItem("October")
-        comboBoxConfigurationMonth.addItem("November")
-        comboBoxConfigurationMonth.addItem("December")
-        verticalLayoutWidgetMenuBottom.addWidget(comboBoxConfigurationMonth)
-
-        configurationTitleDay = QLabel()
-        configurationTitleDay.setText("Day:")
-        verticalLayoutWidgetMenuBottom.addWidget(configurationTitleDay)
-
-        comboBoxConfigurationDay = QComboBox()
-        comboBoxConfigurationDay.addItem("1")
-        comboBoxConfigurationDay.addItem("2")
-        comboBoxConfigurationDay.addItem("3")
-        comboBoxConfigurationDay.addItem("4")
-        comboBoxConfigurationDay.addItem("5")
-        comboBoxConfigurationDay.addItem("6")
-        comboBoxConfigurationDay.addItem("7")
-        comboBoxConfigurationDay.addItem("8")
-        comboBoxConfigurationDay.addItem("9")
-        comboBoxConfigurationDay.addItem("10")
-        comboBoxConfigurationDay.addItem("11")
-        comboBoxConfigurationDay.addItem("12")
-        comboBoxConfigurationDay.addItem("13")
-        comboBoxConfigurationDay.addItem("14")
-        comboBoxConfigurationDay.addItem("15")
-        comboBoxConfigurationDay.addItem("16")
-        comboBoxConfigurationDay.addItem("17")
-        comboBoxConfigurationDay.addItem("18")
-        comboBoxConfigurationDay.addItem("19")
-        comboBoxConfigurationDay.addItem("20")
-        comboBoxConfigurationDay.addItem("21")
-        comboBoxConfigurationDay.addItem("22")
-        comboBoxConfigurationDay.addItem("23")
-        comboBoxConfigurationDay.addItem("24")
-        comboBoxConfigurationDay.addItem("25")
-        comboBoxConfigurationDay.addItem("26")
-        comboBoxConfigurationDay.addItem("27")
-        comboBoxConfigurationDay.addItem("28")
-        comboBoxConfigurationDay.addItem("29")
-        comboBoxConfigurationDay.addItem("30")
-        comboBoxConfigurationDay.addItem("31")
-        verticalLayoutWidgetMenuBottom.addWidget(comboBoxConfigurationDay)
+        dateEditEnd = QDateEdit()
+        dateEditEnd.setCalendarPopup(True)
+        dateEditEnd.setDateTime(QDateTime.currentDateTime())
+        verticalLayoutWidgetMenuBottom.addWidget(dateEditEnd)
+        self.homeDateEditEnd = dateEditEnd
 
         verticalLayoutWidgetMenu.addWidget(widgetMenuTop)
         verticalLayoutWidgetMenu.addWidget(widgetMenuBottom)
 
         horizontalLayout.addWidget(widgetMenu)
 
-        widget_2 = QWidget(home)
-        widget_2.setObjectName(u"widget_2")
-        verticalLayout = QVBoxLayout(widget_2)
-        verticalLayout.setObjectName(u"verticalLayout")
-        widgetMap = QWebEngineView(widget_2)
-        widgetMap.setObjectName(u"widgetMap")
+        mapWidget = QWidget(home)
+        verticalLayout = QVBoxLayout(mapWidget)
+
+        widgetMap = QWebEngineView(mapWidget)
         widgetMap.setHtml(self.foliumMapData().getvalue().decode())
 
         verticalLayout.addWidget(widgetMap)
 
-        widgetMapControlls = QWidget(widget_2)
-        widgetMapControlls.setObjectName(u"widgetMapControlls")
-        widgetMapControlls.setStyleSheet(u"")
-
         # Kontrollfeld unten
+        widgetMapControlls = QWidget(mapWidget)
         verticalLayoutMapControlls = QVBoxLayout(widgetMapControlls)
+
         slider = QSlider(Qt.Horizontal)
         verticalLayoutMapControlls.addWidget(slider)
+        self.homeSlider = slider
 
         verticalLayout.addWidget(widgetMapControlls)
 
-        verticalLayout.setStretch(0, 3)
+        verticalLayout.setStretch(0, 5)
         verticalLayout.setStretch(1, 1)
 
-        horizontalLayout.addWidget(widget_2)
+        horizontalLayout.addWidget(mapWidget)
 
-        horizontalLayout.setStretch(0, 1)
         horizontalLayout.setStretch(1, 4)
 
         return home
@@ -406,14 +330,4 @@ class AirView(object):
         return forecast
 
 
-
-    def retranslateUi(self, Form):
-        Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.home), QCoreApplication.translate("Form", u"Home", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.analysis),
-                                  QCoreApplication.translate("Form", u"Analysis", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.highlights),
-                                  QCoreApplication.translate("Form", u"Highlights", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.forecast),
-                                  QCoreApplication.translate("Form", u"Forecast", None))
 

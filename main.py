@@ -16,6 +16,7 @@ if __name__ == "__main__":
 
     controller = AirController()
     controller.run()
+
     startup_time = time.time()-startup_time
     logging.info(f'Startup of AirGoogle took {startup_time}ms.')
     sys.exit(controller.app.exec_())
