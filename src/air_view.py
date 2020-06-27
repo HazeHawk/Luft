@@ -78,7 +78,7 @@ class AirView(object):
 
         inputPosition = QLineEdit()
         verticalLayoutWidgetMenuTop.addWidget(inputPosition)
-        self.lineEditPosition = inputPosition
+        self.homeLineEditPosition = inputPosition
 
         medianLabel = QLabel()
         medianLabel.setText("Median:")
