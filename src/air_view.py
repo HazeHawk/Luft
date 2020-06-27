@@ -131,7 +131,14 @@ class AirView(object):
         self.homeDateEditEnd = dateEditEnd
 
         verticalLayoutWidgetMenu.addWidget(widgetMenuTop)
+        verticalLayoutWidgetMenu.setStretch(0,1)
+
+        emptyWidget = QWidget()
+        verticalLayoutWidgetMenu.addWidget(emptyWidget)
+        verticalLayoutWidgetMenu.setStretch(1,1)
+
         verticalLayoutWidgetMenu.addWidget(widgetMenuBottom)
+        verticalLayoutWidgetMenu.setStretch(2,1)
 
         horizontalLayout.addWidget(widgetMenu)
 
