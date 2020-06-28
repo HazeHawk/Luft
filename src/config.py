@@ -24,10 +24,10 @@ class Configuration(metaclass=Singleton):
         self.LOGGER = logging.getLogger()
 
         #Mongo-DB
-        self.MONGO_HOST = 'localhost'
+        self.MONGO_HOST = 'hucserv193'
         self.MONGO_PORT = 8888
         self.MONGO_USERNAME = 'mongoadmin'
-        self.MONGO_PASSWORD = 'secret'
+        self.MONGO_PASSWORD = 'Ze3cr1t!'
 
 
 
