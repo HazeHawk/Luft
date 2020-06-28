@@ -11,6 +11,7 @@ _cfg = Configuration()
 
 class AirView(object):
     def __init__(self):
+        self.foliumMapData()
         pass
 
     def setupUi(self, Form):
@@ -47,16 +48,17 @@ class AirView(object):
 
 
     def foliumMapData(self):
-        m = folium.Map(
-            location=[45.5236, -122.6750], tiles="Stamen Toner", zoom_start=13
+        self.m = folium.Map(
+            location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12
         )
 
+    def saveHtml(self):
         data = io.BytesIO()
-        m.save(data, close_file=False)
+
+        self.m.save(data, close_file=False)
 
         return data
 
-    # retranslateUi
 
     def buildHome(self, home):
         horizontalLayout = QHBoxLayout(home)
@@ -146,7 +148,9 @@ class AirView(object):
         verticalLayout = QVBoxLayout(mapWidget)
 
         widgetMap = QWebEngineView(mapWidget)
-        widgetMap.setHtml(self.foliumMapData().getvalue().decode())
+        self.foliumMapData()
+        widgetMap.setHtml(self.saveHtml().getvalue().decode())
+        self.homeWidgetMap = widgetMap
 
         verticalLayout.addWidget(widgetMap)
 
@@ -264,7 +268,7 @@ class AirView(object):
         verticalLayout_2 = QVBoxLayout(widget_3)
 
         widgetForecastMap = QWebEngineView(widget_3)
-        widgetForecastMap.setHtml(self.foliumMapData().getvalue().decode())
+        widgetForecastMap.setHtml(self.saveHtml().getvalue().decode())
 
         verticalLayout_2.addWidget(widgetForecastMap)
 
