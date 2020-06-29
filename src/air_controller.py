@@ -5,7 +5,10 @@ from PySide2.QtWidgets import QApplication, QWidget
 
 from src.air_view import AirView
 from src.air_model import AirModel
+from src.config import Configuration
 
+_cfg = Configuration()
+logger = _cfg.LOGGER
 
 class AirController(object):
 
@@ -16,15 +19,16 @@ class AirController(object):
 
         ui = AirView()
         ui.setupUi(self.widget)
-        print("lulus")
+
+        model = AirModel()
 
 
 
 
     def run(self):
-        print("Derpiger run")
+
         self.widget.show()
-        print("Derpiger run")
+
 
 
 

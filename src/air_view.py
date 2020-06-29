@@ -1,5 +1,4 @@
 import io
-import logging
 import sys
 import time
 
@@ -19,7 +18,7 @@ from PySide2.QtWidgets import *
 from src.config import Configuration
 
 _cfg = Configuration()
-
+logger = _cfg.LOGGER
 
 class AirView(object):
     def __init__(self):

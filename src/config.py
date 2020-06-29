@@ -18,10 +18,15 @@ class Configuration(metaclass=Singleton):
 
     def __init__(self):
 
+        # DEBUG Mode
+        self.DEBUG = True
+
         #Logger
+        self.LOGGER = logging.getLogger(__name__)
         format = "%(asctime)s - %(threadName)s - %(levelname)s | %(message)s"
         logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
-        self.LOGGER = logging.getLogger()
+        if self.DEBUG:
+            self.LOGGER.setLevel(logging.DEBUG)
 
         #Mongo-DB
         self.MONGO_HOST = 'hucserv193'
