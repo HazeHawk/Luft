@@ -19,8 +19,8 @@ class AirController(object):
 
         self.widget = QWidget()
 
-        ui = AirView()
-        ui.setupUi(self.widget)
+        self._ui = AirView()
+        self._ui.setupUi(self.widget)
 
         self._homeDateStart = self._ui.homeDateEditStart.date()
         self._homeDateEnd = self._ui.homeDateEditEnd.date()
@@ -52,14 +52,14 @@ class AirController(object):
         self._ui.homeWidgetMap.update()
 
     def setHomeDateStart(self):
-        print(self._ui.homeDateEditStart.date())
+        logger.debug(self._ui.homeDateEditStart.date())
         self._homeDateStart = self._ui.homeDateEditStart.date()
 
     def getHomeDateStart(self):
         return self._homeDateStart
 
     def setHomeDateEnd(self):
-        print(self._ui.homeDateEditEnd.date())
+        logger.debug(self._ui.homeDateEditEnd.date())
         self._homeDateEnd = self._ui.homeDateEditEnd.date()
 
     def getHomeDateEnd(self):
