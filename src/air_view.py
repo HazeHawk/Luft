@@ -2,7 +2,7 @@ import io
 import folium
 import pyqtgraph
 
-from PySide2.QtCore import (Qt, QDateTime)
+from PySide2.QtCore import *
 from PySide2.QtWebEngineWidgets import *
 from PySide2.QtWidgets import *
 from src.config import Configuration
@@ -11,7 +11,7 @@ _cfg = Configuration()
 
 class AirView(object):
     def __init__(self):
-        self.foliumMapData()
+        self.foliumStandardLocation()
         pass
 
     def setupUi(self, Form):
@@ -47,12 +47,12 @@ class AirView(object):
         tabWidget.setCurrentIndex(0)
 
 
-    def foliumMapData(self):
+    def foliumStandardLocation(self):
         self.m = folium.Map(
             location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12
         )
 
-    def saveHtml(self):
+    def saveFoliumToHtml(self):
         data = io.BytesIO()
 
         self.m.save(data, close_file=False)
@@ -148,8 +148,8 @@ class AirView(object):
         verticalLayout = QVBoxLayout(mapWidget)
 
         widgetMap = QWebEngineView(mapWidget)
-        self.foliumMapData()
-        widgetMap.setHtml(self.saveHtml().getvalue().decode())
+        self.foliumStandardLocation()
+        widgetMap.setHtml(self.saveFoliumToHtml().getvalue().decode())
         self.homeWidgetMap = widgetMap
 
         verticalLayout.addWidget(widgetMap)
@@ -268,7 +268,7 @@ class AirView(object):
         verticalLayout_2 = QVBoxLayout(widget_3)
 
         widgetForecastMap = QWebEngineView(widget_3)
-        widgetForecastMap.setHtml(self.saveHtml().getvalue().decode())
+        widgetForecastMap.setHtml(self.saveFoliumToHtml().getvalue().decode())
 
         verticalLayout_2.addWidget(widgetForecastMap)
 
