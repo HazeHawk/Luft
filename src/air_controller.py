@@ -35,11 +35,11 @@ class AirController(object):
 
         print("Derpiger run")
 
-    def setFoliumMarkerTest(self):
-        folium.CircleMarker(
-            location=[48.77915707462204, 9.175987243652344],
+    def setFoliumCircle(self, lat, long, popup):
+        folium.Circle(
+            location=[lat, long],
             radius=50,
-            popup='Test',
+            popup=popup,
             color='#3186cc',
             fill=True,
             fill_color='#3186cc'
