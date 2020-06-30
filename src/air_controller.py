@@ -26,12 +26,9 @@ class AirController(object):
 
         print("lulus")
 
-
     def run(self):
         print("Derpiger run")
         self.widget.show()
-
-        self.setFoliumMarkerTest()
 
         print("Derpiger run")
 
