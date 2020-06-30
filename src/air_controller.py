@@ -32,14 +32,14 @@ class AirController(object):
 
         print("Derpiger run")
 
-    def setFoliumCircle(self, lat, long, popup):
+    def setFoliumCircle(self, lat:float, long:float, popup:str):
         folium.Circle(
             location=[lat, long],
-            radius=50,
+            radius=20,
             popup=popup,
-            color='#3186cc',
+            color='blue',
             fill=True,
-            fill_color='#3186cc'
+            fill_color='blue'
         ).add_to(self._ui.m)
 
         self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())

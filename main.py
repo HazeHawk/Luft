@@ -17,7 +17,11 @@ if __name__ == "__main__":
     controller = AirController()
     controller.run()
 
-    controller.setFoliumCircle(48.77915707462204, 9.175987243652344, "murks")
+    controller.setFoliumCircle(48.780, 9.175, "murks")
+    controller.setFoliumCircle(48.785, 9.175, "marks")
+    controller.setFoliumCircle(48.775, 9.175, "merks")
+    controller.setFoliumCircle(48.780, 9.180, "mirks")
+    controller.setFoliumCircle(48.780, 9.170, "morks")
 
     startup_time = time.time()-startup_time
     logging.info(f'Startup of AirGoogle took {startup_time}ms.')
