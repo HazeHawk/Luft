@@ -31,6 +31,11 @@ class AirController(object):
         print("Derpiger run")
         self.widget.show()
 
+        self.setFoliumMarkerTest()
+
+        print("Derpiger run")
+
+    def setFoliumMarkerTest(self):
         folium.CircleMarker(
             location=[48.77915707462204, 9.175987243652344],
             radius=50,
@@ -43,7 +48,6 @@ class AirController(object):
         self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
 
         self._ui.homeWidgetMap.update()
-        print("Derpiger run")
 
     def setHomeDateStart(self):
         print(self._ui.homeDateEditStart.date())
