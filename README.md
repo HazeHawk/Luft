@@ -42,3 +42,12 @@ Setup:
 
 setup.sh Skript muss noch geschrieben werden.
 Das Skript muss im root Ordner vom Projekt / Workspace ausgeführt werden.
+
+
+
+
+------
+
+Area Data:
+
+https://jqplay.org/ für die Compact Erstellung der JSON Datei. jq --compact-output '.features'
