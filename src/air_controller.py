@@ -6,8 +6,11 @@ from PySide2.QtGui import *
 
 from src.air_view import AirView
 from src.air_model import AirModel
+from src.config import Configuration
 import folium
 
+_cfg = Configuration()
+logger = _cfg.LOGGER
 
 class AirController(object):
 
@@ -16,21 +19,23 @@ class AirController(object):
 
         self.widget = QWidget()
 
-        self._ui = AirView()
-        self._ui.setupUi(self.widget)
+        ui = AirView()
+        ui.setupUi(self.widget)
 
         self._homeDateStart = self._ui.homeDateEditStart.date()
         self._homeDateEnd = self._ui.homeDateEditEnd.date()
         self._ui.homeDateEditStart.dateChanged.connect(self.setHomeDateStart)
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
 
-        print("lulus")
+        model = AirModel()
+
+
+
 
     def run(self):
-        print("Derpiger run")
+
         self.widget.show()
 
-        print("Derpiger run")
 
     def setFoliumCircle(self, lat:float, long:float, popup:str):
         folium.Circle(

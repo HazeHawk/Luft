@@ -2,7 +2,6 @@
 Contains all model classes for DB connects and datahandling.
 '''
 import datetime
-import logging
 
 from dateutil.relativedelta import *
 from pymongo import MongoClient, errors
@@ -10,7 +9,9 @@ from pymongo import MongoClient, errors
 from src.config import Configuration, Singleton
 
 _cfg = Configuration()
-class AirModel(Singleton):
+logger = _cfg.LOGGER
+
+class AirModel(metaclass=Singleton):
 
     def __init__(self):
 
@@ -18,13 +19,14 @@ class AirModel(Singleton):
             client = MongoClient(host=_cfg.MONGO_HOST, port=_cfg.MONGO_PORT, username=_cfg.MONGO_USERNAME,
                                  password=_cfg.MONGO_PASSWORD, serverSelectionTimeoutMS=1)
         except errors.ServerSelectionTimeoutError as err:
-            logging.error(str(err))
+            logger.error(str(err))
 
-        logging.debug(client.server_info())
-        logging.debug(f"{str(client.list_database_names())}")
+        #logger.debug(client.server_info())
+        #logger.debug(f"{str(client.list_database_names())}")
 
         self.db = client.air_db
         self.sensors = self.db.airq_data
+        self.client = client
 
     def get_db(self):
         return self.db
@@ -107,3 +109,6 @@ class AirModel(Singleton):
     def read(self):
         pass
 
+if __name__ == 'main':
+    model = AirModel()
+    print(model.client.server_info())
