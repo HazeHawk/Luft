@@ -11,7 +11,8 @@ from pymongo import MongoClient, errors
 
 from bs4 import BeautifulSoup
 
-logging.basicConfig(filename='logging.log', level=logging.DEBUG)
+today = datetime.today()
+logging.basicConfig(filename='log/' + today.strftime("%d:%m:%Y_%H:%M:%S") + '.log', level=logging.DEBUG)
 
 try:
     to_unicode = unicode
@@ -25,7 +26,8 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-date = time.strptime("22/06/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("25/06/2020", "%d/%m/%Y")
+dateEnd = time.strptime("01/07/2020", "%d/%m/%Y")
 
 dayList  = []
 csvList  = []
@@ -36,12 +38,12 @@ x = {}
 MONGO_HOST='localhost'
 MONGO_PORT=8888
 MONGO_USERNAME='mongoadmin'
-MONGO_PASSWORD='secret'
+MONGO_PASSWORD='Ze3cr1t!'
 
 maxSevSelDelay=1
 
 try:
-    client = MongoClient(host='localhost', port=8888, username='mongoadmin', password='secret',
+    client = MongoClient(host='localhost', port=8888, username='mongoadmin', password='Ze3cr1t!',
                          serverSelectionTimeoutMS=maxSevSelDelay)
 
 except errors.ServerSelectionTimeoutError as err:
@@ -49,8 +51,10 @@ except errors.ServerSelectionTimeoutError as err:
     # tryagain later
     print(err)
 #Datenbanke anlegen
-db = client.patricksDB3
-sensoren = db.sensoren
+db = client.airq_db
+sensoren = db.airq_sensors
+logging.info("Datenbank: airq_db")
+
 
 #Ordnerstruktur auslesen in dayList beinhaltet
 #hier eventeull noch Abfrage um Zeitraum zu begrenzen
@@ -59,10 +63,11 @@ for link in soup.find_all('a'):
     #if re.search("2020-\d\d-\d\d/",link.get('href')):
     if re.search("\d\d\d\d-\d\d-\d\d/",link.get('href')):
         test = re.findall("\d\d\d\d-\d\d-\d\d", link.get('href'))
-        date2 = time.strptime(test[0], "%Y-%m-%d")
-        if date2 >= date:
+        dateNow = time.strptime(test[0], "%Y-%m-%d")
+        if dateNow >= dateBeginn and dateNow <= dateEnd:
             dayList.append(link.get('href'))
-            print(link.get('href'))
+            #print(link.get('href'))
+            logging.info(link.get('href'))
 
 
 #ab hier for Schleife alle Tagesordner durchlaufen
@@ -77,7 +82,8 @@ for day in dayList:
     for link in soup.find_all('a'):
         #print(link.get('href'))
         if re.search("sds011_sensor",link.get('href')) or re.search("sps30_sensor",link.get('href')):
-            csvList.append(url2 + link.get('href'))
+            if not re.search("indoor",link.get('href')):
+            	csvList.append(url2 + link.get('href'))
     #print(csvList)
 
 #alle gültigen CSV Dateien (Links in csvList) downloaden und bearbeiten
@@ -126,7 +132,7 @@ for csvEintrag in csvList:
                     "sensor_type": row[1],
                     "location": {
                         "type": "Point",
-                        "coordinates": [float(row[4], float(row[3])]
+                        "coordinates": [float(row[4]), float(row[3])]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
                     "PM1": float(row[6]),
