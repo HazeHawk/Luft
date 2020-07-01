@@ -27,7 +27,7 @@ class Configuration(metaclass=Singleton):
         logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
         #Relativ Pfad komt noch
-        LOG_PATH = 'D:\\Nam\\Docs\\Uni\\3_Semester\\Visualisierung\\code_project\\repo\\logs'
+        LOG_PATH = 'D:\\HUC\\Semester 2\\Visualisierung\\Git\\Luft\\lullog.log'
         fh = logging.FileHandler(LOG_PATH+'query_logger.log')
         self.Q_LOGGER = logging.getLogger('querylogger')
         self.Q_LOGGER.addHandler(fh)

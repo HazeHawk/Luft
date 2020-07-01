@@ -33,14 +33,14 @@ class AirController(object):
         self.model = AirModel()
         self.model.test_model()
 
+        timeframe = [datetime.fromisoformat("2020-01-01 12:00:00"), datetime.fromisoformat("2020-01-01 13:00:00")]
 
-        #geometry = {"$box": [[9.135, 48.790], [9.220, 48.750]]}
+        result = self.model.find_sensors_by(timeframe=timeframe)
 
-        time = {"$gt": datetime.date(2020, 6, 10)}
-
-        result = model.find_sensors_by(day=time)
-
-        print(result[1])
+        for item in result[:100]:
+            #print(item["location"]["coordinates"])
+            long, lat = item["location"]["coordinates"]
+            self.setFoliumCircle(lat, long, "test")
 
     def test(self):
         sensors = self.model.get_sensors()
