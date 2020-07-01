@@ -26,8 +26,8 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-dateBeginn = time.strptime("01/05/2020", "%d/%m/%Y")
-dateEnd = time.strptime("30/06/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("25/06/2020", "%d/%m/%Y")
+dateEnd = time.strptime("01/07/2020", "%d/%m/%Y")
 
 dayList  = []
 csvList  = []
@@ -51,9 +51,9 @@ except errors.ServerSelectionTimeoutError as err:
     # tryagain later
     print(err)
 #Datenbanke anlegen
-db = client.sensorenDBTest
-sensoren = db.sensoren
-logging.info("Datenbank: sensorenDBTest")
+db = client.airq_db
+sensoren = db.airq_sensors
+logging.info("Datenbank: airq_db")
 
 
 #Ordnerstruktur auslesen in dayList beinhaltet
@@ -132,7 +132,7 @@ for csvEintrag in csvList:
                     "sensor_type": row[1],
                     "location": {
                         "type": "Point",
-                        "coordinates": [float(row[4], float(row[3])]
+                        "coordinates": [float(row[4]), float(row[3])]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
                     "PM1": float(row[6]),
