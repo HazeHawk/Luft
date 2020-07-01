@@ -8,6 +8,7 @@ from src.air_view import AirView
 from src.air_model import AirModel
 from src.config import Configuration
 import folium
+import datetime
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -29,8 +30,13 @@ class AirController(object):
 
         model = AirModel()
 
+        #geometry = {"$box": [[9.135, 48.790], [9.220, 48.750]]}
 
+        time = {"$gt": datetime.date(2020, 6, 10)}
 
+        result = model.find_sensors_by(day=time)
+
+        print(result[1])
 
     def run(self):
 
