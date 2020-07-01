@@ -84,3 +84,96 @@
        }
     }
   }
+
+
+
+
+
+
+
+
+
+
+#Stuttgart points
+
+
+
+
+{
+  "type": "Feature",
+  "properties": {},
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      9.1131591796875,
+      48.776102781718585
+    ]
+  }
+},
+{
+  "type": "Feature",
+  "properties": {},
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      9.166717529296875,
+      48.801436476249386
+    ]
+  }
+},
+{
+  "type": "Feature",
+  "properties": {},
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      9.185943603515625,
+      48.728114695566745
+    ]
+  }
+},
+{
+  "type": "Feature",
+  "properties": {},
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      9.15985107421875,
+      48.75528339249263
+    ]
+  }
+},
+{
+  "type": "Feature",
+  "properties": {},
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      9.227142333984375,
+      48.78786644480696
+    ]
+  }
+},
+{
+  "type": "Feature",
+  "properties": {},
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      9.283447265625,
+      49.15296965617042
+    ]
+  }
+},
+{
+  "type": "Feature",
+  "properties": {},
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      9.371337890625,
+      49.210420445650286
+    ]
+  }
+}
+
