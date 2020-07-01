@@ -1,5 +1,8 @@
 
 import sys
+from datetime import datetime
+
+import pymongo as pm
 
 from PySide2.QtWidgets import QApplication, QWidget
 from PySide2.QtGui import *
@@ -8,7 +11,6 @@ from src.air_view import AirView
 from src.air_model import AirModel
 from src.config import Configuration
 import folium
-import datetime
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -28,7 +30,9 @@ class AirController(object):
         self._ui.homeDateEditStart.dateChanged.connect(self.setHomeDateStart)
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
 
-        model = AirModel()
+        self.model = AirModel()
+        self.model.test_model()
+
 
         #geometry = {"$box": [[9.135, 48.790], [9.220, 48.750]]}
 
@@ -37,6 +41,19 @@ class AirController(object):
         result = model.find_sensors_by(day=time)
 
         print(result[1])
+
+    def test(self):
+        sensors = self.model.get_sensors()
+        jan = datetime(year=2020, month=1, day=1)
+
+        cursor = self.model.find_sensors_by(day=jan)
+
+        print(cursor.explain())
+
+    def create_index(self):
+        collection = self.model.get_sensors()
+        # collection.create_index(keys=("timestamp",pm.ASCENDING), background=True)
+        pass
 
     def run(self):
 

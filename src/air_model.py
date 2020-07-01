@@ -2,31 +2,65 @@
 Contains all model classes for DB connects and datahandling.
 '''
 import datetime
+import json
+import sys
 
+import pymongo as pm
+from bson.objectid import ObjectId
 from dateutil.relativedelta import *
-from pymongo import MongoClient, errors
 
 from src.config import Configuration, Singleton
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
+q_logger = _cfg.Q_LOGGER
 
 class AirModel(metaclass=Singleton):
 
     def __init__(self):
 
         try:
-            client = MongoClient(host=_cfg.MONGO_HOST, port=_cfg.MONGO_PORT, username=_cfg.MONGO_USERNAME,
+            client = pm.MongoClient(host=_cfg.MONGO_HOST, port=_cfg.MONGO_PORT, username=_cfg.MONGO_USERNAME,
                                  password=_cfg.MONGO_PASSWORD, serverSelectionTimeoutMS=1)
-        except errors.ServerSelectionTimeoutError as err:
+        except pm.errors.ServerSelectionTimeoutError as err:
             logger.error(str(err))
 
         #logger.debug(client.server_info())
         #logger.debug(f"{str(client.list_database_names())}")
 
-        self.db = client.air_db
-        self.sensors = self.db.airq_data
+        self.db = client.sensorenDB
+        self.sensors = self.db.sensoren
         self.client = client
+
+    def test_model(self):
+        #print(self.db.areas.find_one(1))
+        self.createIndex()
+        area = self.get_stuttgart_geo()
+        geo = {'$geometry': area['geometry']}
+        #cursor = self.find_sensors_by(geometry=geo)
+        filteru = {"location": {"$geoWithin": geo}}
+        #print(filteru)
+        cursor = self.db.smoltest.find(filter=filteru)
+        q_logger.debug(cursor.explain())
+
+        for item in cursor[:10]:
+            print(item)
+
+    def _test_queries(self):
+        pass
+
+    #ID + indexe for the areas is unclear, but because of few query length optimization can be ignored imo.
+    def _import_areas(self):
+        areas = self.db.areas
+        with open('data/bezirke_compact.json', encoding='utf-8') as f:
+            json_data = json.load(f)
+
+        areas.insert_many(json_data)
+
+    def get_stuttgart_geo(self):
+        areas = self.db.areas
+        area = areas.find_one(filter=ObjectId('5efb66fa5d0e288d53dde371'), projection={"geometry":1})
+        return area
 
     def get_db(self):
         return self.db
@@ -34,6 +68,13 @@ class AirModel(metaclass=Singleton):
     def get_sensors(self):
         return self.sensors
 
+    def createIndex(self):
+        collection = self.db.smoltest
+
+        collection.create_index(keys=[('timestamp', pm.ASCENDING)], background=True)
+        collection.create_index(keys=[("sensor_id", pm.ASCENDING)], background=True)
+        collection.create_index(keys=[("sensor_type", pm.ASCENDING)], background=True)
+        collection.create_index(keys=[("location", pm.GEOSPHERE)], background=True, name="GEO_INDEXU")
 
     #TODO die GeoQuery sollte direkt nach einem Read ein zu ein, so aufgerufen werden. Also das dict.
     # Überarbeiten wenn das nicht klappt
@@ -74,7 +115,7 @@ class AirModel(metaclass=Singleton):
             raise(ValueError("At least one argument must be set."))
         time_vars = [day, month, year, timeframe, timestamp]
 
-        if time_vars.count(None)> 1:
+        if time_vars.count(None)<4:
             raise(ValueError("Only one timefilter (day, month, year, timeframe, timestamp) can be chosen!"))
 
         if geometry is not None:
@@ -86,14 +127,16 @@ class AirModel(metaclass=Singleton):
                 start_date, end_date = timeframe
             elif day is not None:
                 start_date = day
-                end_date = start_date+relativedelta(day=1)
+                end_date = start_date+relativedelta(days=1)
             elif month is not None:
                 start_date = month
                 end_date = start_date+relativedelta(months=1)
             elif year is not None:
                 start_date = year
                 end_date = start_date+relativedelta(years=1)
-            time_match = {"timestamp": {"$and": [{"$gte": start_date}, {"$lt": end_date}]}}
+            #time_match = {"timestamp": {"$and": [{"$gte": start_date}, {"$lt": end_date}]}}
+            time_match = {"$and": [{"timestamp": {"$gte": start_date}}, {"timestamp": {"$lt": end_date}}]}
+            #time_match = {"timestamp": {"$gte": start_date}, "timestamp": {"$lt": end_date}}
             if timestamp is not None:
                 time_match = {"timestamp": timestamp}
 
@@ -102,6 +145,7 @@ class AirModel(metaclass=Singleton):
         if len(query)==1:
             query = query[0]
 
+        logger.debug(f'QUERY: {query}')
         results = self.sensors.find(filter=query)
         return results
 

@@ -25,8 +25,17 @@ class Configuration(metaclass=Singleton):
         self.LOGGER = logging.getLogger(__name__)
         format = "%(asctime)s - %(threadName)s - %(levelname)s | %(message)s"
         logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+
+        #Relativ Pfad komt noch
+        LOG_PATH = 'D:\\Nam\\Docs\\Uni\\3_Semester\\Visualisierung\\code_project\\repo\\logs'
+        fh = logging.FileHandler(LOG_PATH+'query_logger.log')
+        self.Q_LOGGER = logging.getLogger('querylogger')
+        self.Q_LOGGER.addHandler(fh)
+
         if self.DEBUG:
             self.LOGGER.setLevel(logging.DEBUG)
+            self.Q_LOGGER.setLevel(logging.DEBUG)
+
 
         #Mongo-DB
         self.MONGO_HOST = 'hucserv193'
