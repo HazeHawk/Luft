@@ -26,8 +26,8 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-dateBeginn = time.strptime("25/06/2020", "%d/%m/%Y")
-dateEnd = time.strptime("01/07/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("29/06/2020", "%d/%m/%Y")
+dateEnd = time.strptime("30/06/2020", "%d/%m/%Y")
 
 dayList  = []
 csvList  = []
@@ -81,6 +81,7 @@ for day in dayList:
     soup = BeautifulSoup(myfile.content, 'html.parser')
     for link in soup.find_all('a'):
         #print(link.get('href'))
+        #if re.search("sds011_sensor_36039.csv",link.get('href')):
         if re.search("sds011_sensor",link.get('href')) or re.search("sps30_sensor",link.get('href')):
             if not re.search("indoor",link.get('href')):
             	csvList.append(url2 + link.get('href'))
@@ -109,8 +110,8 @@ for csvEintrag in csvList:
                     "timestamp": datetime.fromisoformat(row[5]),
                     "PM1": "",
                     "PM4": "",
-                    "PM2": float(row[9]),
-                    "PM10": float(row[6]),
+                    "PM2": (float(row[9]) if not not row[9] else None),
+                    "PM10": (float(row[6]) if not not row[6] else None),
                     "N10": "",
                     "N4": "",
                     "N2": "",
@@ -135,16 +136,16 @@ for csvEintrag in csvList:
                         "coordinates": [float(row[4]), float(row[3])]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": float(row[6]),
-                    "PM4": float(row[7]),
-                    "PM2": float(row[8]),
-                    "PM10": float(row[9]),
-                    "N10": float(row[10]),
-                    "N4": float(row[11]),
-                    "N2": float(row[12]),
-                    "N1": float(row[13]),
-                    "N05": float(row[14]),
-                    "TS": float(row[15])
+                    "PM1": (float(row[6]) if not not row[6] else None),
+                    "PM4": (float(row[7]) if not not row[7] else None),
+                    "PM2": (float(row[8]) if not not row[8] else None),
+                    "PM10": (float(row[9]) if not not row[9] else None),
+                    "N10": (float(row[10]) if not not row[10] else None),
+                    "N4": (float(row[11]) if not not row[11] else None),
+                    "N2": (float(row[12]) if not not row[12] else None),
+                    "N1": (float(row[13]) if not not row[13] else None),
+                    "N05": (float(row[14]) if not not row[14] else None),
+                    "TS": (float(row[15]) if not not row[15] else None)
                 }
                 sensorList.append(x)
 
