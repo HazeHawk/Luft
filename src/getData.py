@@ -100,17 +100,17 @@ for csvEintrag in csvList:
             #Falsches Zeitformat abfangen Zeile wird ignoriert
             if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
                 x = {
-                    "sensor_id": row[0],
+                    "sensor_id": int(row[0]),
                     "sensor_type": row[1],
                     "location": {
-                        "type": "point",
-                        "coordinates": [row[4], row[3]]
+                        "type": "Point",
+                        "coordinates": [float(row[4]), float(row[3])]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
                     "PM1": "",
                     "PM4": "",
-                    "PM2": row[9],
-                    "PM10": row[6],
+                    "PM2": float(row[9]),
+                    "PM10": float(row[6]),
                     "N10": "",
                     "N4": "",
                     "N2": "",
@@ -131,20 +131,20 @@ for csvEintrag in csvList:
                     "sensor_id": row[0],
                     "sensor_type": row[1],
                     "location": {
-                        "type": "point",
-                        "coordinates": [row[4], row[3]]
+                        "type": "Point",
+                        "coordinates": [float(row[4], float(row[3])]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": row[6],
-                    "PM4": row[7],
-                    "PM2": row[8],
-                    "PM10": row[9],
-                    "N10": row[10],
-                    "N4": row[11],
-                    "N2": row[12],
-                    "N1": row[13],
-                    "N05": row[14],
-                    "TS": row[15]
+                    "PM1": float(row[6]),
+                    "PM4": float(row[7]),
+                    "PM2": float(row[8]),
+                    "PM10": float(row[9]),
+                    "N10": float(row[10]),
+                    "N4": float(row[11]),
+                    "N2": float(row[12]),
+                    "N1": float(row[13]),
+                    "N05": float(row[14]),
+                    "TS": float(row[15])
                 }
                 sensorList.append(x)
 
