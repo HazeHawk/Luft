@@ -87,3 +87,18 @@ class AirController(object):
 
     def getHomeDateEnd(self):
         return self._homeDateEnd
+
+    def setLabelMedian(self, median: str):
+        self._ui.homeLabelMedian.setText(median)
+
+    def setLabelMaximum(self, maximum: str):
+        self._ui.homeLabelMaximal.setText(maximum)
+
+    def setLabelMinimum(self, minimum: str):
+        self._ui.homeLabelMinimal.setText(minimum)
+
+    def setLabelAverag(self, average:str):
+        self._ui.homeLabelAverage.setText(average)
+
+    def setLabelSensorCount(self, sensorCount: str):
+        self._ui.homeLabelSencorCount.setText(sensorCount)
