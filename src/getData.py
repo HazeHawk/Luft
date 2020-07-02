@@ -108,16 +108,16 @@ for csvEintrag in csvList:
                         "coordinates": [float(row[4]), float(row[3])]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": "",
-                    "PM4": "",
+                    "PM1": None,
+                    "PM4": None,
                     "PM2": (float(row[9]) if not not row[9] and not (row[9] == "unavailable") else None),
                     "PM10": (float(row[6]) if not not row[6] and not (row[9] == "unavailable") else None),
-                    "N10": "",
-                    "N4": "",
-                    "N2": "",
-                    "N1": "",
-                    "N05": "",
-                    "TS": ""
+                    "N10": None,
+                    "N4": None,
+                    "N2": None,
+                    "N1": None,
+                    "N05": None,
+                    "TS": None
                 }
                 sensorList.append(x)
     #sps30
