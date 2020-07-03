@@ -26,7 +26,7 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-dateBeginn = time.strptime("28/06/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("01/06/2020", "%d/%m/%Y")
 dateEnd = time.strptime("30/06/2020", "%d/%m/%Y")
 
 dayList  = []
@@ -51,7 +51,7 @@ except errors.ServerSelectionTimeoutError as err:
     # tryagain later
     print(err)
 #Datenbanke anlegen
-db = client.airq_db
+db = client.airq_db2
 sensoren = db.airq_sensors
 logging.info("Datenbank: airq_db")
 
@@ -98,6 +98,9 @@ for csvEintrag in csvList:
         csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
         csv_reader_object.__next__()
         for row in csv_reader_object:
+            for index in row:
+                if row[index] == "" or row[index] == "unavailable":
+                    row[index] = None
             #Falsches Zeitformat abfangen Zeile wird ignoriert
             if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
                 x = {
@@ -105,19 +108,19 @@ for csvEintrag in csvList:
                     "sensor_type": row[1],
                     "location": {
                         "type": "Point",
-                        "coordinates": [float(row[4]), float(row[3])]
+                        "coordinates": [(row[4] if (not row[4]) else float(row[4])), (row[3] if (not row[3]) else float(row[3]))]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": "",
-                    "PM4": "",
-                    "PM2": (float(row[9]) if not not row[9] and not (row[9] == "unavailable") else None),
-                    "PM10": (float(row[6]) if not not row[6] and not (row[9] == "unavailable") else None),
-                    "N10": "",
-                    "N4": "",
-                    "N2": "",
-                    "N1": "",
-                    "N05": "",
-                    "TS": ""
+                    "PM1": None,
+                    "PM4": None,
+                    "PM2": (row[9] if (not row[9]) else float(row[9])),
+                    "PM10": (row[6] if (not row[6]) else float(row[6])),
+                    "N10": None,
+                    "N4": None,
+                    "N2": None,
+                    "N1": None,
+                    "N05": None,
+                    "TS": None
                 }
                 sensorList.append(x)
     #sps30
@@ -126,26 +129,29 @@ for csvEintrag in csvList:
         csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
         csv_reader_object.__next__()
         for row in csv_reader_object:
+            for index in row:
+                if row[index] == "" or row[index] == "unavailable":
+                    row[index] = None
             #Falsches Zeitformat abfangen Zeile wird ignoriert
             if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
                 x = {
-                    "sensor_id": row[0],
+                    "sensor_id": int(row[0]),
                     "sensor_type": row[1],
                     "location": {
                         "type": "Point",
-                        "coordinates": [float(row[4]), float(row[3])]
+                        "coordinates": [(row[4] if (not row[4]) else float(row[4])), (row[3] if (not row[3]) else float(row[3]))]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": (float(row[6]) if not not row[6] and not (row[9] == "unavailable") else None),
-                    "PM4": (float(row[7]) if not not row[7] and not (row[9] == "unavailable") else None),
-                    "PM2": (float(row[8]) if not not row[8] and not (row[9] == "unavailable") else None),
-                    "PM10": (float(row[9]) if not not row[9] and not (row[9] == "unavailable") else None),
-                    "N10": (float(row[10]) if not not row[10] and not (row[9] == "unavailable") else None),
-                    "N4": (float(row[11]) if not not row[11] and not (row[9] == "unavailable") else None),
-                    "N2": (float(row[12]) if not not row[12] and not (row[9] == "unavailable") else None),
-                    "N1": (float(row[13]) if not not row[13] and not (row[9] == "unavailable") else None),
-                    "N05": (float(row[14]) if not not row[14] and not (row[9] == "unavailable") else None),
-                    "TS": (float(row[15]) if not not row[15] and not (row[9] == "unavailable") else None)
+                    "PM1": (row[6] if (not row[6]) else float(row[6])),
+                    "PM4": (row[7] if (not row[7]) else float(row[7])),
+                    "PM2": (row[8] if (not row[8]) else float(row[8])),
+                    "PM10": (row[9] if (not row[9]) else float(row[9])),
+                    "N10": (row[10] if (not row[10]) else float(row[10])),
+                    "N4": (row[11] if (not row[11]) else float(row[11])),
+                    "N2": (row[12] if (not row[12]) else float(row[12])),
+                    "N1": (row[13] if (not row[13]) else float(row[13])),
+                    "N05": (row[14] if (not row[14]) else float(row[14])),
+                    "TS": (row[15] if (not row[15]) else float(row[15]))
                 }
                 sensorList.append(x)
 
