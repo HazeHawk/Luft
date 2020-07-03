@@ -53,7 +53,7 @@ except errors.ServerSelectionTimeoutError as err:
 #Datenbanke anlegen
 db = client.airq_db2
 sensoren = db.airq_sensors
-logging.info("Datenbank: airq_db")
+logging.info("Datenbank: airq_db2")
 
 
 #Ordnerstruktur auslesen in dayList beinhaltet
