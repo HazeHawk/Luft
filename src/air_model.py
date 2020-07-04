@@ -4,6 +4,7 @@ Contains all model classes for DB connects and datahandling.
 import datetime
 import json
 import sys
+import time
 from pprint import pformat
 
 import pymongo as pm
@@ -11,7 +12,6 @@ from bson.objectid import ObjectId
 from dateutil.relativedelta import *
 
 from src.config import Configuration, Singleton
-
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -38,14 +38,16 @@ class AirModel(metaclass=Singleton):
         self.areas_col = self.db.areas
         self.smoltest_col = self.db.smoltest
         self.client = client
+        self.create_index()
 
     def create_index(self):
-        collection = self.sensors_col
-
-        collection.create_index(keys=[('timestamp', pm.ASCENDING)], background=True)
-        collection.create_index(keys=[("sensor_id", pm.ASCENDING)], background=True)
-        collection.create_index(keys=[("sensor_type", pm.ASCENDING)], background=True)
-        collection.create_index(keys=[("location", pm.GEOSPHERE)], background=True, name="GEO_INDEXU")
+        col1 = self.sensors_col
+        col1.create_index(keys=[('timestamp', pm.ASCENDING)], background=True)
+        col1.create_index(keys=[("sensor_id", pm.ASCENDING)], background=True)
+        col1.create_index(keys=[("sensor_type", pm.ASCENDING)], background=True)
+        col1.create_index(keys=[("location", pm.GEOSPHERE)], background=True, name="GEO_INDEXU")
+        col1.create_index(keys=[("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE)], background=True)
+        col1.create_index(keys=[("sensor_id", pm.ASCENDING), ("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE)], background=True)
 
         col2 = self.areas_col
         col2.create_index(keys=[('properties.ID_1', pm.ASCENDING)], background=True, name="Bundesland_Index")
@@ -86,9 +88,9 @@ class AirModel(metaclass=Singleton):
             #geo = None
             #cursor = self.find_sensors_by(geometry=geo, timeframe=(start_time, end_time))
             cursor = self.find_sensors_by(geometry=geo, day=datetime.datetime(2020,6,1))
-            month = datetime.datetime(2020,6,1)
+            day = datetime.datetime(2020,6,1)
             #cursor = self._pipeline(geometry=geo, timeframe=(month, month+relativedelta(days=1)))
-            q_logger.debug("HENLO NAMUS MAXIMUS")
+            q_logger.debug("Start Testing "+str(datetime.datetime.now().time()))
 
             self._explain_query(cursor)
 
@@ -97,18 +99,34 @@ class AirModel(metaclass=Singleton):
                 if i==10:
                     break
 
-        do_query3()
+        self._test_queries()
 
     def _test_queries(self):
-        pass
+        geo = self.get_stuttgart_geo()
+        day = datetime.datetime(2020,6,1)
+        q_logger.debug("Start Testing "+str(datetime.datetime.now().time()))
+
+        #cursor1 = self.find_sensors_by(geometry=geo, month=datetime.datetime(2020,6,1))
+        #self._explain_query(cursor1)
+
+        cursor2 = self.find_sensors_by(geometry=geo, timeframe=(day, day+relativedelta(days=1)), group_by="sensor_id")
+
+        for i, item in enumerate(cursor2):
+            print(item)
+            if i == 10:
+                break
+
+        print("DONUS MAXIMUS")
+
 
     def _explain_query(self, cursor):
         expa = cursor.explain()
-        q_logger.debug("QUERY boi")
-        q_logger.debug(f'Query Planner: {pformat(expa["queryPlanner"])}')
+        del expa["executionStats"]["allPlansExecution"]
+        q_logger.debug("FindQuery")
+        #q_logger.debug(f'Query Planner: {pformat(expa["queryPlanner"])}')
         q_logger.debug(f'Executionstats: {pformat(expa["executionStats"])}')
+        q_logger.debug("FindQuery DONUS")
 
-        print("explaino donus")
 
     def get_db(self):
         '''Return the database instance 'airq_db' from the MongoDB.'''
@@ -131,7 +149,7 @@ class AirModel(metaclass=Singleton):
 
     #TODO die GeoQuery sollte direkt nach einem Read ein zu ein, so aufgerufen werden. Also das dict.
     # Überarbeiten wenn das nicht klappt
-    def find_sensors_by(self, geometry=None, timestamp=None, day=None, month=None, year=None, timeframe=None):
+    def find_sensors_by_old(self, geometry=None, timestamp=None, day=None, month=None, year=None, timeframe=None):
         ''' Query Mongo DB for finding sensor data in specific area and timeframe.
             If several parameters are given it will usually interpreted as AND Operator!
             Query Filters are in dictionary format(essentially JSON).
@@ -203,7 +221,7 @@ class AirModel(metaclass=Singleton):
         results = self.sensors_col.find(filter=query)
         return results
 
-    def find_area_by(self, bundesland=None, bezirk=None, projection={"geometry":1}):
+    def find_area_by(self, bundesland=None, bezirk=None,  projection={"geometry":1}):
         ''' Returns cursor object of an area query.
             By default the query return only the geometry of the document.
             For unfiltered document, use projection=None
@@ -232,41 +250,65 @@ class AirModel(metaclass=Singleton):
 
         return cursor
 
-    def _pipeline(self, geometry=None, timeframe=(None, None)):
+    def find_sensors_by(self, geometry=None, timeframe=(None, None), group_by=None, sort_by=None, projection=None, show_debug=False):
+        ''' Sort & projection sind noch nicht implementiert. Ist aber "einfach"
+        Geometry, Timeframe und group_by funtionieren.
 
-        example_pip = [
-            { "$match": { "status": "A" } },
-            { "$group": { "_id": "$cust_id", "total": { "$sum": "$amount" } } }
-            ]
+        Wenn ihr group_by nutzen wollt.
+        group_by = sensor_id
 
+        TimeFrame example für Tag
+        start_date = day
+        end_date = start_date+relativedelta(days=1)
+
+        '''
         match, group, sort = None, None, None
         pip = []
         start_date, end_date = timeframe
 
+        # Matching TODO find data for single sensor
         geo_match = {"location": {"$geoWithin": geometry}} if geometry is not None else None
         start_match = {"timestamp": {"$gte": start_date}} if timeframe is not None else None
         end_match = {"timestamp": {"$lt": end_date}} if timeframe is not None else None
         matches = self._merge_dicts([start_match, end_match, geo_match])
         match = {"$match": matches}
 
+        #Group_by, maybe prepare some options
+        groups = { "_id": "$"+group_by,
+                   "sensor_type": {"$first": "$sensortype"},
+                   "PM2_avg": {"$avg": "$PM2"},
+                   "PM2_min": {"$min": "$PM2"},
+                   "PM2_max": {"$max": "$PM2"},
+                   "PM2_std": {"$stdDevPop": "$PM2"},
+                   "PM10_avg": {"$avg": "$PM10"},
+                   "PM10_min": {"$min": "$PM10"},
+                   "PM10_max": {"$max": "$PM10"},
+                   "PM10_std": {"$stdDevPop": "$PM10"}
+                 }
+        group = {"$group": groups} if group_by is not None else None
+
         stages = [match, sort, group]
         for stage in stages:
             if stage is not None:
                 pip.append(stage)
 
-        q_logger.info("Normal Fein Cursor")
+        if show_debug:
+            #q_logger.debug("Explain Cursor V1 - Nur Queryplan?")
+            #explain_cursor = self.db.command('aggregate', 'airq_sensors', pipeline=pip, explain=True, allowDiskUse=True)
+            #q_logger.debug(pformat(explain_cursor))
+            q_logger.debug(f"ExplainCursor with EXEC - {datetime.datetime.now().time()}")
+            explain_aggregate = self.db.command('explain', {'aggregate': 'airq_sensors', 'pipeline': pip, 'cursor': {}}, verbosity='executionStats')
+            #del another['queryPlanner']
+            q_logger.debug(pformat(explain_aggregate))
+
         cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True)
-        q_logger.info("No Explain possible")
-
-        q_logger.debug("Explain Cursor V1 - Nur Execplan?")
-        explain_cursor = self.db.command('aggregate', 'airq_sensors', pipeline=pip, explain=True, allowDiskUse=True)
-        q_logger.debug(pformat(explain_cursor))
-
-        q_logger.debug("ExplainCursor with EXEC")
-        another = self.db.command('explain', {'aggregate': 'airq_sensors', 'pipeline': pip, 'cursor': {}}, verbosity='executionStats')
-        q_logger.debug(pformat(another))
-
         return cursor
+
+
+
+    def _median(self):
+        #https://stackoverflow.com/questions/20456095/calculate-the-median-in-mongodb-aggregation-framework
+        pass
 
     def _merge_dicts(self, dicts):
         '''Takes a list of dicts and merges them into a bigger dict.'''

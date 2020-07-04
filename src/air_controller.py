@@ -2,15 +2,14 @@
 import sys
 from datetime import datetime
 
+import folium
 import pymongo as pm
-
-from PySide2.QtWidgets import QApplication, QWidget
 from PySide2.QtGui import *
+from PySide2.QtWidgets import QApplication, QWidget
 
 from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
-import folium
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -31,27 +30,18 @@ class AirController(object):
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
 
         self.model = AirModel()
-        self.model.test_model()
-
-
+        #self.model.test_model()
 
     def test(self):
         sensors = self.model.get_sensors()
         jan = datetime(year=2020,month=1,day=1)
-
-        cursor = self.model.find_sensors_by(day=jan)
-
+        cursor = self.model.find_sensors_by_old(day=jan)
         print(cursor.explain())
-
-    def create_index(self):
-        collection = self.model.get_sensors()
-        # collection.create_index(keys=("timestamp",pm.ASCENDING), background=True)
-        pass
 
     def run(self):
 
         self.widget.show()
-        
+
     def setFoliumCircle(self, lat:float, long:float, popup:str):
         folium.Circle(
             location=[lat, long],
