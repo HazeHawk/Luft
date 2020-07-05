@@ -1,9 +1,11 @@
 
 import sys
-from datetime import datetime
+from datetime import date, datetime
+from pprint import pformat
 
 import folium
 import pymongo as pm
+from dateutil.relativedelta import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QApplication, QWidget
 
@@ -41,6 +43,54 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
+        self.load_home_data()
+        self.load_test_circles()
+
+    def load_home_data(self, timeframe=None):
+
+        if not timeframe:
+            d = date.today()
+            today = datetime(d.year, d.month, d.day)
+
+            today = datetime(2020,6,1) # tmp
+
+            start_time = today
+            end_time = today+relativedelta(hours=1)
+
+        stuttgart_geo = self.model.get_stuttgart_geo()
+
+        cursor = self.model.find_sensors_by(geometry=stuttgart_geo, timeframe=(start_time, end_time), group_by=0)
+
+        for i, sensor in enumerate(cursor):
+            if i == 5:
+                break
+            logger.debug(pformat(sensor))
+
+            pass
+
+        # create markes
+        #Folium Tooltip enables to display Dictionaries as tooltips for the data.
+
+
+        logo_icon = folium.Icon(color='green', icon='leaf')
+        custom_popup = folium.Popup()
+        lon, lat = [9.172210693359375,48.77474525855414]
+        marker = folium.Marker(location=(lat, lon), popup='<strong> Location FGT </strong>',
+                                tooltip='see Details or folium.tooltip', icon=logo_icon)
+
+        marker.add_to(self._ui.m)
+
+        self._refresh_home_map()
+
+    def load_test_circles(self):
+        self.setFoliumCircle(48.780, 9.175, "murks")
+        self.setFoliumCircle(48.785, 9.175, "marks")
+        self.setFoliumCircle(48.775, 9.175, "merks")
+        self.setFoliumCircle(48.780, 9.180, "mirks")
+        self.setFoliumCircle(48.780, 9.170, "morks")
+
+    def get_popup_str(self):
+        pass
 
     def setFoliumCircle(self, lat:float, long:float, popup:str):
         folium.Circle(
@@ -52,9 +102,11 @@ class AirController(object):
             fill_color='blue'
         ).add_to(self._ui.m)
 
-        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
 
+    def _refresh_home_map(self):
+        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
         self._ui.homeWidgetMap.update()
+
 
     def setHomeDateStart(self):
         logger.debug(self._ui.homeDateEditStart.date())
