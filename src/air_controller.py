@@ -33,20 +33,6 @@ class AirController(object):
 
         self.model = AirModel()
 
-        timeframe = [datetime.fromisoformat("2020-06-01 12:00:00"), datetime.fromisoformat("2020-06-01 13:00:00")]
-
-        geometry = self.model.find_area_by(bezirk="Stuttgart")
-        print(pformat(geometry.next()))
-
-        result = self.model.find_sensors_by(geometry=geometry, timeframe=timeframe, group_by="0")
-
-        data = result.next()
-
-        #self.choroplethTest(geometry=geometry, data=data)
-
-
-
-
     def test(self):
         sensors = self.model.get_sensors()
         jan = datetime(year=2020,month=1,day=1)
@@ -73,35 +59,26 @@ class AirController(object):
 
         stuttgart_geo = self.model.get_stuttgart_geo()
 
-        areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        areas = self.model.find_area_by(bundesland="BW", projection=None)
+        list = []
 
         for area in areas:
             print(pformat(area))
             geo = {'$geometry': area['geometry']}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
 
+
             for i, sensor in enumerate(cursor):
                 if i == 5:
                     break
-                sensor['ROMAN_ID'] = area["properties"]["NAME_2"]
+                sensor['NAME_2'] = area["properties"]["NAME_2"]
                 logger.debug(pformat(sensor))
+                list.append({"ID": sensor["NAME_2"], "AVG": sensor['PM2_avg']})
+
+        self.choroplethTest(geometry=areas, data=list)
 
 
-
-
-        # create markes
-        #Folium Tooltip enables to display Dictionaries as tooltips for the data.
-
-
-        logo_icon = folium.Icon(color='green', icon='leaf')
-        custom_popup = folium.Popup()
-        lon, lat = [9.172210693359375,48.77474525855414]
-        marker = folium.Marker(location=(lat, lon), popup='<strong> Location FGT </strong>',
-                                tooltip='see Details or folium.tooltip', icon=logo_icon)
-
-        marker.add_to(self._ui.m)
-
-        self._refresh_home_map()
 
     def load_test_circles(self):
         self.setFoliumCircle(48.780, 9.175, "murks")
