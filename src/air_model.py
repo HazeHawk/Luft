@@ -178,7 +178,7 @@ class AirModel(metaclass=Singleton):
         results = self.sensors_col.find(filter=query)
         return results
 
-    def find_area_by(self, bundesland=None, bezirk=None,  projection={"geometry":1}):
+    def find_area_by(self, bundesland=None, bezirk=None,  projection={"_id":0, "geometry":1}, as_ft_collection=False):
         ''' Returns cursor object of an area query.
             By default the query return only the geometry of the document.
             For unfiltered document, use projection=None
@@ -231,6 +231,9 @@ class AirModel(metaclass=Singleton):
         match = {"$match": matches}
 
 
+        # Group projection
+
+        #Group_by, maybe prepare some options
         if group_by == 0:
             groups = { "_id": group_by,
                    "PM2_avg": {"$avg": "$PM2"},
@@ -243,7 +246,6 @@ class AirModel(metaclass=Singleton):
                    "PM10_std": {"$stdDevPop": "$PM10"}
                  }
         elif isinstance(group_by, str):
-            #Group_by, maybe prepare some options
             groups = { "_id": "$"+group_by,
                     "sensor_type": {"$first": "$sensortype"},
                     "location": {"$first": "$location"},

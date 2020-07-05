@@ -45,6 +45,7 @@ class AirController(object):
         self.widget.show()
         self.load_home_data()
         self.load_test_circles()
+        logger.info("Running Over is dono")
 
     def load_home_data(self, timeframe=None):
 
@@ -59,14 +60,21 @@ class AirController(object):
 
         stuttgart_geo = self.model.get_stuttgart_geo()
 
-        cursor = self.model.find_sensors_by(geometry=stuttgart_geo, timeframe=(start_time, end_time), group_by=0)
+        areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
 
-        for i, sensor in enumerate(cursor):
-            if i == 5:
-                break
-            logger.debug(pformat(sensor))
+        for area in areas:
+            print(pformat(area))
+            geo = {'$geometry': area['geometry']}
+            cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
 
-            pass
+            for i, sensor in enumerate(cursor):
+                if i == 5:
+                    break
+                sensor['ROMAN_ID'] = area["properties"]["NAME_2"]
+                logger.debug(pformat(sensor))
+
+
+
 
         # create markes
         #Folium Tooltip enables to display Dictionaries as tooltips for the data.
