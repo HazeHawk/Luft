@@ -12,6 +12,7 @@ from src.air_model import AirModel
 from src.config import Configuration
 import folium
 import pymongo as pm
+from pprint import pformat
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -35,18 +36,16 @@ class AirController(object):
 
         timeframe = [datetime.fromisoformat("2020-06-01 12:00:00"), datetime.fromisoformat("2020-06-01 13:00:00")]
 
-        geometry = self.model.get_stuttgart_geo()
+        geometry = self.model.find_area_by(bezirk="Stuttgart")
+        print(pformat(geometry.next()))
 
-        result = self.model.find_sensors_by(geometry=geometry, timeframe=timeframe, group_by="sensor_id")
-        logger.debug("Found Sensors")
+        result = self.model.find_sensors_by(geometry=geometry, timeframe=timeframe, group_by="0")
 
-        for i, item in enumerate(result):
+        data = result.next()
 
-            if i == 5:
-                break
-            
-            print("Well")
-            print(item)
+        #self.choroplethTest(geometry=geometry, data=data)
+
+
 
 
     def test(self):
@@ -66,6 +65,22 @@ class AirController(object):
 
         self.widget.show()
 
+    def choroplethTest(self, geometry, data):
+        folium.Choropleth(
+            geo_data=geometry,
+            name='choropleth',
+            data=data,
+            columns=['State', 'Unemployment'],
+            key_on='feature.properties.NAME_2',
+            fill_color='YlGn',
+            fill_opacity=0.7,
+            line_opacity=0.2,
+            legend_name='Unemployment Rate (%)'
+        ).add_to(self._ui.m)
+
+        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+
+        self._ui.homeWidgetMap.update()
 
     def setFoliumCircle(self, lat:float, long:float, popup:str):
         folium.Circle(
