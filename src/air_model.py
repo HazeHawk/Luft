@@ -32,7 +32,7 @@ class AirModel(metaclass=Singleton):
             logger.error(str(err))
             return
 
-        self.db = client.airq_db
+        self.db = client.airq_db2
         self.sensors_col = self.db.airq_sensors
         self.areas_col = self.db.areas
         self.smoltest_col = self.db.smoltest
@@ -205,7 +205,16 @@ class AirModel(metaclass=Singleton):
         query_filter = bl_query if not bezirk else bezirk_query
         cursor = areas.find(filter=query_filter, projection=projection)
 
-        return cursor
+        if as_ft_collection:
+            ft_list = []
+            for area in cursor:
+                ft_list.append(area)
+            feature_collection = {"type": "FeatureCollection",
+                                  "features": ft_list
+            }
+            return feature_collection
+        else:
+            return cursor
 
     def find_sensors_by(self, geometry=None, timeframe=(None, None), group_by=None, sort_by=None, projection=None, show_debug=False):
         ''' Sort & projection sind noch nicht implementiert. Ist aber "einfach"
