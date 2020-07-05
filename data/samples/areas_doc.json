@@ -1,0 +1,39 @@
+//Example Bezirk in areas Collection
+{
+    "_id": "5efb66fa5d0e288d53dde36f",
+    "type": "Feature",
+    "properties": {
+        "ID_0": 86,
+        "ISO": "DEU",
+        "NAME_0": "Germany",
+        "ID_1": 1,
+        "NAME_1": "Baden-Württemberg",
+        "ID_2": 1,
+        "NAME_2": "Freiburg",
+        "NL_NAME_2": null,
+        "VARNAME_2": "Friburgo|Fribourg",
+        "TYPE_2": "Regierungsbezirk",
+        "ENGTYPE_2": "Administrative Region"
+    },
+    "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+            [
+                [
+                    [
+                        8.708373069763297,
+                        47.71555709838867
+                    ],
+                    [
+                        8.72245121002237,
+                        47.69652938842779
+                    ],
+                    [
+                        8.661308288574162,
+                        47.695213317871264
+                    ]
+                ]
+            ]
+        ]
+    }
+}

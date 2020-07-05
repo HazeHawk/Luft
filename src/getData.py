@@ -11,7 +11,8 @@ from pymongo import MongoClient, errors
 
 from bs4 import BeautifulSoup
 
-logging.basicConfig(filename='logging.log', level=logging.DEBUG)
+today = datetime.today()
+logging.basicConfig(filename='log/' + today.strftime("%d:%m:%Y_%H:%M:%S") + '.log', level=logging.DEBUG)
 
 try:
     to_unicode = unicode
@@ -25,7 +26,8 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-date = time.strptime("22/06/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("28/06/2020", "%d/%m/%Y")
+dateEnd = time.strptime("30/06/2020", "%d/%m/%Y")
 
 dayList  = []
 csvList  = []
@@ -36,12 +38,12 @@ x = {}
 MONGO_HOST='localhost'
 MONGO_PORT=8888
 MONGO_USERNAME='mongoadmin'
-MONGO_PASSWORD='secret'
+MONGO_PASSWORD='Ze3cr1t!'
 
 maxSevSelDelay=1
 
 try:
-    client = MongoClient(host='localhost', port=8888, username='mongoadmin', password='secret',
+    client = MongoClient(host='localhost', port=8888, username='mongoadmin', password='Ze3cr1t!',
                          serverSelectionTimeoutMS=maxSevSelDelay)
 
 except errors.ServerSelectionTimeoutError as err:
@@ -49,8 +51,10 @@ except errors.ServerSelectionTimeoutError as err:
     # tryagain later
     print(err)
 #Datenbanke anlegen
-db = client.patricksDB3
-sensoren = db.sensoren
+db = client.airq_db
+sensoren = db.airq_sensors
+logging.info("Datenbank: airq_db")
+
 
 #Ordnerstruktur auslesen in dayList beinhaltet
 #hier eventeull noch Abfrage um Zeitraum zu begrenzen
@@ -59,10 +63,11 @@ for link in soup.find_all('a'):
     #if re.search("2020-\d\d-\d\d/",link.get('href')):
     if re.search("\d\d\d\d-\d\d-\d\d/",link.get('href')):
         test = re.findall("\d\d\d\d-\d\d-\d\d", link.get('href'))
-        date2 = time.strptime(test[0], "%Y-%m-%d")
-        if date2 >= date:
+        dateNow = time.strptime(test[0], "%Y-%m-%d")
+        if dateNow >= dateBeginn and dateNow <= dateEnd:
             dayList.append(link.get('href'))
-            print(link.get('href'))
+            #print(link.get('href'))
+            logging.info(link.get('href'))
 
 
 #ab hier for Schleife alle Tagesordner durchlaufen
@@ -76,8 +81,10 @@ for day in dayList:
     soup = BeautifulSoup(myfile.content, 'html.parser')
     for link in soup.find_all('a'):
         #print(link.get('href'))
+        #if re.search("sds011_sensor_25443",link.get('href')):
         if re.search("sds011_sensor",link.get('href')) or re.search("sps30_sensor",link.get('href')):
-            csvList.append(url2 + link.get('href'))
+            if not re.search("indoor",link.get('href')):
+            	csvList.append(url2 + link.get('href'))
     #print(csvList)
 
 #alle gültigen CSV Dateien (Links in csvList) downloaden und bearbeiten
@@ -101,16 +108,16 @@ for csvEintrag in csvList:
                         "coordinates": [float(row[4]), float(row[3])]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": "",
-                    "PM4": "",
-                    "PM2": float(row[9]),
-                    "PM10": float(row[6]),
-                    "N10": "",
-                    "N4": "",
-                    "N2": "",
-                    "N1": "",
-                    "N05": "",
-                    "TS": ""
+                    "PM1": None,
+                    "PM4": None,
+                    "PM2": (float(row[9]) if not not row[9] and not (row[9] == "unavailable") else None),
+                    "PM10": (float(row[6]) if not not row[6] and not (row[9] == "unavailable") else None),
+                    "N10": None,
+                    "N4": None,
+                    "N2": None,
+                    "N1": None,
+                    "N05": None,
+                    "TS": None
                 }
                 sensorList.append(x)
     #sps30
@@ -126,19 +133,19 @@ for csvEintrag in csvList:
                     "sensor_type": row[1],
                     "location": {
                         "type": "Point",
-                        "coordinates": [float(row[4], float(row[3])]
+                        "coordinates": [float(row[4]), float(row[3])]
                     },
                     "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": float(row[6]),
-                    "PM4": float(row[7]),
-                    "PM2": float(row[8]),
-                    "PM10": float(row[9]),
-                    "N10": float(row[10]),
-                    "N4": float(row[11]),
-                    "N2": float(row[12]),
-                    "N1": float(row[13]),
-                    "N05": float(row[14]),
-                    "TS": float(row[15])
+                    "PM1": (float(row[6]) if not not row[6] and not (row[9] == "unavailable") else None),
+                    "PM4": (float(row[7]) if not not row[7] and not (row[9] == "unavailable") else None),
+                    "PM2": (float(row[8]) if not not row[8] and not (row[9] == "unavailable") else None),
+                    "PM10": (float(row[9]) if not not row[9] and not (row[9] == "unavailable") else None),
+                    "N10": (float(row[10]) if not not row[10] and not (row[9] == "unavailable") else None),
+                    "N4": (float(row[11]) if not not row[11] and not (row[9] == "unavailable") else None),
+                    "N2": (float(row[12]) if not not row[12] and not (row[9] == "unavailable") else None),
+                    "N1": (float(row[13]) if not not row[13] and not (row[9] == "unavailable") else None),
+                    "N05": (float(row[14]) if not not row[14] and not (row[9] == "unavailable") else None),
+                    "TS": (float(row[15]) if not not row[15] and not (row[9] == "unavailable") else None)
                 }
                 sensorList.append(x)
 
