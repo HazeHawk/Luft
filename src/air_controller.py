@@ -11,6 +11,7 @@ from src.air_view import AirView
 from src.air_model import AirModel
 from src.config import Configuration
 import folium
+import pymongo as pm
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -31,16 +32,22 @@ class AirController(object):
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
 
         self.model = AirModel()
-        self.model.test_model()
 
-        timeframe = [datetime.fromisoformat("2020-01-01 12:00:00"), datetime.fromisoformat("2020-01-01 13:00:00")]
+        timeframe = [datetime.fromisoformat("2020-06-01 12:00:00"), datetime.fromisoformat("2020-06-01 13:00:00")]
 
-        result = self.model.find_sensors_by(timeframe=timeframe)
+        geometry = self.model.get_stuttgart_geo()
 
-        for item in result[:100]:
-            #print(item["location"]["coordinates"])
-            long, lat = item["location"]["coordinates"]
-            self.setFoliumCircle(lat, long, "test")
+        result = self.model.find_sensors_by(geometry=geometry, timeframe=timeframe, group_by="sensor_id")
+        logger.debug("Found Sensors")
+
+        for i, item in enumerate(result):
+
+            if i == 5:
+                break
+            
+            print("Well")
+            print(item)
+
 
     def test(self):
         sensors = self.model.get_sensors()
