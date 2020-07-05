@@ -26,7 +26,7 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-dateBeginn = time.strptime("01/06/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("01/05/2020", "%d/%m/%Y")
 dateEnd = time.strptime("30/06/2020", "%d/%m/%Y")
 
 dayList  = []
@@ -51,9 +51,9 @@ except errors.ServerSelectionTimeoutError as err:
     # tryagain later
     print(err)
 #Datenbanke anlegen
-db = client.airq_db2
+db = client.airq_db
 sensoren = db.airq_sensors
-logging.info("Datenbank: airq_db2")
+logging.info("Datenbank: airq_db")
 
 
 #Ordnerstruktur auslesen in dayList beinhaltet
@@ -98,8 +98,8 @@ for csvEintrag in csvList:
         csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
         csv_reader_object.__next__()
         for row in csv_reader_object:
-            for index in row:
-                if row[index] == "" or row[index] == "unavailable":
+            for index in range(len(row)):
+                if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f":
                     row[index] = None
             #Falsches Zeitformat abfangen Zeile wird ignoriert
             if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
@@ -129,8 +129,8 @@ for csvEintrag in csvList:
         csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
         csv_reader_object.__next__()
         for row in csv_reader_object:
-            for index in row:
-                if row[index] == "" or row[index] == "unavailable":
+            for index in range(len(row)):
+                if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f":
                     row[index] = None
             #Falsches Zeitformat abfangen Zeile wird ignoriert
             if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
