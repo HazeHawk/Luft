@@ -2,16 +2,18 @@
 import sys
 from datetime import date, datetime
 from pprint import pformat
-
+import json
 import folium
 import pymongo as pm
 from dateutil.relativedelta import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QApplication, QWidget
+import pandas as pd
 
 from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
+
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -52,7 +54,7 @@ class AirController(object):
             d = date.today()
             today = datetime(d.year, d.month, d.day)
 
-            today = datetime(2020,6,1) # tmp
+            today = datetime(2020,6,20) # tmp
 
             start_time = today
             end_time = today+relativedelta(hours=1)
@@ -60,23 +62,31 @@ class AirController(object):
         stuttgart_geo = self.model.get_stuttgart_geo()
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
-        areas = self.model.find_area_by(bundesland="BW", projection=None)
-        list = []
+        #areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
 
-        for area in areas:
-            print(pformat(area))
-            geo = {'$geometry': area['geometry']}
+
+        with open('data/areas/bezirke.json', encoding='utf-8') as f:
+            areas = json.load(f)
+
+
+        listID = []
+        listAVG = []
+
+        for area in areas["features"]:
+            geo = {"$geometry": area["geometry"]}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
-
 
             for i, sensor in enumerate(cursor):
                 if i == 5:
                     break
                 sensor['NAME_2'] = area["properties"]["NAME_2"]
                 logger.debug(pformat(sensor))
-                list.append({"ID": sensor["NAME_2"], "AVG": sensor['PM2_avg']})
+                listID.append(area["properties"]["NAME_2"])
+                listAVG.append(sensor['PM2_avg'])
 
-        self.choroplethTest(geometry=areas, data=list)
+        data = {'AVG': listAVG, 'ID': listID}
+        dataFrameData = pd.DataFrame.from_dict(data)
+        self.choroplethTest(geometry=areas, data=dataFrameData)
 
 
 
@@ -95,12 +105,12 @@ class AirController(object):
             geo_data=geometry,
             name='choropleth',
             data=data,
-            columns=['State', 'Unemployment'],
+            columns=['ID', 'AVG'],
             key_on='feature.properties.NAME_2',
             fill_color='YlGn',
             fill_opacity=0.7,
             line_opacity=0.2,
-            legend_name='Unemployment Rate (%)'
+            legend_name='Average PM2'
         ).add_to(self._ui.m)
 
         self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
