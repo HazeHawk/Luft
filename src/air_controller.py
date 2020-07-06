@@ -9,6 +9,7 @@ from dateutil.relativedelta import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QApplication, QWidget
 import pandas as pd
+from opencage.geocoder import OpenCageGeocode
 
 from src.air_model import AirModel
 from src.air_view import AirView
@@ -27,6 +28,7 @@ class AirController(object):
 
         self._ui = AirView()
         self._ui.setupUi(self.widget)
+        self._ui.homeLineEditPosition.returnPressed.connect(self.gethomeLineEditPosition)
 
         self._homeDateStart = self._ui.homeDateEditStart.date()
         self._homeDateEnd = self._ui.homeDateEditEnd.date()
@@ -161,3 +163,19 @@ class AirController(object):
 
     def setLabelSensorCount(self, sensorCount: str):
         self._ui.homeLabelSencorCount.setText(sensorCount)
+
+    def getCoordinates(self, name):
+        key = "3803f50ca47344bf87e9c165d4e7fa94"
+        geocoder = OpenCageGeocode(key)
+        results = geocoder.geocode(name)
+        lat = results[0]['geometry']['lat']
+        lng = results[0]['geometry']['lng']
+        return [lat, lng];
+
+    def gethomeLineEditPosition(self):
+        city = self._ui.homeLineEditPosition.text()
+        coordinates = self.getCoordinates(city)
+        #self._ui.m.location = [48.77915707462204, -9.175987243652344]
+        self._ui.m.location = coordinates
+        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+        self._ui.homeWidgetMap.update()
