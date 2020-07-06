@@ -313,7 +313,7 @@ class AirView(object):
         return forecast
 
     def buildInfo(self, info):
-        horizontalLayout_5 = QHBoxLayout(info)
+        horizontalLayout_5 = QVBoxLayout(info)
 
         widgetInfoMenu = QWidget(info)
 
@@ -333,5 +333,11 @@ class AirView(object):
         inputPositionLable1.setAlignment(Qt.AlignLeft)
         inputPositionLable1.setWordWrap(True);
         horizontalLayout_5.addWidget(inputPositionLable1)
+
+        inputPositionLable2 = QLabel()
+        inputPositionLable2.setText('''<a href='http://luftdaten.info'>luftdaten.info</a>''')
+        inputPositionLable2.setAlignment(Qt.AlignCenter)
+        inputPositionLable2.setOpenExternalLinks(True)
+        horizontalLayout_5.addWidget(inputPositionLable2)
 
         return info
