@@ -27,13 +27,12 @@ class AirModel(metaclass=Singleton):
         try:
             client = pm.MongoClient(host=_cfg.MONGO_HOST, port=_cfg.MONGO_PORT, username=_cfg.MONGO_USERNAME,
                                  password=_cfg.MONGO_PASSWORD, serverSelectionTimeoutMS=1)
+            client.server_info()
         except pm.errors.ServerSelectionTimeoutError as err:
             logger.error(str(err))
             return
 
-        logger.debug(client.server_info())
-
-        self.db = client.airq_db
+        self.db = client.airq_db2
         self.sensors_col = self.db.airq_sensors
         self.areas_col = self.db.areas
         self.smoltest_col = self.db.smoltest
@@ -41,7 +40,7 @@ class AirModel(metaclass=Singleton):
         self.create_index()
 
     def create_index(self):
-        col1 = self.sensors_col
+        col1 = self.client.airq_db2.airq_sensors
         col1.create_index(keys=[('timestamp', pm.ASCENDING)], background=True)
         col1.create_index(keys=[("sensor_id", pm.ASCENDING)], background=True)
         col1.create_index(keys=[("sensor_type", pm.ASCENDING)], background=True)
@@ -49,7 +48,7 @@ class AirModel(metaclass=Singleton):
         col1.create_index(keys=[("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE)], background=True)
         col1.create_index(keys=[("sensor_id", pm.ASCENDING), ("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE)], background=True)
 
-        col2 = self.areas_col
+        col2 = self.client.airq_db2.areas
         col2.create_index(keys=[('properties.ID_1', pm.ASCENDING)], background=True, name="Bundesland_Index")
         col2.create_index(keys=[('properties.ID_2', pm.ASCENDING)], background=True, name="Bezirk_Index")
         col2.create_index(keys=[("geometry", pm.GEOSPHERE)], background=True, name="GEO_AREA_INDEXU")
@@ -57,56 +56,14 @@ class AirModel(metaclass=Singleton):
 
     def test_model(self):
 
-        #self.createIndex()
-
-        def do_query():
-            geo = self.get_stuttgart_geo()
-
-            #cursor = self.find_sensors_by(geometry=geo)
-            filteru = {"location": {"$geoWithin": geo}}
-
-            cursor = self.sensors_col.find(filter=filteru)
-            q_logger.debug(cursor.explain())
-
-            for item in cursor[:10]:
-                print(item)
-
-        def do_query2():
-
-            cursor = self.find_area_by(bundesland='BW', projection={"properties":1})
-            q_logger.debug(cursor.explain())
-
-            for item in cursor[:10]:
-                print(item)
-
-        def do_query3():
-            geo = self.get_stuttgart_geo()
-            start_time = datetime.datetime(year=2020, month=6, day=28)
-            end_time = start_time+relativedelta(hours=3)
-
-            logger.debug((start_time, end_time))
-            #geo = None
-            #cursor = self.find_sensors_by(geometry=geo, timeframe=(start_time, end_time))
-            cursor = self.find_sensors_by(geometry=geo, day=datetime.datetime(2020,6,1))
-            day = datetime.datetime(2020,6,1)
-            #cursor = self._pipeline(geometry=geo, timeframe=(month, month+relativedelta(days=1)))
-            q_logger.debug("Start Testing "+str(datetime.datetime.now().time()))
-
-            self._explain_query(cursor)
-
-            for i, item in enumerate(cursor):
-                print(item)
-                if i==10:
-                    break
-
         self._test_queries()
 
     def _test_queries(self):
         geo = self.get_stuttgart_geo()
         day = datetime.datetime(2020,6,1)
-        q_logger.debug("Start Testing "+str(datetime.datetime.now().time()))
+        q_logger.debug("Start Testing Queries "+str(datetime.datetime.now().time()))
 
-        #cursor1 = self.find_sensors_by(geometry=geo, month=datetime.datetime(2020,6,1))
+        #cursor1 = self.find_sensors_by_old(geometry=geo, month=datetime.datetime(2020,6,1))
         #self._explain_query(cursor1)
 
         cursor2 = self.find_sensors_by(geometry=geo, timeframe=(day, day+relativedelta(days=1)), group_by="sensor_id")
@@ -221,7 +178,7 @@ class AirModel(metaclass=Singleton):
         results = self.sensors_col.find(filter=query)
         return results
 
-    def find_area_by(self, bundesland=None, bezirk=None,  projection={"geometry":1}):
+    def find_area_by(self, bundesland=None, bezirk=None,  projection={"_id":0, "geometry":1}, as_ft_collection=False):
         ''' Returns cursor object of an area query.
             By default the query return only the geometry of the document.
             For unfiltered document, use projection=None
@@ -248,7 +205,16 @@ class AirModel(metaclass=Singleton):
         query_filter = bl_query if not bezirk else bezirk_query
         cursor = areas.find(filter=query_filter, projection=projection)
 
-        return cursor
+        if as_ft_collection:
+            ft_list = []
+            for area in cursor:
+                ft_list.append(area)
+            feature_collection = {"type": "FeatureCollection",
+                                  "features": ft_list
+            }
+            return feature_collection
+        else:
+            return cursor
 
     def find_sensors_by(self, geometry=None, timeframe=(None, None), group_by=None, sort_by=None, projection=None, show_debug=False):
         ''' Sort & projection sind noch nicht implementiert. Ist aber "einfach"
@@ -273,9 +239,12 @@ class AirModel(metaclass=Singleton):
         matches = self._merge_dicts([start_match, end_match, geo_match])
         match = {"$match": matches}
 
+
+        # Group projection
+
         #Group_by, maybe prepare some options
-        groups = { "_id": "$"+group_by,
-                   "sensor_type": {"$first": "$sensortype"},
+        if group_by == 0:
+            groups = { "_id": group_by,
                    "PM2_avg": {"$avg": "$PM2"},
                    "PM2_min": {"$min": "$PM2"},
                    "PM2_max": {"$max": "$PM2"},
@@ -285,6 +254,20 @@ class AirModel(metaclass=Singleton):
                    "PM10_max": {"$max": "$PM10"},
                    "PM10_std": {"$stdDevPop": "$PM10"}
                  }
+        elif isinstance(group_by, str):
+            groups = { "_id": "$"+group_by,
+                    "sensor_type": {"$first": "$sensortype"},
+                    "location": {"$first": "$location"},
+                    "PM2_avg": {"$avg": "$PM2"},
+                    "PM2_min": {"$min": "$PM2"},
+                    "PM2_max": {"$max": "$PM2"},
+                    "PM2_std": {"$stdDevPop": "$PM2"},
+                    "PM10_avg": {"$avg": "$PM10"},
+                    "PM10_min": {"$min": "$PM10"},
+                    "PM10_max": {"$max": "$PM10"},
+                    "PM10_std": {"$stdDevPop": "$PM10"}
+                    }
+
         group = {"$group": groups} if group_by is not None else None
 
         stages = [match, sort, group]
@@ -333,6 +316,49 @@ class AirModel(metaclass=Singleton):
             json_data = json.load(f)
 
         areas.insert_many(json_data)
+
+    def __old_examples(self):
+        def do_query():
+            geo = self.get_stuttgart_geo()
+
+            #cursor = self.find_sensors_by(geometry=geo)
+            filteru = {"location": {"$geoWithin": geo}}
+
+            cursor = self.sensors_col.find(filter=filteru)
+            q_logger.debug(cursor.explain())
+
+            for item in cursor[:10]:
+                print(item)
+
+        def do_query2():
+
+            cursor = self.find_area_by(bundesland='BW', projection={"properties":1})
+            q_logger.debug(cursor.explain())
+
+            for item in cursor[:10]:
+                print(item)
+
+        def do_query3():
+            geo = self.get_stuttgart_geo()
+            start_time = datetime.datetime(year=2020, month=6, day=28)
+            end_time = start_time+relativedelta(hours=3)
+
+            logger.debug((start_time, end_time))
+            #geo = None
+            #cursor = self.find_sensors_by(geometry=geo, timeframe=(start_time, end_time))
+            cursor = self.find_sensors_by_old(geometry=geo, day=datetime.datetime(2020,6,1))
+            day = datetime.datetime(2020,6,1)
+            #cursor = self._pipeline(geometry=geo, timeframe=(month, month+relativedelta(days=1)))
+            q_logger.debug("Start Testing "+str(datetime.datetime.now().time()))
+
+            self._explain_query(cursor)
+
+            for i, item in enumerate(cursor):
+                print(item)
+                if i==10:
+                    break
+
+
 
 if __name__ == 'main':
     model = AirModel()
