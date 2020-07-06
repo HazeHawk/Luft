@@ -92,69 +92,74 @@ for csvEintrag in csvList:
     download = requests.get(csvEintrag)
     myfile = download.content.decode('utf-8')
     csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
-    #sds011
-    #sensor_id;sensor_type;location;lat;lon;timestamp;P1;durP1;ratioP1;P2;durP2;ratioP2
-    if re.search("sds011_sensor", csvEintrag):
-        csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
-        csv_reader_object.__next__()
-        for row in csv_reader_object:
-            for index in range(len(row)):
-                if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f":
-                    row[index] = None
-            #Falsches Zeitformat abfangen Zeile wird ignoriert
-            if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
-                x = {
-                    "sensor_id": int(row[0]),
-                    "sensor_type": row[1],
-                    "location": {
-                        "type": "Point",
-                        "coordinates": [(row[4] if (not row[4]) else float(row[4])), (row[3] if (not row[3]) else float(row[3]))]
-                    },
-                    "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": None,
-                    "PM4": None,
-                    "PM2": (row[9] if (not row[9]) else float(row[9])),
-                    "PM10": (row[6] if (not row[6]) else float(row[6])),
-                    "N10": None,
-                    "N4": None,
-                    "N2": None,
-                    "N1": None,
-                    "N05": None,
-                    "TS": None
-                }
-                sensorList.append(x)
-    #sps30
-    #sensor_id;sensor_type;location;lat;lon;timestamp;P1;P4;P2;P0;N10;N4;N25;N1;N05;TS
-    if re.search("sps30_sensor", csvEintrag):
-        csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
-        csv_reader_object.__next__()
-        for row in csv_reader_object:
-            for index in range(len(row)):
-                if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f":
-                    row[index] = None
-            #Falsches Zeitformat abfangen Zeile wird ignoriert
-            if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
-                x = {
-                    "sensor_id": int(row[0]),
-                    "sensor_type": row[1],
-                    "location": {
-                        "type": "Point",
-                        "coordinates": [(row[4] if (not row[4]) else float(row[4])), (row[3] if (not row[3]) else float(row[3]))]
-                    },
-                    "timestamp": datetime.fromisoformat(row[5]),
-                    "PM1": (row[6] if (not row[6]) else float(row[6])),
-                    "PM4": (row[7] if (not row[7]) else float(row[7])),
-                    "PM2": (row[8] if (not row[8]) else float(row[8])),
-                    "PM10": (row[9] if (not row[9]) else float(row[9])),
-                    "N10": (row[10] if (not row[10]) else float(row[10])),
-                    "N4": (row[11] if (not row[11]) else float(row[11])),
-                    "N2": (row[12] if (not row[12]) else float(row[12])),
-                    "N1": (row[13] if (not row[13]) else float(row[13])),
-                    "N05": (row[14] if (not row[14]) else float(row[14])),
-                    "TS": (row[15] if (not row[15]) else float(row[15]))
-                }
-                sensorList.append(x)
+    try:
+        #sds011
+        #sensor_id;sensor_type;location;lat;lon;timestamp;P1;durP1;ratioP1;P2;durP2;ratioP2
+        if re.search("sds011_sensor", csvEintrag):
+            csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
+            csv_reader_object.__next__()
+            for row in csv_reader_object:
+                for index in range(len(row)):
+                    if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f":
+                        row[index] = None
+                #Falsches Zeitformat abfangen Zeile wird ignoriert
+                if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
+                    x = {
+                        "sensor_id": int(row[0]),
+                        "sensor_type": row[1],
+                        "location": {
+                            "type": "Point",
+                            "coordinates": [(row[4] if (not row[4]) else float(row[4])), (row[3] if (not row[3]) else float(row[3]))]
+                        },
+                        "timestamp": datetime.fromisoformat(row[5]),
+                        "PM1": None,
+                        "PM4": None,
+                        "PM2": (row[9] if (not row[9]) else float(row[9])),
+                        "PM10": (row[6] if (not row[6]) else float(row[6])),
+                        "N10": None,
+                        "N4": None,
+                        "N2": None,
+                        "N1": None,
+                        "N05": None,
+                        "TS": None
+                    }
+                    sensorList.append(x)
+        #sps30
+        #sensor_id;sensor_type;location;lat;lon;timestamp;P1;P4;P2;P0;N10;N4;N25;N1;N05;TS
+        if re.search("sps30_sensor", csvEintrag):
+            csv_reader_object = csv.reader(myfile.splitlines(), delimiter=';')
+            csv_reader_object.__next__()
+            for row in csv_reader_object:
+                for index in range(len(row)):
+                    if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f":
+                        row[index] = None
+                #Falsches Zeitformat abfangen Zeile wird ignoriert
+                if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
+                    x = {
+                        "sensor_id": int(row[0]),
+                        "sensor_type": row[1],
+                        "location": {
+                            "type": "Point",
+                            "coordinates": [(row[4] if (not row[4]) else float(row[4])), (row[3] if (not row[3]) else float(row[3]))]
+                        },
+                        "timestamp": datetime.fromisoformat(row[5]),
+                        "PM1": (row[6] if (not row[6]) else float(row[6])),
+                        "PM4": (row[7] if (not row[7]) else float(row[7])),
+                        "PM2": (row[8] if (not row[8]) else float(row[8])),
+                        "PM10": (row[9] if (not row[9]) else float(row[9])),
+                        "N10": (row[10] if (not row[10]) else float(row[10])),
+                        "N4": (row[11] if (not row[11]) else float(row[11])),
+                        "N2": (row[12] if (not row[12]) else float(row[12])),
+                        "N1": (row[13] if (not row[13]) else float(row[13])),
+                        "N05": (row[14] if (not row[14]) else float(row[14])),
+                        "TS": (row[15] if (not row[15]) else float(row[15]))
+                    }
+                    sensorList.append(x)
 
-    sensoren.insert_many(documents=sensorList)
-    logging.info("Datei in Datenbank gespeichert: " + csvEintrag)
-    sensorList = []
+        sensoren.insert_many(documents=sensorList)
+        logging.info("Datei in Datenbank gespeichert: " + csvEintrag)
+        sensorList = []
+    except:
+        logging.warning("Datei nicht in Datenbank gespeichert: " + csvEintrag)
+        logging.warning()
+        sensorList = []
