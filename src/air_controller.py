@@ -4,11 +4,15 @@ from datetime import date, datetime
 from pprint import pformat
 import json
 import folium
+from folium.plugins import MarkerCluster
+from PySide2.QtCharts import *
+from PySide2.QtCore import *
 import pymongo as pm
 from dateutil.relativedelta import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QApplication, QWidget
 import pandas as pd
+from opencage.geocoder import OpenCageGeocode
 
 from src.air_model import AirModel
 from src.air_view import AirView
@@ -27,6 +31,7 @@ class AirController(object):
 
         self._ui = AirView()
         self._ui.setupUi(self.widget)
+        self._ui.homeLineEditPosition.returnPressed.connect(self.gethomeLineEditPosition)
 
         self._homeDateStart = self._ui.homeDateEditStart.date()
         self._homeDateEnd = self._ui.homeDateEditEnd.date()
@@ -45,7 +50,8 @@ class AirController(object):
 
         self.widget.show()
         self.load_home_data()
-        self.load_test_circles()
+        self.load_cluster_circle_home()
+        #self.load_single_circle_home()
         logger.info("Running Over is dono")
 
     def load_home_data(self, timeframe=None):
@@ -64,10 +70,8 @@ class AirController(object):
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         #areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
 
-
         with open('data/areas/bezirke.json', encoding='utf-8') as f:
             areas = json.load(f)
-
 
         listID = []
         listAVG = []
@@ -85,10 +89,124 @@ class AirController(object):
                 listAVG.append(sensor['PM2_avg'])
 
         data = {'AVG': listAVG, 'ID': listID}
+
+        self.load_analysis(listID, listAVG)
+        self.load_highlights(listID, listAVG)
+
         dataFrameData = pd.DataFrame.from_dict(data)
         self.choroplethTest(geometry=areas, data=dataFrameData)
 
+        # create markes
+        #Folium Tooltip enables to display Dictionaries as tooltips for the data.
 
+    def load_single_circle_home(self):
+        today = datetime(2020,6,20) # tmp
+        start_time = today
+        end_time = today+relativedelta(hours=1)
+
+        areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+
+        for area in areas:
+            geo = {'$geometry': area['geometry']}
+            cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
+
+            for i, sensor in enumerate(cursor):
+                if i == 300:
+                    break
+                lon, lat = sensor["location"]["coordinates"]
+                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+
+                self.setFoliumCircle(lat=lat, long=lon, popup=popup)
+
+            self._refresh_home_map()
+            print(i)
+            print(area["properties"]["NAME_2"])
+
+    def load_cluster_circle_home(self):
+        today = datetime(2020,6,20) # tmp
+        start_time = today
+        end_time = today+relativedelta(hours=1)
+
+        areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+
+        for area in areas:
+            location_list = []
+            popup_list = []
+
+            geo = {'$geometry': area['geometry']}
+            cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
+
+            for i, sensor in enumerate(cursor):
+                if i == 300:
+                    break
+                lon, lat = sensor["location"]["coordinates"]
+                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+
+                location_list.append([lat, lon])
+                popup_list.append(popup)
+
+
+            cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
+            cluster.add_to(self._ui.m)
+            self._refresh_home_map()
+            print(i)
+            print(area["properties"]["NAME_2"])
+
+    def load_analysis(self, listID:list, listAVG:list):
+
+        listID = listID[:4]
+        listAVG = listAVG[:4]
+
+        dataSet2 = QtCharts.QBarSet("PM2_avg")
+        for item in listAVG:
+            dataSet2.append(item)
+
+        axisX = QtCharts.QBarCategoryAxis()
+        axisX.append(listID)
+
+        axisY = QtCharts.QValueAxis()
+        min = 0
+        max = 0
+        for item in listAVG:
+            if min>item:
+                min=item
+            if max<item:
+                max=item
+
+        axisY.setRange(min, max)
+
+        dataSeries = QtCharts.QBarSeries()
+        dataSeries.append(dataSet2)
+        dataSeries.attachAxis(axisX)
+        dataSeries.attachAxis(axisY)
+
+        self._ui.analysisChart.addAxis(axisX, Qt.AlignBottom)
+        self._ui.analysisChart.addAxis(axisY, Qt.AlignLeft)
+
+        self._ui.analysisChart.addSeries(dataSeries)
+        self._ui.analysisChart.legend().setVisible(True)
+        self._ui.analysisChart.legend().setAlignment(Qt.AlignBottom)
+        self._ui.analysisChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+
+    def load_highlights(self, listID: list, listAVG: list):
+
+        series = QtCharts.QPieSeries()
+
+        for itemID, itemAVG in zip(listID, listAVG):
+            series.append(itemID, itemAVG)
+
+        slice = QtCharts.QPieSlice()
+
+        for i in range(0, series.count()):
+            slice = series.slices()[i]
+            slice.setLabelVisible(True)
+
+        self._ui.highlightsQChart.legend().setVisible(True)
+        self._ui.highlightsQChart.legend().setAlignment(Qt.AlignBottom)
+        self._ui.highlightsQChart.addSeries(series)
+        self._ui.highlightsQChart.createDefaultAxes()
+        self._ui.highlightsQChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+        self._ui.highlightsQChart.setTitle("Pie Chart Example")
 
     def load_test_circles(self):
         self.setFoliumCircle(48.780, 9.175, "murks")
@@ -98,6 +216,16 @@ class AirController(object):
         self.setFoliumCircle(48.780, 9.170, "morks")
 
     def get_popup_str(self):
+        pass
+
+    def setFoliumMarkerCluster(self, coordinates:list, popup:list):
+        options_dict = {"showCoverageOnHover":True, "removeOutsideVisibleBounds":False,
+                        "spiderfyOnMaxZoom":True, "maxClusterRadius":80}
+        #cluster = folium.plugins.FastMarkerCluster(data=coordinates, popups=popup, name="SensorClusterLayer")
+
+        cluster = MarkerCluster(locations=coordinates, popups=popup)
+
+        return cluster
         pass
 
     def choroplethTest(self, geometry, data):
@@ -120,7 +248,7 @@ class AirController(object):
     def setFoliumCircle(self, lat:float, long:float, popup:str):
         folium.Circle(
             location=[lat, long],
-            radius=20,
+            radius=500,
             popup=popup,
             color='blue',
             fill=True,
@@ -128,9 +256,11 @@ class AirController(object):
         ).add_to(self._ui.m)
 
 
+
     def _refresh_home_map(self):
         self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
         self._ui.homeWidgetMap.update()
+
 
 
     def setHomeDateStart(self):
@@ -161,3 +291,19 @@ class AirController(object):
 
     def setLabelSensorCount(self, sensorCount: str):
         self._ui.homeLabelSencorCount.setText(sensorCount)
+
+    def getCoordinates(self, name):
+        key = "3803f50ca47344bf87e9c165d4e7fa94"
+        geocoder = OpenCageGeocode(key)
+        results = geocoder.geocode(name)
+        lat = results[0]['geometry']['lat']
+        lng = results[0]['geometry']['lng']
+        return [lat, lng];
+
+    def gethomeLineEditPosition(self):
+        city = self._ui.homeLineEditPosition.text()
+        coordinates = self.getCoordinates(city)
+        #self._ui.m.location = [48.77915707462204, -9.175987243652344]
+        self._ui.m.location = coordinates
+        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+        self._ui.homeWidgetMap.update()
