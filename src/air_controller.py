@@ -2,17 +2,19 @@
 import sys
 from datetime import date, datetime
 from pprint import pformat
-
+import json
 import folium
 from folium.plugins import MarkerCluster
 import pymongo as pm
 from dateutil.relativedelta import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QApplication, QWidget
+import pandas as pd
 
 from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
+
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -34,7 +36,6 @@ class AirController(object):
 
         self.model = AirModel()
 
-
     def test(self):
         sensors = self.model.get_sensors()
         jan = datetime(year=2020,month=1,day=1)
@@ -55,30 +56,37 @@ class AirController(object):
             d = date.today()
             today = datetime(d.year, d.month, d.day)
 
-            today = datetime(2020,6,1) # tmp
+            today = datetime(2020,6,20) # tmp
 
             start_time = today
             end_time = today+relativedelta(hours=1)
 
         stuttgart_geo = self.model.get_stuttgart_geo()
 
-        #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1}, as_ft_collection=True)
-        areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
+        #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        #areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
 
+        with open('data/areas/bezirke.json', encoding='utf-8') as f:
+            areas = json.load(f)
 
-        for area in areas:
-            print(pformat(area))
-            geo = {'$geometry': area['geometry']}
+        listID = []
+        listAVG = []
+
+        for area in areas["features"]:
+            geo = {"$geometry": area["geometry"]}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
 
             for i, sensor in enumerate(cursor):
                 if i == 5:
                     break
-                sensor['ROMAN_ID'] = area["properties"]["NAME_2"]
+                sensor['NAME_2'] = area["properties"]["NAME_2"]
                 logger.debug(pformat(sensor))
+                listID.append(area["properties"]["NAME_2"])
+                listAVG.append(sensor['PM2_avg'])
 
-
-
+        data = {'AVG': listAVG, 'ID': listID}
+        dataFrameData = pd.DataFrame.from_dict(data)
+        self.choroplethTest(geometry=areas, data=dataFrameData)
 
         # create markes
         #Folium Tooltip enables to display Dictionaries as tooltips for the data.
@@ -157,7 +165,22 @@ class AirController(object):
         return cluster
         pass
 
+    def choroplethTest(self, geometry, data):
+        folium.Choropleth(
+            geo_data=geometry,
+            name='choropleth',
+            data=data,
+            columns=['ID', 'AVG'],
+            key_on='feature.properties.NAME_2',
+            fill_color='YlGn',
+            fill_opacity=0.7,
+            line_opacity=0.2,
+            legend_name='Average PM2'
+        ).add_to(self._ui.m)
 
+        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+
+        self._ui.homeWidgetMap.update()
 
     def setFoliumCircle(self, lat:float, long:float, popup:str):
         folium.Circle(
@@ -190,3 +213,18 @@ class AirController(object):
 
     def getHomeDateEnd(self):
         return self._homeDateEnd
+
+    def setLabelMedian(self, median: str):
+        self._ui.homeLabelMedian.setText(median)
+
+    def setLabelMaximum(self, maximum: str):
+        self._ui.homeLabelMaximal.setText(maximum)
+
+    def setLabelMinimum(self, minimum: str):
+        self._ui.homeLabelMinimal.setText(minimum)
+
+    def setLabelAverag(self, average:str):
+        self._ui.homeLabelAverage.setText(average)
+
+    def setLabelSensorCount(self, sensorCount: str):
+        self._ui.homeLabelSencorCount.setText(sensorCount)
