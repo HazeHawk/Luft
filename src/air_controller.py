@@ -4,6 +4,7 @@ from datetime import date, datetime
 from pprint import pformat
 import json
 import folium
+from folium.plugins import MarkerCluster
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
 import pymongo as pm
@@ -48,9 +49,9 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
-        #self.load_home_data()
-        #self.load_cluster_circle_home()
-        self.load_single_circle_home()
+        self.load_home_data()
+        self.load_cluster_circle_home()
+        #self.load_single_circle_home()
         logger.info("Running Over is dono")
 
     def load_home_data(self, timeframe=None):
