@@ -5,6 +5,7 @@ import time
 import folium
 import pyqtgraph
 
+from PySide2.QtCharts import *
 from PySide2.QtCore import *
 from PySide2.QtWebEngineWidgets import *
 from PySide2.QtWidgets import *
@@ -186,7 +187,8 @@ class AirView(object):
         widgetAnalysisControls = QWidget(analysis)
 
         vBox3 = QVBoxLayout()
-
+        '''
+        #controlls
         configurationTitleAnalysis = QLabel()
         configurationTitleAnalysis.setText("Configuration:")
         vBox3.addWidget(configurationTitleAnalysis)
@@ -214,20 +216,29 @@ class AirView(object):
         widgetAnalysisControls.setLayout(vBox3)
 
         horizontalLayout_2.addWidget(widgetAnalysisControls)
-
-        widgetAnalysis = pyqtgraph.PlotWidget(analysis)
+        '''
+        '''widgetAnalysis = pyqtgraph.PlotWidget(analysis)
 
         hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
 
         # plot data: x, y values
         widgetAnalysis.plot(hour, temperature)
+        '''
+
+        self.analysisChart = QtCharts.QChart()
+
+
+        widgetAnalysis = QtCharts.QChartView(self.analysisChart)
+
+
         self.analysisPlotWidget = widgetAnalysis
 
         horizontalLayout_2.addWidget(widgetAnalysis)
 
         horizontalLayout_2.setStretch(0, 1)
         horizontalLayout_2.setStretch(1, 4)
+
 
         return analysis
 
@@ -237,6 +248,11 @@ class AirView(object):
         highlightsWidget = QWidget()
         vBox = QGridLayout()
 
+        self.highlightsQChart = QtCharts.QChart()
+
+        chartview = QtCharts.QChartView(self.highlightsQChart)
+        vBox.addWidget(chartview)
+        '''
         for i in range(1, 10):
             object = pyqtgraph.PlotWidget(highlights)
             hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -244,7 +260,7 @@ class AirView(object):
             object.plot(hour, temperature)
             vBox.setRowMinimumHeight(i - 1, 500)
             vBox.addWidget(object)
-
+        '''
         highlightsWidget.setLayout(vBox)
 
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
