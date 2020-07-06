@@ -4,6 +4,8 @@ from datetime import date, datetime
 from pprint import pformat
 import json
 import folium
+from PySide2.QtCharts import *
+from PySide2.QtCore import *
 import pymongo as pm
 from dateutil.relativedelta import *
 from PySide2.QtGui import *
@@ -85,10 +87,68 @@ class AirController(object):
                 listAVG.append(sensor['PM2_avg'])
 
         data = {'AVG': listAVG, 'ID': listID}
+
+        self.load_analysis(listID, listAVG)
+        self.load_highlights(listID, listAVG)
+
         dataFrameData = pd.DataFrame.from_dict(data)
         self.choroplethTest(geometry=areas, data=dataFrameData)
 
+    def load_analysis(self, listID:list, listAVG:list):
 
+        listID = listID[:4]
+        listAVG = listAVG[:4]
+
+        dataSet2 = QtCharts.QBarSet("PM2_avg")
+        for item in listAVG:
+            dataSet2.append(item)
+
+        axisX = QtCharts.QBarCategoryAxis()
+        axisX.append(listID)
+
+        axisY = QtCharts.QValueAxis()
+        min = 0
+        max = 0
+        for item in listAVG:
+            if min>item:
+                min=item
+            if max<item:
+                max=item
+
+        axisY.setRange(min, max)
+
+        dataSeries = QtCharts.QBarSeries()
+        dataSeries.append(dataSet2)
+        dataSeries.attachAxis(axisX)
+        dataSeries.attachAxis(axisY)
+
+        self._ui.analysisChart.addAxis(axisX, Qt.AlignBottom)
+        self._ui.analysisChart.addAxis(axisY, Qt.AlignLeft)
+
+        self._ui.analysisChart.addSeries(dataSeries)
+        self._ui.analysisChart.legend().setVisible(True)
+        self._ui.analysisChart.legend().setAlignment(Qt.AlignBottom)
+        self._ui.analysisChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+
+    def load_highlights(self, listID: list, listAVG: list):
+
+        series = QtCharts.QPieSeries()
+
+        for itemID, itemAVG in zip(listID, listAVG):
+            series.append(itemID, itemAVG)
+
+        slice = QtCharts.QPieSlice()
+
+        for i in range(0, series.count()):
+            slice = series.slices()[i]
+            slice.setLabelVisible(True)
+
+        self._ui.highlightsQChart.legend().setVisible(True)
+        self._ui.highlightsQChart.legend().setAlignment(Qt.AlignBottom)
+        self._ui.highlightsQChart.addSeries(series)
+        self._ui.highlightsQChart.createDefaultAxes()
+        self._ui.highlightsQChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+        self._ui.highlightsQChart.setTitle("Pie Chart Example")
 
     def load_test_circles(self):
         self.setFoliumCircle(48.780, 9.175, "murks")
