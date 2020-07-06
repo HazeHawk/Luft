@@ -29,8 +29,10 @@ class AirModel(metaclass=Singleton):
                                  password=_cfg.MONGO_PASSWORD, serverSelectionTimeoutMS=1)
             client.server_info()
         except pm.errors.ServerSelectionTimeoutError as err:
-            logger.error(str(err))
-            return
+            logger.error(str(err)+"\n Are you connected via VPN ? Also check the config.py Configurations.")
+            status = sys.exit()
+
+
 
         self.db = client.airq_db2
         self.sensors_col = self.db.airq_sensors
@@ -47,6 +49,8 @@ class AirModel(metaclass=Singleton):
         col1.create_index(keys=[("location", pm.GEOSPHERE)], background=True, name="GEO_INDEXU")
         col1.create_index(keys=[("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE)], background=True)
         col1.create_index(keys=[("sensor_id", pm.ASCENDING), ("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE)], background=True)
+        col1.create_index(keys=[("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE), ("sensor_id", pm.ASCENDING)], background=True)
+
 
         col2 = self.client.airq_db2.areas
         col2.create_index(keys=[('properties.ID_1', pm.ASCENDING)], background=True, name="Bundesland_Index")
@@ -202,6 +206,7 @@ class AirModel(metaclass=Singleton):
         areas = self.areas_col
         bl_query = {"properties.ID_1":BL_OPT_DICT[bundesland]}
         bezirk_query = {"properties.NAME_2": bezirk}
+
         query_filter = bl_query if not bezirk else bezirk_query
         cursor = areas.find(filter=query_filter, projection=projection)
 
@@ -239,9 +244,7 @@ class AirModel(metaclass=Singleton):
         matches = self._merge_dicts([start_match, end_match, geo_match])
         match = {"$match": matches}
 
-
         # Group projection
-
         #Group_by, maybe prepare some options
         if group_by == 0:
             groups = { "_id": group_by,
