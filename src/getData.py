@@ -26,12 +26,12 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-dateBeginn = time.strptime("25/05/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("29/05/2020", "%d/%m/%Y")
 dateEnd = time.strptime("30/06/2020", "%d/%m/%Y")
 
 #abgebrochenen Download fortsetzen
 #help auf 0 setzen sonst auf 1
-lastData = "2020-05-26_sds011_sensor_31232.csv"
+lastData = "2020-05-29_sds011_sensor_32746.csv"
 help = 0
 
 dayList  = []
@@ -170,5 +170,4 @@ for csvEintrag in csvList:
             sensorList = []
         except:
             logging.warning("Datei nicht in Datenbank gespeichert: " + csvEintrag)
-            logging.warning()
             sensorList = []
