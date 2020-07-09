@@ -10,7 +10,7 @@ from PySide2.QtCore import *
 import pymongo as pm
 from dateutil.relativedelta import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QApplication, QWidget
+from PySide2.QtWidgets import QApplication, QWidget, QStyleFactory
 import pandas as pd
 from opencage.geocoder import OpenCageGeocode
 
@@ -26,6 +26,8 @@ class AirController(object):
 
     def __init__(self):
         self.app = QApplication(sys.argv)
+        print(QStyleFactory.keys())
+        self.app.setStyle("Fusion")
 
         self.widget = QWidget()
 
@@ -37,6 +39,7 @@ class AirController(object):
         self._homeDateEnd = self._ui.homeDateEditEnd.date()
         self._ui.homeDateEditStart.dateChanged.connect(self.setHomeDateStart)
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
+        self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
 
         self.model = AirModel()
 
@@ -49,9 +52,10 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
-        self.load_home_data()
-        self.load_cluster_circle_home()
+        #self.load_home_data()
+        #self.load_cluster_circle_home()
         #self.load_single_circle_home()
+
         logger.info("Running Over is dono")
 
     def load_home_data(self, timeframe=None):
@@ -261,7 +265,8 @@ class AirController(object):
         self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
         self._ui.homeWidgetMap.update()
 
-
+    def homeButtonSendClicked(self):
+        self.get_current_map_part()
 
     def setHomeDateStart(self):
         logger.debug(self._ui.homeDateEditStart.date())
@@ -307,3 +312,6 @@ class AirController(object):
         self._ui.m.location = coordinates
         self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
         self._ui.homeWidgetMap.update()
+
+    def get_current_map_part(self):
+        print(self._ui.m.location)

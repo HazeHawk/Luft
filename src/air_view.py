@@ -138,6 +138,11 @@ class AirView(object):
         verticalLayoutWidgetMenuBottom.addWidget(dateEditEnd)
         self.homeDateEditEnd = dateEditEnd
 
+        button = QPushButton()
+        button.setText('Click Me')
+        verticalLayoutWidgetMenuBottom.addWidget(button)
+        self.homeButtonSendData = button
+
         verticalLayoutWidgetMenu.addWidget(widgetMenuTop)
         verticalLayoutWidgetMenu.setStretch(0,1)
 
