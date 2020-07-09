@@ -26,13 +26,13 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-dateBeginn = time.strptime("29/05/2020", "%d/%m/%Y")
-dateEnd = time.strptime("30/06/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("01/04/2020", "%d/%m/%Y")
+dateEnd = time.strptime("30/04/2020", "%d/%m/%Y")
 
 #abgebrochenen Download fortsetzen
 #help auf 0 setzen sonst auf 1
-lastData = "2020-05-29_sds011_sensor_32746.csv"
-help = 0
+lastData = ""
+help = 1
 
 dayList  = []
 csvList  = []
@@ -86,7 +86,8 @@ for day in dayList:
     soup = BeautifulSoup(myfile.content, 'html.parser')
     for link in soup.find_all('a'):
         #print(link.get('href'))
-        #if re.search("sds011_sensor_25443",link.get('href')):
+        #um einelne datei nachzuladen datum richtig setzen
+        #if re.search("2020-06-04_sds011_sensor_46737",link.get('href')):
         if re.search("sds011_sensor",link.get('href')) or re.search("sps30_sensor",link.get('href')):
             if not re.search("indoor",link.get('href')):
             	csvList.append(url2 + link.get('href'))
@@ -109,7 +110,7 @@ for csvEintrag in csvList:
                 csv_reader_object.__next__()
                 for row in csv_reader_object:
                     for index in range(len(row)):
-                        if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f":
+                        if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f" or row[index] == "True" or row[index] == "nan":
                             row[index] = None
                     #Falsches Zeitformat abfangen Zeile wird ignoriert
                     if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
@@ -140,7 +141,7 @@ for csvEintrag in csvList:
                 csv_reader_object.__next__()
                 for row in csv_reader_object:
                     for index in range(len(row)):
-                        if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f":
+                        if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f" or row[index] == "True" or row[index] == "nan":
                             row[index] = None
                     #Falsches Zeitformat abfangen Zeile wird ignoriert
                     if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
