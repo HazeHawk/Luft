@@ -52,7 +52,7 @@ class AirController(object):
 
         self.widget.show()
         self.load_home_data()
-        #self.load_cluster_circle_home()
+        self.load_cluster_circle_home()
         #self.load_single_circle_home()
 
         folium.LayerControl().add_to(self._ui.m)
@@ -143,7 +143,7 @@ class AirController(object):
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
             for i, sensor in enumerate(cursor):
-                if i == 600:
+                if i == 100:
                     break
                 lon, lat = sensor["location"]["coordinates"]
                 popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
@@ -151,8 +151,7 @@ class AirController(object):
                 location_list.append([lat, lon])
                 popup_list.append(popup)
 
-            fg = folium.FeatureGroup(name=area["properties"]["NAME_2"], show=False)
-            self._ui.m.add_child(fg)
+            fg = folium.FeatureGroup(name=area["properties"]["NAME_2"]).add_to(self._ui.m)
 
             cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
             cluster.add_to(fg)
