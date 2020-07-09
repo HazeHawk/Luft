@@ -26,7 +26,6 @@ class AirController(object):
 
     def __init__(self):
         self.app = QApplication(sys.argv)
-        print(QStyleFactory.keys())
         self.app.setStyle("Fusion")
 
         self.widget = QWidget()
@@ -52,9 +51,12 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
-        #self.load_home_data()
+        self.load_home_data()
         #self.load_cluster_circle_home()
         #self.load_single_circle_home()
+
+        folium.LayerControl().add_to(self._ui.m)
+        self._refresh_home_map()
 
         logger.info("Running Over is dono")
 
@@ -98,7 +100,7 @@ class AirController(object):
         self.load_highlights(listID, listAVG)
 
         dataFrameData = pd.DataFrame.from_dict(data)
-        self.choroplethTest(geometry=areas, data=dataFrameData)
+        self.choroplethTest(geometry=areas, data=dataFrameData).add_to(self._ui.m)
 
         # create markes
         #Folium Tooltip enables to display Dictionaries as tooltips for the data.
@@ -141,7 +143,7 @@ class AirController(object):
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
             for i, sensor in enumerate(cursor):
-                if i == 300:
+                if i == 600:
                     break
                 lon, lat = sensor["location"]["coordinates"]
                 popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
@@ -149,12 +151,17 @@ class AirController(object):
                 location_list.append([lat, lon])
                 popup_list.append(popup)
 
+            fg = folium.FeatureGroup(name=area["properties"]["NAME_2"], show=False)
+            self._ui.m.add_child(fg)
 
             cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
-            cluster.add_to(self._ui.m)
-            self._refresh_home_map()
+            cluster.add_to(fg)
+
             print(i)
             print(area["properties"]["NAME_2"])
+
+        #folium.LayerControl().add_to(self._ui.m)
+        #self._refresh_home_map()
 
     def load_analysis(self, listID:list, listAVG:list):
 
@@ -233,7 +240,7 @@ class AirController(object):
         pass
 
     def choroplethTest(self, geometry, data):
-        folium.Choropleth(
+        choro = folium.Choropleth(
             geo_data=geometry,
             name='choropleth',
             data=data,
@@ -243,11 +250,19 @@ class AirController(object):
             fill_opacity=0.7,
             line_opacity=0.2,
             legend_name='Average PM2'
-        ).add_to(self._ui.m)
+        )
 
-        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+        style_function = "font-size: 15px; font-weight: bold"
+        choro.geojson.add_child(folium.GeoJsonTooltip(["NAME_2"], style=style_function, labels=False))
 
-        self._ui.homeWidgetMap.update()
+        return choro
+
+        #WTF Warum geht das hier fürs choro und sonst nirgends?
+        #folium.LayerControl().add_to(self._ui.m)
+
+        #self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+
+        #self._ui.homeWidgetMap.update()
 
     def setFoliumCircle(self, lat:float, long:float, popup:str):
         folium.Circle(
@@ -314,4 +329,4 @@ class AirController(object):
         self._ui.homeWidgetMap.update()
 
     def get_current_map_part(self):
-        print(self._ui.m.location)
+        print("Nix")
