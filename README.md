@@ -54,7 +54,7 @@ nutzen den korrekten Interpreter.
 
 
 
-Hinweise & Anleitungen fues Dev Team
+HINWEISE UND ANLEITUNG FUER DAS DEV TEAM !
 
 Da die Virtualenv ziemlich groß wird, ist es empfehlenswert, die Python Version und die
 requirements.txt zu sharen.
