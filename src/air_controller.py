@@ -53,7 +53,7 @@ class AirController(object):
         self.widget.show()
         self.load_home_data()
         self.load_cluster_circle_home()
-        self.load_single_circle_home()
+        #self.load_single_circle_home()
 
         folium.LayerControl().add_to(self._ui.m)
         self._refresh_home_map()
@@ -133,9 +133,12 @@ class AirController(object):
         start_time = today
         end_time = today+relativedelta(hours=1)
 
-        areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        with open('data/areas/bezirke.json', encoding='utf-8') as f:
+            areas = json.load(f)
 
-        for area in areas:
+        #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+
+        for area in areas["features"]:
             location_list = []
             popup_list = []
 
