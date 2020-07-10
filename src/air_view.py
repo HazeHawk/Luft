@@ -48,6 +48,10 @@ class AirView(object):
         self.widgetForecast = QWidget()
         tabWidget.addTab(self.buildForecast(self.widgetForecast), "Forecast")
 
+        #Info Tab
+        self.widgetInfo = QWidget()
+        tabWidget.addTab(self.buildInfo(self.widgetInfo), "Info")
+
         gridLayoutTabWidget.addWidget(tabWidget, 0, 0, 1, 1)
 
         tabWidget.setCurrentIndex(0)
@@ -316,6 +320,32 @@ class AirView(object):
 
         return forecast
 
+    def buildInfo(self, info):
+        horizontalLayout_5 = QVBoxLayout(info)
 
+        widgetInfoMenu = QWidget(info)
 
+       # horizontalLayout_5.addWidget(widgetInfoMenu)
 
+        widget_3 = QWidget(info)
+
+        verticalLayout_2 = QVBoxLayout(widget_3)
+
+        inputPositionLable1 = QLabel()
+        inputPositionLable1.setText("This program visualizes sensor data from Luftdaten.info."
+        " Luftdaten.info is a community project that follows the determination of the fine dust content in Stuttgart. In the meantime, the sensors can also be found outside Stuttgart."
+        " Users build themselves a measuring station with the ability to measure particulate emissions. In addition, temperature, humidity and air pressure can also be measured.However, these options are optional and it is up to the builder to implement them. In this project only the fine dust content is visualized."
+        " The project started in 2015 and there are now over 12000 active measuring stations. The measuring stations measure every 2.5 minutes and transmit the current values to the server."
+        " There are different sensors. The SDS011 and the SPS30 are responsible for the fine dust."
+        " For more information feel free to visit the Website luftdaten.info and have a look.")
+        inputPositionLable1.setAlignment(Qt.AlignLeft)
+        inputPositionLable1.setWordWrap(True);
+        horizontalLayout_5.addWidget(inputPositionLable1)
+
+        inputPositionLable2 = QLabel()
+        inputPositionLable2.setText('''<a href='http://luftdaten.info'>luftdaten.info</a>''')
+        inputPositionLable2.setAlignment(Qt.AlignCenter)
+        inputPositionLable2.setOpenExternalLinks(True)
+        horizontalLayout_5.addWidget(inputPositionLable2)
+
+        return info
