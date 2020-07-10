@@ -53,7 +53,7 @@ class AirController(object):
         self.widget.show()
         self.load_home_data()
         self.load_cluster_circle_home()
-        #self.load_single_circle_home()
+        self.load_single_circle_home()
 
         folium.LayerControl().add_to(self._ui.m)
         self._refresh_home_map()
@@ -116,13 +116,13 @@ class AirController(object):
             geo = {'$geometry': area['geometry']}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
+            fg = folium.FeatureGroup(name="Single points " + area["properties"]["NAME_2"]).add_to(self._ui.m)
+
             for i, sensor in enumerate(cursor):
-                if i == 300:
-                    break
                 lon, lat = sensor["location"]["coordinates"]
                 popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
 
-                self.setFoliumCircle(lat=lat, long=lon, popup=popup)
+                self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(fg)
 
             self._refresh_home_map()
             print(i)
@@ -143,8 +143,6 @@ class AirController(object):
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
             for i, sensor in enumerate(cursor):
-                if i == 100:
-                    break
                 lon, lat = sensor["location"]["coordinates"]
                 popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
 
@@ -264,19 +262,21 @@ class AirController(object):
         #self._ui.homeWidgetMap.update()
 
     def setFoliumCircle(self, lat:float, long:float, popup:str):
-        folium.Circle(
+        return folium.Circle(
             location=[lat, long],
             radius=500,
             popup=popup,
             color='blue',
             fill=True,
             fill_color='blue'
-        ).add_to(self._ui.m)
+        )
 
 
 
     def _refresh_home_map(self):
-        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+        self._ui.saveFoliumToHtmlInDirectory()
+        self._ui.homeWidgetMap.load(QUrl('file:/data/html/map.html'))
+        #self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
         self._ui.homeWidgetMap.update()
 
     def homeButtonSendClicked(self):

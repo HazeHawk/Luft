@@ -58,12 +58,9 @@ class AirView(object):
             location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12
         )
 
-    def saveFoliumToHtml(self):
-        data = io.BytesIO()
 
-        self.m.save(data, close_file=False)
-
-        return data
+    def saveFoliumToHtmlInDirectory(self):
+        self.m.save('./data/html/map.html', close_file=False)
 
 
     def buildHome(self, home):
