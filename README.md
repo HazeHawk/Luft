@@ -17,30 +17,38 @@ Steps to do:
  
   - Frage das Team (Roman, Nam, Patrick) nach dem Einladungslink, um für das Projekt berechtigt zu werden
   - Klone dir das Projekt über den Befehl
-            git clone https://github.com/HazeHawk/Luft.git <pfad/zum/ordner>
+  
+           git clone https://github.com/HazeHawk/Luft.git <pfad/zum/ordner>
  
 Wie setze ich eine Virtualenv auf?
 Die folgenden Befehle sind in der Console deiner Wahl einzugeben (bash, cmd, PowerShell etc.)
-
-    - installiere in deiner Python Umgebung deiner Wahl virtualenv
+- installiere in deiner Python Umgebung deiner Wahl virtualenv
+    
             pip install virtualenv
-    - führe im gewünschten Python interpreter den folgenden Befehl aus:
-      (Empfehlung ist es die virtuelle Umgebung in einem neuen Ordner im Git Repository zu erstellen)
+            
+- führe im gewünschten Python interpreter den folgenden Befehl aus:
+(Empfehlung ist es die virtuelle Umgebung in einem neuen Ordner im Git Repository zu erstellen)
+      
             py -3.8 -m virtualenv <pfad/zum/env_ordner>
-    - Aktiviere deine virtuelle Umgebung, um in der virtualenv die relevanten Pakete zu installieren
+- Aktiviere deine virtuelle Umgebung, um in der virtualenv die relevanten Pakete zu installieren
+
             source <pfad/zum/env_ordner/Scripts/activate>
-    - Installiere die requirements.txt pakete:
-      (Die requirements.txt befindet sich im repo)
+- Installiere die requirements.txt pakete:
+(Die requirements.txt befindet sich im repo)
+      
             pip install -r </path/to/requirements.txt>
 
 Wie starte ich die Anwendung ?
  - Stelle sicher das du dich im VPN der Hochschule Reutlingen befindest. Als test könnt ihr versuchen den folgenden Link aufzurufen:
-            http://hucserv193:8081/
+ 
+          http://hucserv193:8081/
    Es sollte eine HTML Seite kommen, wo drin steht, dass ihr versuch auf die DB über n Browser zuzugreifen (was logischer weise nicht klappt ;))
  - Stelle sicher, dass ihr den Python Intepreter aus der virtuellen Umgebungen aktiviert habt
-             source <pfad/zum/env_ordner/Scripts/activate>
+ 
+         source <pfad/zum/env_ordner/Scripts/activate>
  - Führe die main.py im Repository aus
-             python main.py
+ 
+         python main.py
 
 
 Weitere Hinweise:
