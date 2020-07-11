@@ -69,6 +69,9 @@ class AirView(object):
 
         return data
 
+    def saveFoliumToHtmlInDirectory(self):
+        self.m.save('./data/html/map.html', close_file=False)
+
 
     def buildHome(self, home):
         horizontalLayout = QHBoxLayout(home)
@@ -141,6 +144,11 @@ class AirView(object):
         dateEditEnd.setDateTime(QDateTime.currentDateTime())
         verticalLayoutWidgetMenuBottom.addWidget(dateEditEnd)
         self.homeDateEditEnd = dateEditEnd
+
+        button = QPushButton()
+        button.setText('Click Me')
+        verticalLayoutWidgetMenuBottom.addWidget(button)
+        self.homeButtonSendData = button
 
         verticalLayoutWidgetMenu.addWidget(widgetMenuTop)
         verticalLayoutWidgetMenu.setStretch(0,1)
