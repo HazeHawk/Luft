@@ -43,6 +43,10 @@ class AirController(object):
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
 
+        self.choropleth = None
+        self.clusterPoints = []
+        self.singlePoints = []
+
         self.model = AirModel()
 
     def test(self):
@@ -58,7 +62,7 @@ class AirController(object):
         self.load_cluster_circle_home()
         #self.load_single_circle_home()
 
-        folium.LayerControl().add_to(self._ui.m)
+        
         self.refresh_home_map()
 
         logger.info("Running Over is dono")
@@ -103,7 +107,7 @@ class AirController(object):
         self.load_highlights(listID, listAVG)
 
         dataFrameData = pd.DataFrame.from_dict(data)
-        self.choroplethTest(geometry=areas, data=dataFrameData).add_to(self._ui.m)
+        self.choropleth = self.choroplethTest(geometry=areas, data=dataFrameData)
 
         # create markes
         #Folium Tooltip enables to display Dictionaries as tooltips for the data.
@@ -159,6 +163,8 @@ class AirController(object):
 
             cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
             cluster.add_to(fg)
+
+            self.clusterPoints.append(fg)
 
             print(i)
             print(area["properties"]["NAME_2"])
@@ -278,12 +284,27 @@ class AirController(object):
         )
 
     def refresh_home_map(self):
-
-        self._ui.saveFoliumToHtmlInDirectory()
+        #self._ui.saveFoliumToHtmlInDirectory()
+        self.buildFoliumMap()
 
         self._ui.homeWidgetMap.reload()
 
         self._ui.homeWidgetMap.update()
+
+    def buildFoliumMap(self):
+        
+        map = folium.Map(location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12)
+
+        if self.choropleth is not None:
+            map.add_child(self.choropleth)
+            
+        if not not self.clusterPoints:
+            for item in self.clusterPoints:
+                map.add_child(item)
+
+        folium.LayerControl().add_to(map)
+        
+        map.save('./data/html/map.html', close_file=False)
 
     def homeButtonSendClicked(self):
         self.get_current_map_part()
