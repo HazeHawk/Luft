@@ -10,13 +10,16 @@ from PySide2.QtCore import *
 import pymongo as pm
 from dateutil.relativedelta import *
 from PySide2.QtGui import *
-from PySide2.QtWidgets import QApplication, QWidget, QStyleFactory
+from PySide2.QtWidgets import *
 import pandas as pd
 from opencage.geocoder import OpenCageGeocode
-
+import threading
+import time
 from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
+from src.thread_data import ThreadData
+from src.qthread_data import QThreadData
 
 
 _cfg = Configuration()
@@ -42,6 +45,8 @@ class AirController(object):
 
         self.model = AirModel()
 
+        self.layerControl = folium.LayerControl()
+
     def test(self):
         sensors = self.model.get_sensors()
         jan = datetime(year=2020,month=1,day=1)
@@ -51,12 +56,12 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
-        self.load_home_data()
+        #self.load_home_data()
         self.load_cluster_circle_home()
         #self.load_single_circle_home()
 
-        folium.LayerControl().add_to(self._ui.m)
-        self._refresh_home_map()
+        self.layerControl.add_to(self._ui.m)
+        self.refresh_home_map()
 
         logger.info("Running Over is dono")
 
@@ -124,7 +129,7 @@ class AirController(object):
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(fg)
 
-            self._refresh_home_map()
+            self.refresh_home_map()
             print(i)
             print(area["properties"]["NAME_2"])
 
@@ -274,16 +279,17 @@ class AirController(object):
             fill_color='blue'
         )
 
-
-
-    def _refresh_home_map(self):
+    def refresh_home_map(self):
+        self.layerControl.reset()
         self._ui.saveFoliumToHtmlInDirectory()
-        self._ui.homeWidgetMap.load(QUrl('file:/data/html/map.html'))
-        #self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+
+        self._ui.homeWidgetMap.reload()
+
         self._ui.homeWidgetMap.update()
 
     def homeButtonSendClicked(self):
         self.get_current_map_part()
+        self.thread_test()
 
     def setHomeDateStart(self):
         logger.debug(self._ui.homeDateEditStart.date())
@@ -332,3 +338,17 @@ class AirController(object):
 
     def get_current_map_part(self):
         print("Nix")
+
+    def thread_test(self):
+        self.thread = QThreadData(self.load_home_data)
+        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_map)
+        self.thread.start()
+
+
+
+
+
+
+
+
+

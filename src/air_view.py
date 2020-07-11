@@ -15,9 +15,11 @@ _cfg = Configuration()
 
 logger = _cfg.LOGGER
 
-class AirView(object):
+class AirView(QMainWindow):
     def __init__(self):
+        QMainWindow.__init__(self)
         self.foliumStandardLocation()
+        self.saveFoliumToHtmlInDirectory()
         pass
 
     def setupUi(self, Form):
@@ -61,13 +63,6 @@ class AirView(object):
         self.m = folium.Map(
             location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12
         )
-
-    def saveFoliumToHtml(self):
-        data = io.BytesIO()
-
-        self.m.save(data, close_file=False)
-
-        return data
 
     def saveFoliumToHtmlInDirectory(self):
         self.m.save('./data/html/map.html', close_file=False)
@@ -167,7 +162,7 @@ class AirView(object):
 
         widgetMap = QWebEngineView(mapWidget)
         self.foliumStandardLocation()
-        widgetMap.setHtml(self.saveFoliumToHtml().getvalue().decode())
+        widgetMap.load(QUrl('file:/data/html/map.html'))
         self.homeWidgetMap = widgetMap
 
         verticalLayout.addWidget(widgetMap)
@@ -301,7 +296,7 @@ class AirView(object):
         verticalLayout_2 = QVBoxLayout(widget_3)
 
         widgetForecastMap = QWebEngineView(widget_3)
-        widgetForecastMap.setHtml(self.saveFoliumToHtml().getvalue().decode())
+        widgetForecastMap.load(QUrl('file:/data/html/map.html'))
 
         verticalLayout_2.addWidget(widgetForecastMap)
 
