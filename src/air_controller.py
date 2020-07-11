@@ -1,23 +1,23 @@
 
+import json
 import sys
 from datetime import date, datetime
 from pprint import pformat
-import json
+
 import folium
-from folium.plugins import MarkerCluster
-from PySide2.QtCharts import *
-from PySide2.QtCore import *
+import pandas as pd
 import pymongo as pm
 from dateutil.relativedelta import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import QApplication, QWidget, QStyleFactory
-import pandas as pd
+from folium.plugins import MarkerCluster
 from opencage.geocoder import OpenCageGeocode
+from PySide2.QtCharts import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import QApplication, QStyleFactory, QWidget
 
 from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
-
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -51,9 +51,9 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
-        self.load_home_data()
+        #self.load_home_data()
         self.load_cluster_circle_home()
-        self.load_single_circle_home()
+        #self.load_single_circle_home()
 
         folium.LayerControl().add_to(self._ui.m)
         self._refresh_home_map()
@@ -131,7 +131,7 @@ class AirController(object):
     def load_cluster_circle_home(self):
         today = datetime(2020,6,20) # tmp
         start_time = today
-        end_time = today+relativedelta(hours=1)
+        end_time = today+relativedelta(hours=0.5)
 
         areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
 
@@ -144,7 +144,11 @@ class AirController(object):
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
-                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+                data = {"Bundesland":area["properties"]["NAME_2"],**sensor}
+                data['location'] = str(data['location']['coordinates'])
+                df = pd.DataFrame(data, index=[0])
+                html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
+                popup = folium.Popup(html)
 
                 location_list.append([lat, lon])
                 popup_list.append(popup)
