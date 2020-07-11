@@ -44,8 +44,8 @@ class AirController(object):
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
 
         self.choropleth = None
-        self.clusterPoints = []
-        self.singlePoints = []
+        self.clusterPoints = None
+        self.singlePoints = None
 
         self.model = AirModel()
 
@@ -59,11 +59,8 @@ class AirController(object):
 
         self.widget.show()
         #self.load_home_data()
-        self.load_cluster_circle_home()
+        #self.load_cluster_circle_home()
         #self.load_single_circle_home()
-
-        
-        self.refresh_home_map()
 
         logger.info("Running Over is dono")
 
@@ -97,7 +94,7 @@ class AirController(object):
                 if i == 5:
                     break
                 sensor['NAME_2'] = area["properties"]["NAME_2"]
-                logger.debug(pformat(sensor))
+                #logger.debug(pformat(sensor))
                 listID.append(area["properties"]["NAME_2"])
                 listAVG.append(sensor['PM2_avg'])
 
@@ -117,23 +114,29 @@ class AirController(object):
         start_time = today
         end_time = today+relativedelta(hours=1)
 
+        fg = folium.FeatureGroup(name="Single Circles")
+        sfgList = []
+
         areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
 
         for area in areas:
             geo = {'$geometry': area['geometry']}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
-            fg = folium.FeatureGroup(name="Single points " + area["properties"]["NAME_2"]).add_to(self._ui.m)
+            sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single points " + area["properties"]["NAME_2"])
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
                 popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
 
-                self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(fg)
+                self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
 
-            self.refresh_home_map()
-            print(i)
-            print(area["properties"]["NAME_2"])
+            sfgList.append(sfg)
+
+        for item in sfgList:
+            fg.add_child(item)
+        self.singlePoints = fg
+
 
     def load_cluster_circle_home(self):
         today = datetime(2020,6,20) # tmp
@@ -144,6 +147,9 @@ class AirController(object):
             areas = json.load(f)
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+
+        fg = folium.FeatureGroup(name="Cluster Circles")
+        sfgList = []
 
         for area in areas["features"]:
             location_list = []
@@ -159,18 +165,16 @@ class AirController(object):
                 location_list.append([lat, lon])
                 popup_list.append(popup)
 
-            fg = folium.FeatureGroup(name=area["properties"]["NAME_2"]).add_to(self._ui.m)
+            sfg = folium.plugins.FeatureGroupSubGroup(fg, name=area["properties"]["NAME_2"])
 
             cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
-            cluster.add_to(fg)
+            cluster.add_to(sfg)
 
-            self.clusterPoints.append(fg)
+            sfgList.append(sfg)
 
-            print(i)
-            print(area["properties"]["NAME_2"])
-
-        #folium.LayerControl().add_to(self._ui.m)
-        #self._refresh_home_map()
+        for item in sfgList:
+            fg.add_child(item)
+        self.clusterPoints = fg
 
     def load_analysis(self, listID:list, listAVG:list):
 
@@ -284,11 +288,7 @@ class AirController(object):
         )
 
     def refresh_home_map(self):
-        #self._ui.saveFoliumToHtmlInDirectory()
-        self.buildFoliumMap()
-
         self._ui.homeWidgetMap.reload()
-
         self._ui.homeWidgetMap.update()
 
     def buildFoliumMap(self):
@@ -298,9 +298,11 @@ class AirController(object):
         if self.choropleth is not None:
             map.add_child(self.choropleth)
             
-        if not not self.clusterPoints:
-            for item in self.clusterPoints:
-                map.add_child(item)
+        if self.clusterPoints is not None:
+            map.add_child(self.clusterPoints)
+
+        if self.singlePoints is not None:
+            map.add_child(self.singlePoints)
 
         folium.LayerControl().add_to(map)
         
@@ -359,9 +361,10 @@ class AirController(object):
         print("Nix")
 
     def thread_test(self):
-        self.thread = QThreadData(self.load_home_data)
-        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_map)
+        self.thread = QThreadData([self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.buildFoliumMap])
         self.thread.start()
+
+        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_map)
 
 
 

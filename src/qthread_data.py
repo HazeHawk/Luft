@@ -2,7 +2,7 @@ from PySide2.QtCore import QThread
 
 class QThreadData(QThread):
 
-    def __init__(self, target):
+    def __init__(self, target:list):
         QThread.__init__(self)
         self.target = target
 
@@ -10,5 +10,6 @@ class QThreadData(QThread):
         self.wait()
 
     def run(self):
-        self.target()
+        for item in self.target:
+            item()
 
