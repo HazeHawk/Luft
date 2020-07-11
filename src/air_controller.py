@@ -51,9 +51,9 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
-        #self.load_home_data()
+        self.load_home_data()
         self.load_cluster_circle_home()
-        #self.load_single_circle_home()
+        self.load_single_circle_home()
 
         folium.LayerControl().add_to(self._ui.m)
         self._refresh_home_map()
@@ -120,7 +120,11 @@ class AirController(object):
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
-                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+                data = {"Bundesland":area["properties"]["NAME_2"],**sensor}
+                data['location'] = str(data['location']['coordinates'])
+                df = pd.DataFrame(data, index=[0])
+                html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
+                popup = folium.Popup(html)
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(fg)
 
