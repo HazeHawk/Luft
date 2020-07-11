@@ -91,8 +91,6 @@ class AirController(object):
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
 
             for i, sensor in enumerate(cursor):
-                if i == 5:
-                    break
                 sensor['NAME_2'] = area["properties"]["NAME_2"]
                 #logger.debug(pformat(sensor))
                 listID.append(area["properties"]["NAME_2"])
@@ -117,9 +115,11 @@ class AirController(object):
         fg = folium.FeatureGroup(name="Single Circles")
         sfgList = []
 
-        areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        with open('data/areas/bezirke.json', encoding='utf-8') as f:
+            areas = json.load(f)
 
-        for area in areas:
+        for area in areas["features"]:
             geo = {'$geometry': area['geometry']}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
