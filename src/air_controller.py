@@ -45,8 +45,6 @@ class AirController(object):
 
         self.model = AirModel()
 
-        self.layerControl = folium.LayerControl()
-
     def test(self):
         sensors = self.model.get_sensors()
         jan = datetime(year=2020,month=1,day=1)
@@ -60,7 +58,7 @@ class AirController(object):
         self.load_cluster_circle_home()
         #self.load_single_circle_home()
 
-        self.layerControl.add_to(self._ui.m)
+        folium.LayerControl().add_to(self._ui.m)
         self.refresh_home_map()
 
         logger.info("Running Over is dono")
@@ -280,7 +278,7 @@ class AirController(object):
         )
 
     def refresh_home_map(self):
-        self.layerControl.reset()
+
         self._ui.saveFoliumToHtmlInDirectory()
 
         self._ui.homeWidgetMap.reload()
