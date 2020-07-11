@@ -4,6 +4,7 @@ Contains all model classes for DB connects and datahandling.
 import datetime
 import json
 import sys
+import threading
 import time
 from pprint import pformat
 
@@ -32,17 +33,18 @@ class AirModel(metaclass=Singleton):
             logger.error(str(err)+"\n Are you connected via VPN ? Also check the config.py Configurations.")
             status = sys.exit()
 
-
-
-        self.db = client.airq_db2
+        self.db = client.airq_db
         self.sensors_col = self.db.airq_sensors
         self.areas_col = self.db.areas
         self.smoltest_col = self.db.smoltest
         self.client = client
-        self.create_index()
+
+        index_thread = threading.Thread(target=self.create_index, daemon=True, name="Index_Thread")
+        index_thread.start()
 
     def create_index(self):
-        col1 = self.client.airq_db2.airq_sensors
+        logger.info("Start initiating indexes")
+        col1 = self.sensors_col
         col1.create_index(keys=[('timestamp', pm.ASCENDING)], background=True)
         col1.create_index(keys=[("sensor_id", pm.ASCENDING)], background=True)
         col1.create_index(keys=[("sensor_type", pm.ASCENDING)], background=True)
@@ -52,11 +54,11 @@ class AirModel(metaclass=Singleton):
         col1.create_index(keys=[("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE), ("sensor_id", pm.ASCENDING)], background=True)
 
 
-        col2 = self.client.airq_db2.areas
+        col2 = self.areas_col
         col2.create_index(keys=[('properties.ID_1', pm.ASCENDING)], background=True, name="Bundesland_Index")
         col2.create_index(keys=[('properties.ID_2', pm.ASCENDING)], background=True, name="Bezirk_Index")
         col2.create_index(keys=[("geometry", pm.GEOSPHERE)], background=True, name="GEO_AREA_INDEXU")
-
+        logger.info("Done initiating indexes")
 
     def test_model(self):
 
@@ -79,7 +81,6 @@ class AirModel(metaclass=Singleton):
 
         print("DONUS MAXIMUS")
 
-
     def _explain_query(self, cursor):
         expa = cursor.explain()
         del expa["executionStats"]["allPlansExecution"]
@@ -87,7 +88,6 @@ class AirModel(metaclass=Singleton):
         #q_logger.debug(f'Query Planner: {pformat(expa["queryPlanner"])}')
         q_logger.debug(f'Executionstats: {pformat(expa["executionStats"])}')
         q_logger.debug("FindQuery DONUS")
-
 
     def get_db(self):
         '''Return the database instance 'airq_db' from the MongoDB.'''
@@ -291,7 +291,6 @@ class AirModel(metaclass=Singleton):
         return cursor
 
 
-
     def _median(self):
         #https://stackoverflow.com/questions/20456095/calculate-the-median-in-mongodb-aggregation-framework
         pass
@@ -306,10 +305,6 @@ class AirModel(metaclass=Singleton):
                 merged = {**merged, **a_dict}
         return merged
 
-
-
-    def read(self):
-        pass
 
      #ID + indexe for the areas is unclear, but because of few query length optimization can be ignored imo.
 

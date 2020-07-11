@@ -3,6 +3,7 @@ import json
 import sys
 from datetime import date, datetime
 from pprint import pformat
+import threading
 
 import folium
 import pandas as pd
@@ -41,6 +42,7 @@ class AirController(object):
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
 
         self.model = AirModel()
+        
 
     def test(self):
         sensors = self.model.get_sensors()
