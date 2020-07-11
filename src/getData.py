@@ -26,8 +26,8 @@ myfile = requests.get(url)
 
 #ab diesem Datum werden Daten heruntergeladen
 #bis in die Gegenwart
-dateBeginn = time.strptime("01/04/2020", "%d/%m/%Y")
-dateEnd = time.strptime("30/04/2020", "%d/%m/%Y")
+dateBeginn = time.strptime("01/03/2020", "%d/%m/%Y")
+dateEnd = time.strptime("31/03/2020", "%d/%m/%Y")
 
 #abgebrochenen Download fortsetzen
 #help auf 0 setzen sonst auf 1
@@ -110,7 +110,7 @@ for csvEintrag in csvList:
                 csv_reader_object.__next__()
                 for row in csv_reader_object:
                     for index in range(len(row)):
-                        if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f" or row[index] == "True" or row[index] == "nan":
+                        if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f" or row[index] == "True" or row[index] == "nan" or row[index] == "%val2%" or row[index] == "PM10" or row[index] == "PM25":
                             row[index] = None
                     #Falsches Zeitformat abfangen Zeile wird ignoriert
                     if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
@@ -141,7 +141,7 @@ for csvEintrag in csvList:
                 csv_reader_object.__next__()
                 for row in csv_reader_object:
                     for index in range(len(row)):
-                        if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f" or row[index] == "True" or row[index] == "nan":
+                        if row[index] == "" or row[index] == "unavailable" or row[index] == "%.1f" or row[index] == "True" or row[index] == "nan" or row[index] == "%val2%":
                             row[index] = None
                     #Falsches Zeitformat abfangen Zeile wird ignoriert
                     if re.search("\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d", row[5]):
