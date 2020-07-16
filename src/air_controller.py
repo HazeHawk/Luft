@@ -1,4 +1,3 @@
-
 import sys
 from datetime import date, datetime
 from pprint import pformat
@@ -7,21 +6,15 @@ import folium
 from folium.plugins import MarkerCluster
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
-import pymongo as pm
 from dateutil.relativedelta import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 import pandas as pd
 from opencage.geocoder import OpenCageGeocode
-import threading
-import time
 from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
-from src.thread_data import ThreadData
 from src.qthread_data import QThreadData
-from src.worker import Worker
-
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -69,18 +62,18 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
-        #self.load_home_data()
-        #self.load_cluster_circle_home()
-        #self.load_single_circle_home()
 
+        self.load_view_util()
+
+        logger.info("Running Over is dono")
+
+    def load_view_util(self):
         self.home_loading_start()
 
         tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
-
-        logger.info("Running Over is dono")
 
     def load_home_data(self, timeframe=None):
 
