@@ -67,6 +67,7 @@ class AirController(object):
 
         self.widget.show()
 
+        self._ui.homeButtonSendData.setEnabled(False)
         self.load_view_util()
 
         logger.info("Running Over is dono")
@@ -78,17 +79,23 @@ class AirController(object):
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
+        self.thread.exit()
 
-    def load_home_data(self, timeframe=None):
+    def load_home_data(self):
 
-        if not timeframe:
-            d = date.today()
-            today = datetime(d.year, d.month, d.day)
+        start_time = self.getHomeDateStart().toPython()
+        start_time = start_time+relativedelta(
+            hours=self.getHomeTimeStart().hour(), 
+            minutes=self.getHomeTimeStart().minute(), 
+            seconds=self.getHomeTimeStart().second()
+        )
 
-            today = datetime(2020,6,20) # tmp
-
-            start_time = today
-            end_time = today+relativedelta(hours=1)
+        end_time = self.getHomeDateEnd().toPython()
+        end_time = end_time+relativedelta(
+            hours=self.getHomeTimeEnd().hour(),
+            minutes=self.getHomeTimeEnd().minute(),
+            seconds=self.getHomeTimeEnd().second()
+        )
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         #areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
@@ -304,6 +311,7 @@ class AirController(object):
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_map)
+        self.thread.exit()
 
     def refresh_home_map(self):
         self._ui.homeWidgetMap.reload()
@@ -334,15 +342,20 @@ class AirController(object):
     def home_loading_end(self):
         self._ui.homeLoadingLabel.hide()
         self._ui.homeLoadingMovie.stop()
+        self._ui.homeButtonSendData.setEnabled(True)
 
     def homeButtonSendClicked(self):
         self.setHomeTimeStart()
         self.setHomeTimeEnd()
+
+        self._ui.homeButtonSendData.setEnabled(False)
+        self.load_view_util()
         #self.thread_test()
 
     def setHomeDateStart(self):
         logger.debug(self._ui.homeDateEditStart.date())
         self._homeDateStart = self._ui.homeDateEditStart.date()
+        self._ui.homeDateEditEnd.setMinimumDate(self._ui.homeDateEditStart.date())
 
     def getHomeDateStart(self):
         return self._homeDateStart
