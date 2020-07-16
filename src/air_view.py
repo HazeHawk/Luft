@@ -79,6 +79,9 @@ class AirView(QMainWindow):
         widgetMenuTop = QWidget(widgetMenu)
         verticalLayoutWidgetMenuTop = QVBoxLayout(widgetMenuTop)
 
+        widgetMenuMiddle = QWidget(widgetMenu)
+        verticalLayoutWidgetMenuMiddle = QVBoxLayout(widgetMenuMiddle)
+
         widgetMenuBottom = QWidget(widgetMenu)
         verticalLayoutWidgetMenuBottom = QVBoxLayout(widgetMenuBottom)
 
@@ -119,7 +122,7 @@ class AirView(QMainWindow):
         loading = QLabel()
         movie = QMovie('./data/gif/ajax-loader.gif')
         loading.setMovie(movie)
-        verticalLayoutWidgetMenuTop.addWidget(loading)
+        verticalLayoutWidgetMenuMiddle.addWidget(loading)
         loading.hide()
         self.homeLoadingLabel = loading
         self.homeLoadingMovie = movie
@@ -175,8 +178,7 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenu.addWidget(widgetMenuTop)
         verticalLayoutWidgetMenu.setStretch(0,1)
 
-        emptyWidget = QWidget()
-        verticalLayoutWidgetMenu.addWidget(emptyWidget)
+        verticalLayoutWidgetMenu.addWidget(widgetMenuMiddle)
         verticalLayoutWidgetMenu.setStretch(1,1)
 
         verticalLayoutWidgetMenu.addWidget(widgetMenuBottom)

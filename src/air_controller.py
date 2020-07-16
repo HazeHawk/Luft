@@ -75,7 +75,8 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
-        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        #tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        tasks = [self.load_home_data]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
@@ -112,7 +113,7 @@ class AirController(object):
 
             for i, sensor in enumerate(cursor):
                 sensor['NAME_2'] = area["properties"]["NAME_2"]
-                #logger.debug(pformat(sensor))
+                logger.debug(pformat(sensor))
                 listID.append(area["properties"]["NAME_2"])
                 listAVG.append(sensor['PM2_avg'])
 
@@ -124,9 +125,6 @@ class AirController(object):
         dataFrameData = pd.DataFrame.from_dict(data)
         self.choropleth = self.choroplethTest(geometry=areas, data=dataFrameData)
 
-        # create markes
-        #Folium Tooltip enables to display Dictionaries as tooltips for the data.
-
     def load_single_circle_home(self):
         today = datetime(2020,6,20) # tmp
         start_time = today
@@ -134,6 +132,8 @@ class AirController(object):
 
         fg = folium.FeatureGroup(name="Single Circles")
         sfgList = []
+
+        sensorCount = 0
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         with open('data/areas/bezirke.json', encoding='utf-8') as f:
@@ -150,12 +150,15 @@ class AirController(object):
                 popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
+                sensorCount += 1
 
             sfgList.append(sfg)
 
         for item in sfgList:
             fg.add_child(item)
         self.singlePoints = fg
+
+        self.setLabelSensorCount(sensorCount)
 
     def load_cluster_circle_home(self):
         today = datetime(2020,6,20) # tmp
@@ -376,7 +379,12 @@ class AirController(object):
 
     def setHomeTimeEnd(self):
         logger.debug(self._ui.homeTimeEditEnd.time())
-        self._homeTimeEnd = self._ui.homeTimeEditEnd.time()
+
+        if (self._homeTimeStart.toPython() > self._ui.homeTimeEditEnd.time().toPython()):
+            self._homeTimeEnd = self._homeTimeStart.addSecs(3600)
+            self._ui.homeTimeEditEnd.setTime(self._homeTimeStart.addSecs(3600))
+        else:
+            self._homeTimeEnd = self._ui.homeTimeEditEnd.time()
 
     def getHomeTimeEnd(self):
         return self._homeTimeEnd
@@ -393,8 +401,8 @@ class AirController(object):
     def setLabelAverag(self, average:str):
         self._ui.homeLabelAverage.setText(average)
 
-    def setLabelSensorCount(self, sensorCount: str):
-        self._ui.homeLabelSencorCount.setText(sensorCount)
+    def setLabelSensorCount(self, sensorCount:int):
+        self._ui.homeLabelSencorCount.setText("Sensor Count: " + str(sensorCount))
 
     def getCoordinates(self, name):
         key = "3803f50ca47344bf87e9c165d4e7fa94"
