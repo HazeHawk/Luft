@@ -37,11 +37,15 @@ class AirController(object):
         self._homeDateStart = self._ui.homeDateEditStart.date()
         self._ui.homeDateEditStart.dateChanged.connect(self.setHomeDateStart)
 
+        self._homeTimeStart = self._ui.homeTimeEditStart.time()
+
         self._ui.homeDateEditEnd.setMinimumDate(QDate(2020, 3, 1))
         self._ui.homeDateEditEnd.setMaximumDate(QDate(2020, 6, 30))
         self._ui.homeDateEditEnd.setDate(QDate(2020, 3, 1))
         self._homeDateEnd = self._ui.homeDateEditEnd.date()
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
+
+        self._homeTimeEnd = self._ui.homeTimeEditEnd.time()
 
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
 
@@ -85,8 +89,6 @@ class AirController(object):
 
             start_time = today
             end_time = today+relativedelta(hours=1)
-
-        stuttgart_geo = self.model.get_stuttgart_geo()
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         #areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
@@ -147,7 +149,6 @@ class AirController(object):
         for item in sfgList:
             fg.add_child(item)
         self.singlePoints = fg
-
 
     def load_cluster_circle_home(self):
         today = datetime(2020,6,20) # tmp
@@ -335,7 +336,9 @@ class AirController(object):
         self._ui.homeLoadingMovie.stop()
 
     def homeButtonSendClicked(self):
-        self.thread_test()
+        self.setHomeTimeStart()
+        self.setHomeTimeEnd()
+        #self.thread_test()
 
     def setHomeDateStart(self):
         logger.debug(self._ui.homeDateEditStart.date())
@@ -350,6 +353,20 @@ class AirController(object):
 
     def getHomeDateEnd(self):
         return self._homeDateEnd
+
+    def setHomeTimeStart(self):
+        logger.debug(self._ui.homeTimeEditStart.time())
+        self._homeTimeStart = self._ui.homeTimeEditStart.time()
+
+    def getHomeTimeStart(self):
+        return self._homeTimeStart
+
+    def setHomeTimeEnd(self):
+        logger.debug(self._ui.homeTimeEditEnd.time())
+        self._homeTimeEnd = self._ui.homeTimeEditEnd.time()
+
+    def getHomeTimeEnd(self):
+        return self._homeTimeEnd
 
     def setLabelMedian(self, median: str):
         self._ui.homeLabelMedian.setText(median)
