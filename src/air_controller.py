@@ -73,6 +73,8 @@ class AirController(object):
         #self.load_cluster_circle_home()
         #self.load_single_circle_home()
 
+        self.home_loading_start()
+
         tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
         self.thread = QThreadData(tasks)
         self.thread.start()
@@ -82,7 +84,6 @@ class AirController(object):
 
     def load_home_data(self, timeframe=None):
 
-        logger.debug("Home Data")
         if not timeframe:
             d = date.today()
             today = datetime(d.year, d.month, d.day)
@@ -313,6 +314,7 @@ class AirController(object):
     def refresh_home_map(self):
         self._ui.homeWidgetMap.reload()
         self._ui.homeWidgetMap.update()
+        self.home_loading_end()
 
     def buildFoliumMap(self):
         
@@ -330,6 +332,14 @@ class AirController(object):
         folium.LayerControl().add_to(map)
         
         map.save('./data/html/map.html', close_file=False)
+
+    def home_loading_start(self):
+        self._ui.homeLoadingLabel.show()
+        self._ui.homeLoadingMovie.start()
+
+    def home_loading_end(self):
+        self._ui.homeLoadingLabel.hide()
+        self._ui.homeLoadingMovie.stop()
 
     def homeButtonSendClicked(self):
         self.thread_test()

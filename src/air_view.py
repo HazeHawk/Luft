@@ -117,10 +117,12 @@ class AirView(QMainWindow):
         self.homeLabelSencorCount = sensorCountLabel
 
         loading = QLabel()
-        movie = QMovie()
+        movie = QMovie('./data/gif/ajax-loader.gif')
         loading.setMovie(movie)
         verticalLayoutWidgetMenuTop.addWidget(loading)
-        self.homeLoading = sensorCountLabel
+        loading.hide()
+        self.homeLoadingLabel = loading
+        self.homeLoadingMovie = movie
 
         # Bottom
         configurationTitle = QLabel()
