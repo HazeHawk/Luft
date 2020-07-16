@@ -18,7 +18,7 @@ class QThreadData(QThread):
 
     def run(self):
         for item in self.target:
-            logger.debug('start: ' + item.__name__)
+            logger.debug('start' + item.__name__)
             worker = Worker(item)
             self.pool.start(worker)
         self.pool.waitForDone()

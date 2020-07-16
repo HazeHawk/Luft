@@ -98,6 +98,9 @@ class AirController(object):
             seconds=self.getHomeTimeEnd().second()
         )
 
+        print(start_time)
+        print(end_time)
+
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         #areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
 
