@@ -20,6 +20,7 @@ from src.air_view import AirView
 from src.config import Configuration
 from src.thread_data import ThreadData
 from src.qthread_data import QThreadData
+from src.worker import Worker
 
 
 _cfg = Configuration()
@@ -37,10 +38,18 @@ class AirController(object):
         self._ui.setupUi(self.widget)
         self._ui.homeLineEditPosition.returnPressed.connect(self.gethomeLineEditPosition)
 
+        self._ui.homeDateEditStart.setMinimumDate(QDate(2020, 3, 1))
+        self._ui.homeDateEditStart.setMaximumDate(QDate(2020, 6, 30))
+        self._ui.homeDateEditStart.setDate(QDate(2020, 3, 1))
         self._homeDateStart = self._ui.homeDateEditStart.date()
-        self._homeDateEnd = self._ui.homeDateEditEnd.date()
         self._ui.homeDateEditStart.dateChanged.connect(self.setHomeDateStart)
+
+        self._ui.homeDateEditEnd.setMinimumDate(QDate(2020, 3, 1))
+        self._ui.homeDateEditEnd.setMaximumDate(QDate(2020, 6, 30))
+        self._ui.homeDateEditEnd.setDate(QDate(2020, 3, 1))
+        self._homeDateEnd = self._ui.homeDateEditEnd.date()
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
+
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
 
         self.choropleth = None
@@ -48,6 +57,8 @@ class AirController(object):
         self.singlePoints = None
 
         self.model = AirModel()
+
+        self.pool = QThreadPool()
 
     def test(self):
         sensors = self.model.get_sensors()
@@ -62,10 +73,16 @@ class AirController(object):
         #self.load_cluster_circle_home()
         #self.load_single_circle_home()
 
+        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        self.thread = QThreadData(tasks)
+        self.thread.start()
+        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
+
         logger.info("Running Over is dono")
 
     def load_home_data(self, timeframe=None):
 
+        logger.debug("Home Data")
         if not timeframe:
             d = date.today()
             today = datetime(d.year, d.month, d.day)
@@ -287,6 +304,12 @@ class AirController(object):
             fill_color='blue'
         )
 
+    def refresh_home_util(self):
+        tasks = [self.buildFoliumMap]
+        self.thread = QThreadData(tasks)
+        self.thread.start()
+        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_map)
+
     def refresh_home_map(self):
         self._ui.homeWidgetMap.reload()
         self._ui.homeWidgetMap.update()
@@ -309,7 +332,6 @@ class AirController(object):
         map.save('./data/html/map.html', close_file=False)
 
     def homeButtonSendClicked(self):
-        self.get_current_map_part()
         self.thread_test()
 
     def setHomeDateStart(self):
@@ -356,9 +378,6 @@ class AirController(object):
         self._ui.m.location = coordinates
         self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
         self._ui.homeWidgetMap.update()
-
-    def get_current_map_part(self):
-        print("Nix")
 
     def thread_test(self):
         self.thread = QThreadData([self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.buildFoliumMap])

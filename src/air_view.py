@@ -7,6 +7,7 @@ import pyqtgraph
 
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWebEngineWidgets import *
 from PySide2.QtWidgets import *
 from src.config import Configuration
@@ -115,13 +116,19 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuTop.addWidget(sensorCountLabel)
         self.homeLabelSencorCount = sensorCountLabel
 
+        loading = QLabel()
+        movie = QMovie()
+        loading.setMovie(movie)
+        verticalLayoutWidgetMenuTop.addWidget(loading)
+        self.homeLoading = sensorCountLabel
+
         # Bottom
         configurationTitle = QLabel()
         configurationTitle.setText("Configuration:")
         verticalLayoutWidgetMenuBottom.addWidget(configurationTitle)
 
         startLabel = QLabel()
-        startLabel.setText("Start:")
+        startLabel.setText("Start Date:")
         verticalLayoutWidgetMenuBottom.addWidget(startLabel)
 
         dateEditStart = QDateEdit()
@@ -130,8 +137,17 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuBottom.addWidget(dateEditStart)
         self.homeDateEditStart = dateEditStart
 
+        startTimeLabel = QLabel()
+        startTimeLabel.setText("Start Time:")
+        verticalLayoutWidgetMenuBottom.addWidget(startTimeLabel)
+
+        timeEditStart = QTimeEdit()
+        timeEditStart.setTime(QTime(9, 0, 0))
+        verticalLayoutWidgetMenuBottom.addWidget(timeEditStart)
+        self.homeTimeEditStart = timeEditStart
+
         endLabel = QLabel()
-        endLabel.setText("End:")
+        endLabel.setText("End Date:")
         verticalLayoutWidgetMenuBottom.addWidget(endLabel)
 
         dateEditEnd = QDateEdit()
@@ -139,6 +155,15 @@ class AirView(QMainWindow):
         dateEditEnd.setDateTime(QDateTime.currentDateTime())
         verticalLayoutWidgetMenuBottom.addWidget(dateEditEnd)
         self.homeDateEditEnd = dateEditEnd
+
+        endTimeLabel = QLabel()
+        endTimeLabel.setText("End Time:")
+        verticalLayoutWidgetMenuBottom.addWidget(endTimeLabel)
+
+        timeEditEnd = QTimeEdit()
+        timeEditEnd.setTime(QTime(10, 0, 0))
+        verticalLayoutWidgetMenuBottom.addWidget(timeEditEnd)
+        self.homeTimeEditEnd = timeEditEnd
 
         button = QPushButton()
         button.setText('Click Me')
