@@ -45,11 +45,6 @@ class AirController(object):
         self.model = AirModel()
 
 
-    def test(self):
-        self.altair_test()
-        pass
-
-
     def run(self):
 
         if False:
@@ -61,6 +56,9 @@ class AirController(object):
         else:
             #self.load_single_circle_home()
             self.testload_altair_circle()
+            #self.model._test_queries()
+            #status = self.model.db.command("serverStatus")
+            #_cfg.Q_LOGGER.debug(pformat(status))
 
         self.widget.show()
         logger.info("Running Over is dono")
@@ -126,7 +124,7 @@ class AirController(object):
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
                 popup = self.get_sensor_popup(sensor_id=sensor["_id"],
-                                              timeframe=(start_time, end_time), time_group="h")
+                                              timeframe=(start_time, end_time), time_group="d")
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(fg)
 
             self._refresh_home_map()
@@ -262,7 +260,7 @@ class AirController(object):
 
         df = pd.DataFrame(data)
         df = df.melt('date', var_name='PM_category', value_name='concentration')  #µg_per_m3
-
+        print(df)
         # Create a selection that chooses the nearest point & selects based on x-value
         nearest = alt.selection(type='single', nearest=True, on='mouseover',
                                 fields=['date'], empty='none')
@@ -302,15 +300,14 @@ class AirController(object):
 
         # Put the five layers into a chart and bind the data
         layered = alt.layer(
-            #line, selectors, points, rules, text
-            selectors
+            line, selectors, points, rules, text
         ).properties(
-            width=550, height=300
+            width=500, height=300
         )
 
         chart_json = layered.to_json()
-        vega = folium.VegaLite(chart_json, width=600)
-        popup = folium.Popup(max_width=700)
+        vega = folium.VegaLite(chart_json, width=650)
+        popup = folium.Popup()
         vega.add_to(popup)
         return popup
 

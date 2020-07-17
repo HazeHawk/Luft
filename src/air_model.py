@@ -33,7 +33,7 @@ class AirModel(metaclass=Singleton):
             logger.error(str(err)+"\n Are you connected via VPN ? Also check the config.py Configurations.")
             status = sys.exit()
 
-        self.db = client.airq_db2
+        self.db = client.airq_db
         self.sensors_col = self.db.airq_sensors
         self.areas_col = self.db.areas
         self.smoltest_col = self.db.smoltest
@@ -66,18 +66,18 @@ class AirModel(metaclass=Singleton):
 
     def _test_queries(self):
         geo = self.get_stuttgart_geo()
-        day = datetime.datetime(2020,6,1)
+        day = datetime.datetime(2020,6,20)
         q_logger.debug("Start Testing Queries "+str(datetime.datetime.now().time()))
 
         #cursor1 = self.find_sensors_by_old(geometry=geo, month=datetime.datetime(2020,6,1))
         #self._explain_query(cursor1)
 
-        cursor2 = self.find_sensors_by(geometry=geo, timeframe=(day, day+relativedelta(days=1)), group_by="sensor_id")
+        cursor2 = self.find_sensors_by(timeframe=(day, day+relativedelta(hours=0.5)), group_by="sensor_id", show_debug=True)
 
         for i, item in enumerate(cursor2):
-            print(item)
-            if i == 10:
-                break
+            if (i % 1000 == 0):
+                print(i)
+        print(i)
 
         print("DONUS MAXIMUS")
 
@@ -279,15 +279,11 @@ class AirModel(metaclass=Singleton):
                 pip.append(stage)
 
         if show_debug:
-            #q_logger.debug("Explain Cursor V1 - Nur Queryplan?")
-            #explain_cursor = self.db.command('aggregate', 'airq_sensors', pipeline=pip, explain=True, allowDiskUse=True)
-            #q_logger.debug(pformat(explain_cursor))
             q_logger.debug(f"ExplainCursor with EXEC - {datetime.datetime.now().time()}")
             explain_aggregate = self.db.command('explain', {'aggregate': 'airq_sensors', 'pipeline': pip, 'cursor': {}}, verbosity='executionStats')
-            #del another['queryPlanner']
-            q_logger.debug(pformat(explain_aggregate))
+            #q_logger.debug(pformat(explain_aggregate))
 
-        cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True)
+        cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True, batchSize=20)
         return cursor
 
     def find_single_sensor(self, sensor_id, timeframe, group_by=None, show_debug=False):
@@ -300,6 +296,7 @@ class AirModel(metaclass=Singleton):
         match, group, sort, project1 = None, None, None, None
         pip = []
         start_date, end_date = timeframe
+        diff = end_date-start_date
 
         sensor_id_match = {"sensor_id": sensor_id}
         start_match = {"timestamp": {"$gte": start_date}}
@@ -311,6 +308,10 @@ class AirModel(metaclass=Singleton):
                     "d": "%Y-%m-%d", "h": "%Y-%m-%d-%H"}
         if group_by not in GROUP_PARAM.keys() and group_by is not None:
             raise ValueError(f'YOU ARE NOT IN {GROUP_PARAM.keys()} you fool')
+
+        if group_by == 'h' and diff.days > 3:
+            logger.warning("Attention! You tried to query hour grouping for more than 3 days. Changed group_by to days")
+            group_by = 'd'
 
         project1 = {"$project": { "_id" : 0 , "sensor_id" : 1,
                                  "timestamp": 1,
