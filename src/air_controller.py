@@ -15,6 +15,8 @@ from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
 from src.qthread_data import QThreadData
+import numpy
+import statistics
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -49,6 +51,8 @@ class AirController(object):
 
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
 
+        self.location = [48.77915707462204, 9.175987243652344]
+
         self.choropleth = None
         self.clusterPoints = None
         self.singlePoints = None
@@ -73,8 +77,7 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
-        #tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
-        tasks = [self.load_home_data]
+        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
@@ -99,7 +102,7 @@ class AirController(object):
 
             for i, sensor in enumerate(cursor):
                 sensor['NAME_2'] = area["properties"]["NAME_2"]
-                logger.debug(pformat(sensor))
+                #logger.debug(pformat(sensor))
                 listID.append(area["properties"]["NAME_2"])
                 listAVG.append(sensor['PM2_avg'])
 
@@ -118,10 +121,7 @@ class AirController(object):
         sfgList = []
 
         sensorCount = 0
-        minimumPm2 = 9999
-        maximumPm2 = 0
-        averagePm2 = 0
-        medianPm2 = 0
+        pm2_avgList = []
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         with open('data/areas/bezirke.json', encoding='utf-8') as f:
@@ -135,9 +135,10 @@ class AirController(object):
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
-                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+                popup = pformat({"Bezirk":area["properties"]["NAME_2"],**sensor})
 
-                #if minimumPm2 > sensor
+                if sensor["PM2_avg"] is not None and 0 < sensor["PM2_avg"] < 999:
+                    pm2_avgList.append(sensor["PM2_avg"])
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
                 sensorCount += 1
@@ -148,7 +149,13 @@ class AirController(object):
             fg.add_child(item)
         self.singlePoints = fg
 
-        self.setLabelSensorCount(sensorCount)
+        self.setLabelSensorCount(str(sensorCount))
+        self.setLabelMinimum(str(round(min(pm2_avgList), 4)))
+        self.setLabelMaximum(str(round(max(pm2_avgList), 4)))
+        self.setLabelAverag(str(round(sum(pm2_avgList)/len(pm2_avgList), 4)))
+
+        pm2_avgList.sort()
+        self.setLabelMedian(str(round(statistics.median(pm2_avgList), 4)))
 
     def load_cluster_circle_home(self):
         start_time, end_time = self.getTimeframe()
@@ -260,13 +267,6 @@ class AirController(object):
         self._ui.highlightsQChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
         self._ui.highlightsQChart.setTitle("Pie Chart Example")
 
-    def load_test_circles(self):
-        self.setFoliumCircle(48.780, 9.175, "murks")
-        self.setFoliumCircle(48.785, 9.175, "marks")
-        self.setFoliumCircle(48.775, 9.175, "merks")
-        self.setFoliumCircle(48.780, 9.180, "mirks")
-        self.setFoliumCircle(48.780, 9.170, "morks")
-
     def get_popup_str(self):
         pass
 
@@ -287,7 +287,7 @@ class AirController(object):
             data=data,
             columns=['ID', 'AVG'],
             key_on='feature.properties.NAME_2',
-            fill_color='YlGn',
+            fill_color='YlOrRd',
             fill_opacity=0.7,
             line_opacity=0.2,
             legend_name='Average PM2'
@@ -308,7 +308,7 @@ class AirController(object):
     def setFoliumCircle(self, lat:float, long:float, popup:str):
         return folium.Circle(
             location=[lat, long],
-            radius=500,
+            radius=50,
             popup=popup,
             color='blue',
             fill=True,
@@ -329,7 +329,7 @@ class AirController(object):
 
     def buildFoliumMap(self):
         
-        map = folium.Map(location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12)
+        map = folium.Map(location=self.location, tiles="Stamen Toner", zoom_start=12)
 
         if self.choropleth is not None:
             map.add_child(self.choropleth)
@@ -396,19 +396,19 @@ class AirController(object):
         return self._homeTimeEnd
 
     def setLabelMedian(self, median: str):
-        self._ui.homeLabelMedian.setText(median)
+        self._ui.homeLabelMedian.setText("Median: " + median)
 
     def setLabelMaximum(self, maximum: str):
-        self._ui.homeLabelMaximal.setText(maximum)
+        self._ui.homeLabelMaximal.setText("Maximum: " + maximum)
 
     def setLabelMinimum(self, minimum: str):
-        self._ui.homeLabelMinimal.setText(minimum)
+        self._ui.homeLabelMinimal.setText("Minimum: " + minimum)
 
     def setLabelAverag(self, average:str):
-        self._ui.homeLabelAverage.setText(average)
+        self._ui.homeLabelAverage.setText("Average: " + average)
 
-    def setLabelSensorCount(self, sensorCount:int):
-        self._ui.homeLabelSencorCount.setText("Sensor Count: " + str(sensorCount))
+    def setLabelSensorCount(self, sensorCount:str):
+        self._ui.homeLabelSencorCount.setText("Sensor Count: " + sensorCount)
 
     def getCoordinates(self, name):
         key = "3803f50ca47344bf87e9c165d4e7fa94"
@@ -422,8 +422,8 @@ class AirController(object):
         city = self._ui.homeLineEditPosition.text()
         coordinates = self.getCoordinates(city)
         #self._ui.m.location = [48.77915707462204, -9.175987243652344]
-        self._ui.m.location = coordinates
-        self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+        self.location = coordinates
+        self.refresh_home_util()
         self._ui.homeWidgetMap.update()
 
 

@@ -95,6 +95,11 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuTop.addWidget(medianLabel)
         self.homeLabelMedian = medianLabel
 
+        averageLabel = QLabel()
+        averageLabel.setText("Average:")
+        verticalLayoutWidgetMenuTop.addWidget(averageLabel)
+        self.homeLabelAverage = averageLabel
+
         minimalLabel = QLabel()
         minimalLabel.setText("Minimal:")
         verticalLayoutWidgetMenuTop.addWidget(minimalLabel)
@@ -104,11 +109,6 @@ class AirView(QMainWindow):
         maximalLabel.setText("Maximal:")
         verticalLayoutWidgetMenuTop.addWidget(maximalLabel)
         self.homeLabelMaximal = maximalLabel
-
-        averageLabel = QLabel()
-        averageLabel.setText("Average:")
-        verticalLayoutWidgetMenuTop.addWidget(averageLabel)
-        self.homeLabelAverage = averageLabel
 
         sensorCountLabel = QLabel()
         sensorCountLabel.setText("Sensor Count:")
