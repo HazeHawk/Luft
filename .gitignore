@@ -3,3 +3,4 @@
 .idea
 _test.py
 *.log
+data/html/map.html

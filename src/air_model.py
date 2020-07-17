@@ -4,6 +4,7 @@ Contains all model classes for DB connects and datahandling.
 import datetime
 import json
 import sys
+import threading
 import time
 from pprint import pformat
 
@@ -32,15 +33,18 @@ class AirModel(metaclass=Singleton):
             logger.error(str(err)+"\n Are you connected via VPN ? Also check the config.py Configurations.")
             status = sys.exit()
 
-        self.db = client.airq_db
+        self.db = client.airq_db2
         self.sensors_col = self.db.airq_sensors
         self.areas_col = self.db.areas
         self.smoltest_col = self.db.smoltest
         self.client = client
-        self.create_index()
+
+        index_thread = threading.Thread(target=self.create_index, daemon=True, name="Index_Thread")
+        #index_thread.start()
 
     def create_index(self):
-        col1 = self.client.airq_db2.airq_sensors
+        logger.info("Start initiating indexes")
+        col1 = self.sensors_col
         col1.create_index(keys=[('timestamp', pm.ASCENDING)], background=True)
         col1.create_index(keys=[("sensor_id", pm.ASCENDING)], background=True)
         col1.create_index(keys=[("sensor_type", pm.ASCENDING)], background=True)
@@ -50,11 +54,11 @@ class AirModel(metaclass=Singleton):
         col1.create_index(keys=[("timestamp", pm.DESCENDING),("location", pm.GEOSPHERE), ("sensor_id", pm.ASCENDING)], background=True)
 
 
-        col2 = self.client.airq_db2.areas
+        col2 = self.areas_col
         col2.create_index(keys=[('properties.ID_1', pm.ASCENDING)], background=True, name="Bundesland_Index")
         col2.create_index(keys=[('properties.ID_2', pm.ASCENDING)], background=True, name="Bezirk_Index")
         col2.create_index(keys=[("geometry", pm.GEOSPHERE)], background=True, name="GEO_AREA_INDEXU")
-
+        logger.info("Done initiating indexes")
 
     def test_model(self):
 
@@ -77,7 +81,6 @@ class AirModel(metaclass=Singleton):
 
         print("DONUS MAXIMUS")
 
-
     def _explain_query(self, cursor):
         expa = cursor.explain()
         del expa["executionStats"]["allPlansExecution"]
@@ -85,7 +88,6 @@ class AirModel(metaclass=Singleton):
         #q_logger.debug(f'Query Planner: {pformat(expa["queryPlanner"])}')
         q_logger.debug(f'Executionstats: {pformat(expa["executionStats"])}')
         q_logger.debug("FindQuery DONUS")
-
 
     def get_db(self):
         '''Return the database instance 'airq_db' from the MongoDB.'''
@@ -288,7 +290,57 @@ class AirModel(metaclass=Singleton):
         cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True)
         return cursor
 
+    def find_single_sensor(self, sensor_id, timeframe, group_by=None, show_debug=False):
+        """Return Cursor Object with aggregated sensor data of a specific sensor. The data can
+        be grouped by hour, day, month or year. Make sure that the time frame is appropriately.
 
+            group_by
+                - Must be in ["y","m","d","h"]
+        """
+        match, group, sort, project1 = None, None, None, None
+        pip = []
+        start_date, end_date = timeframe
+
+        sensor_id_match = {"sensor_id": sensor_id}
+        start_match = {"timestamp": {"$gte": start_date}}
+        end_match = {"timestamp": {"$lt": end_date}}
+        matches = self._merge_dicts([sensor_id_match, start_match, end_match])
+        match = {"$match": matches}
+
+        GROUP_PARAM = {"y": "%Y", "m": "%Y-%m",
+                    "d": "%Y-%m-%d", "h": "%Y-%m-%d-%H"}
+        if group_by not in GROUP_PARAM.keys() and group_by is not None:
+            raise ValueError(f'YOU ARE NOT IN {GROUP_PARAM.keys()} you fool')
+
+        project1 = {"$project": { "_id" : 0 , "sensor_id" : 1,
+                                 "timestamp": 1,
+                                 "PM2": 1, "PM10":1}
+                    } if group_by is not None else None
+
+        # Group projection
+        #Group_by, maybe prepare some options
+        groups = { "_id": { "$dateToString": { "format": GROUP_PARAM[group_by], "date": "$timestamp" } },
+                   "sensor_id" : {"$first": "$sensor_id"},
+                   "PM2": {"$avg": "$PM2"}, "PM10": {"$avg": "$PM10"}
+                 }
+        group = {"$group": groups} if group_by is not None else None
+
+        #Sort
+        sort = {"$sort" : {"_id":1}} if group_by is not None else None
+
+        #Stages
+        stages = [match, project1, group, sort]
+        for stage in stages:
+            if stage is not None:
+                pip.append(stage)
+
+        if show_debug:
+            q_logger.debug(f"ExplainCursor with EXEC - {datetime.datetime.now().time()}")
+            explain_aggregate = self.db.command('explain', {'aggregate': 'airq_sensors', 'pipeline': pip, 'cursor': {}}, verbosity='executionStats')
+            q_logger.debug(pformat(explain_aggregate))
+
+        cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True)
+        return cursor
 
     def _median(self):
         #https://stackoverflow.com/questions/20456095/calculate-the-median-in-mongodb-aggregation-framework
@@ -304,10 +356,6 @@ class AirModel(metaclass=Singleton):
                 merged = {**merged, **a_dict}
         return merged
 
-
-
-    def read(self):
-        pass
 
      #ID + indexe for the areas is unclear, but because of few query length optimization can be ignored imo.
 
