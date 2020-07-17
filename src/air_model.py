@@ -241,7 +241,7 @@ class AirModel(metaclass=Singleton):
         geo_match = {"location": {"$geoWithin": geometry}} if geometry is not None else None
         start_match = {"timestamp": {"$gte": start_date}} if timeframe is not None else None
         end_match = {"timestamp": {"$lt": end_date}} if timeframe is not None else None
-        matches = self._merge_dicts([start_match, end_match, geo_match])
+        matches = {"$and": [geo_match, start_match, end_match]}
         match = {"$match": matches}
 
         # Group projection
@@ -283,7 +283,7 @@ class AirModel(metaclass=Singleton):
             explain_aggregate = self.db.command('explain', {'aggregate': 'airq_sensors', 'pipeline': pip, 'cursor': {}}, verbosity='executionStats')
             #q_logger.debug(pformat(explain_aggregate))
 
-        cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True, batchSize=20)
+        cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True)
         return cursor
 
     def find_single_sensor(self, sensor_id, timeframe, group_by=None, show_debug=False):
@@ -301,7 +301,7 @@ class AirModel(metaclass=Singleton):
         sensor_id_match = {"sensor_id": sensor_id}
         start_match = {"timestamp": {"$gte": start_date}}
         end_match = {"timestamp": {"$lt": end_date}}
-        matches = self._merge_dicts([sensor_id_match, start_match, end_match])
+        matches = {"$and": [sensor_id_match, start_match, end_match]}
         match = {"$match": matches}
 
         GROUP_PARAM = {"y": "%Y", "m": "%Y-%m",
@@ -408,8 +408,80 @@ class AirModel(metaclass=Singleton):
                 if i==10:
                     break
 
+    def fix_data(self):
+        new_col = self.db.airq_sensors_fixed
+        sensors = self.get_sensors_col()
+        sensor_id_list = sensors.find(projection={"sensor_id":1}).distinct("sensor_id")
+
+        start_date = datetime(2020,3,1)
+
+        for sensor_id in sensor_id_list:
+            # query dataset
+            pip = []
+
+            sensor_id_match = {"sensor_id": sensor_id}
+            start_match = {"timestamp": {"$gte": start_date}}
+            end_match = {"timestamp": {"$lt": end_date}}
+            matches = {"$and": [sensor_id_match, start_match, end_match]}
+            time_match
+
+
+             groups = { "_id": { "$dateToString": { "format": "%Y-%m-%d-%H", "date": "$timestamp" } },
+                   "sensor_id" : {"$first": "$sensor_id"},
+                   "PM2": {"$avg": "$PM2"}, "PM10": {"$avg": "$PM10"}
+                 }
+        group = {"$group": groups} if group_by is not None else None
+
+        start_date, end_date = timeframe
+        diff = end_date-start_date
+
+
+
+        match = {"$match": matches}
+
+
+
+        project1 = {"$project": { "_id" : 0 , "sensor_id" : 1,
+                                 "timestamp": 1,
+                                 "PM2": 1, "PM10":1}
+                    } if group_by is not None else None
+
+        # Group projection
+        #Group_by, maybe prepare some options
+        groups = { "_id": { "$dateToString": { "format": GROUP_PARAM[group_by], "date": "$timestamp" } },
+                   "sensor_id" : {"$first": "$sensor_id"},
+                   "PM2": {"$avg": "$PM2"}, "PM10": {"$avg": "$PM10"}
+                 }
+        group = {"$group": groups} if group_by is not None else None
+
+        #Sort
+        sort = {"$sort" : {"_id":1}} if group_by is not None else None
+
+        #Stages
+        stages = [match, project1, group, sort]
+        for stage in stages:
+            if stage is not None:
+                pip.append(stage)
+
+        if show_debug:
+            q_logger.debug(f"ExplainCursor with EXEC - {datetime.datetime.now().time()}")
+            explain_aggregate = self.db.command('explain', {'aggregate': 'airq_sensors', 'pipeline': pip, 'cursor': {}}, verbosity='executionStats')
+            q_logger.debug(pformat(explain_aggregate))
+
+        cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True)
+        return cursor
+
+
+
+
+
+
+            self.find_single_sensor(sensor_id=sensor_id, )
+
+
+
 
 
 if __name__ == 'main':
     model = AirModel()
-    model.test_model()
+    model.fix_data()

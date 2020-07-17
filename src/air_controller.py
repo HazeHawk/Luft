@@ -68,8 +68,7 @@ class AirController(object):
             self._ui.homeButtonSendData.setEnabled(False)
             self.load_view_util()
         else:
-            self.testload_altair_circle()
-            self.widget.show()
+            self.model.fix_data()
 
         logger.info("Running Over is dono")
 
@@ -77,7 +76,8 @@ class AirController(object):
         self.home_loading_start()
 
         #tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
-        tasks = [self.load_home_data]
+        #tasks = [self.load_home_data]
+        tasks = [self.load_single_circle_home]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
@@ -132,7 +132,7 @@ class AirController(object):
     def load_single_circle_home(self):
         today = datetime(2020,6,20) # tmp
         start_time = today
-        end_time = today+relativedelta(days=1)
+        end_time = today+relativedelta(hours=0.5)
 
         fg = folium.FeatureGroup(name="Single Circles")
         sfgList = []
@@ -161,8 +161,7 @@ class AirController(object):
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
                 sensorCount += 1
-                if (sensorCount==10):
-                    break
+                logger.debug(sensorCount)
 
             sfgList.append(sfg)
             break
@@ -308,7 +307,7 @@ class AirController(object):
 
         df = pd.DataFrame(data)
         df = df.melt('date', var_name='PM_category', value_name='concentration')  #µg_per_m3
-        print(df)
+
         # Create a selection that chooses the nearest point & selects based on x-value
         nearest = alt.selection(type='single', nearest=True, on='mouseover',
                                 fields=['date'], empty='none')
@@ -530,7 +529,8 @@ class AirController(object):
 
         circle.add_to(self._ui.m)
 
-        self._refresh_home_map()
+
+
     def thread_test(self):
         self.thread = QThreadData([self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.buildFoliumMap])
         self.thread.start()
