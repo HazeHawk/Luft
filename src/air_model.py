@@ -33,7 +33,7 @@ class AirModel(metaclass=Singleton):
             logger.error(str(err)+"\n Are you connected via VPN ? Also check the config.py Configurations.")
             status = sys.exit()
 
-        self.db = client.airq_db2
+        self.db = client.airq_db
         self.sensors_col = self.db.airq_sensors
         self.areas_col = self.db.areas
         self.smoltest_col = self.db.smoltest
@@ -66,18 +66,18 @@ class AirModel(metaclass=Singleton):
 
     def _test_queries(self):
         geo = self.get_stuttgart_geo()
-        day = datetime.datetime(2020,6,1)
+        day = datetime.datetime(2020,6,20)
         q_logger.debug("Start Testing Queries "+str(datetime.datetime.now().time()))
 
         #cursor1 = self.find_sensors_by_old(geometry=geo, month=datetime.datetime(2020,6,1))
         #self._explain_query(cursor1)
 
-        cursor2 = self.find_sensors_by(geometry=geo, timeframe=(day, day+relativedelta(days=1)), group_by="sensor_id")
+        cursor2 = self.find_sensors_by(timeframe=(day, day+relativedelta(hours=0.5)), group_by="sensor_id", show_debug=True)
 
         for i, item in enumerate(cursor2):
-            print(item)
-            if i == 10:
-                break
+            if (i % 1000 == 0):
+                print(i)
+        print(i)
 
         print("DONUS MAXIMUS")
 
@@ -117,25 +117,18 @@ class AirModel(metaclass=Singleton):
             Checkout PyMongo docs or official MongoDB docs
             (https://docs.mongodb.com/manual/tutorial/query-documents/)
             for more details regarding the matching operators.
-
             Parameters:
                 time-related parameters should be a datetime object.
                 timeframe: Tuple with start and ending date (start, end) of type datetimeobj
                 day, month, year filter by just 1 month!
-
-
             Geometry Example
-
             geometry = {"$geometry": {"type": "Polygon",
                                     "coordinates": [[9.0,48.0],[10.0,48.0],[10.0,50.0],[9.0,50.0],[9.0,48.0]]
                                     }
                     }
             geometry = {"$box": [[ 10,50],[ 9,48 ]]}
-
             Timestamp Example
-
             time = datetime.fromisoformat('2020-06-10')
-
             Make sure that the time attribute is an datetime Object.
         '''
         params = []
@@ -186,12 +179,9 @@ class AirModel(metaclass=Singleton):
         ''' Returns cursor object of an area query.
             By default the query return only the geometry of the document.
             For unfiltered document, use projection=None
-
             Parameters:
-
                 Bundesland - 2 Character String in Options: ['BW','BY','BE','BB','HB','HH','HE','MV','NI','NW','RP','SL','SN','ST','SH','TH']
                 https://de.wikipedia.org/wiki/ISO_3166-2%3ADE is the convention for bundesländer abbrevation.
-
                 bezirk - free string e.g. Stuttgart. (CASE SENSITIVE!)
         '''
         BL_OPTIONS= ['BW','BY','BE','BB','HB','HH','HE','MV','NI','NW','RP','SL','SN','ST','SH','TH']
@@ -224,14 +214,11 @@ class AirModel(metaclass=Singleton):
     def find_sensors_by(self, geometry=None, timeframe=(None, None), group_by=None, sort_by=None, projection=None, show_debug=False):
         ''' Sort & projection sind noch nicht implementiert. Ist aber "einfach"
         Geometry, Timeframe und group_by funtionieren.
-
         Wenn ihr group_by nutzen wollt.
         group_by = sensor_id
-
         TimeFrame example für Tag
         start_date = day
         end_date = start_date+relativedelta(days=1)
-
         '''
         match, group, sort = None, None, None
         pip = []
@@ -241,7 +228,7 @@ class AirModel(metaclass=Singleton):
         geo_match = {"location": {"$geoWithin": geometry}} if geometry is not None else None
         start_match = {"timestamp": {"$gte": start_date}} if timeframe is not None else None
         end_match = {"timestamp": {"$lt": end_date}} if timeframe is not None else None
-        matches = self._merge_dicts([start_match, end_match, geo_match])
+        matches = {"$and": [geo_match, start_match, end_match]}
         match = {"$match": matches}
 
         # Group projection
@@ -279,13 +266,9 @@ class AirModel(metaclass=Singleton):
                 pip.append(stage)
 
         if show_debug:
-            #q_logger.debug("Explain Cursor V1 - Nur Queryplan?")
-            #explain_cursor = self.db.command('aggregate', 'airq_sensors', pipeline=pip, explain=True, allowDiskUse=True)
-            #q_logger.debug(pformat(explain_cursor))
             q_logger.debug(f"ExplainCursor with EXEC - {datetime.datetime.now().time()}")
             explain_aggregate = self.db.command('explain', {'aggregate': 'airq_sensors', 'pipeline': pip, 'cursor': {}}, verbosity='executionStats')
-            #del another['queryPlanner']
-            q_logger.debug(pformat(explain_aggregate))
+            #q_logger.debug(pformat(explain_aggregate))
 
         cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True)
         return cursor
@@ -293,24 +276,28 @@ class AirModel(metaclass=Singleton):
     def find_single_sensor(self, sensor_id, timeframe, group_by=None, show_debug=False):
         """Return Cursor Object with aggregated sensor data of a specific sensor. The data can
         be grouped by hour, day, month or year. Make sure that the time frame is appropriately.
-
             group_by
                 - Must be in ["y","m","d","h"]
         """
         match, group, sort, project1 = None, None, None, None
         pip = []
         start_date, end_date = timeframe
+        diff = end_date-start_date
 
         sensor_id_match = {"sensor_id": sensor_id}
         start_match = {"timestamp": {"$gte": start_date}}
         end_match = {"timestamp": {"$lt": end_date}}
-        matches = self._merge_dicts([sensor_id_match, start_match, end_match])
+        matches = {"$and": [sensor_id_match, start_match, end_match]}
         match = {"$match": matches}
 
         GROUP_PARAM = {"y": "%Y", "m": "%Y-%m",
                     "d": "%Y-%m-%d", "h": "%Y-%m-%d-%H"}
         if group_by not in GROUP_PARAM.keys() and group_by is not None:
             raise ValueError(f'YOU ARE NOT IN {GROUP_PARAM.keys()} you fool')
+
+        if group_by == 'h' and diff.days > 3:
+            logger.warning("Attention! You tried to query hour grouping for more than 3 days. Changed group_by to days")
+            group_by = 'd'
 
         project1 = {"$project": { "_id" : 0 , "sensor_id" : 1,
                                  "timestamp": 1,
@@ -407,8 +394,6 @@ class AirModel(metaclass=Singleton):
                 if i==10:
                     break
 
-
-
 if __name__ == 'main':
     model = AirModel()
-    model.test_model()
+    model.fix_data()
