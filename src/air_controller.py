@@ -3,6 +3,7 @@ from datetime import date, datetime
 from pprint import pformat
 import json
 import folium
+import altair as alt
 from folium.plugins import MarkerCluster
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
@@ -63,6 +64,7 @@ class AirController(object):
         self.choropleth = None
         self.clusterPoints = None
         self.singlePoints = None
+        self.singlePointsO500 = None
 
         self.model = AirModel()
 
@@ -124,10 +126,14 @@ class AirController(object):
     def load_single_circle_home(self):
         start_time, end_time = self.getTimeframe()
 
-        fg = folium.FeatureGroup(name="Single Circles")
+        fg = folium.FeatureGroup(name="Single Sensors", show=False)
+        fgO500 = folium.FeatureGroup(name="Single Sensors over 500", show=False)
+
         sfgList = []
+        sfgList0500 = []
 
         sensorCount = 0
+        sensorCountFiltered = 0
         pm2_avgList = []
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
@@ -138,25 +144,38 @@ class AirController(object):
             geo = {'$geometry': area['geometry']}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
-            sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single points " + area["properties"]["NAME_2"])
+            sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single Sensors " + area["properties"]["NAME_2"])
+            sfgo500 = folium.plugins.FeatureGroupSubGroup(fgO500, name="Single Sensors over 500 " + area["properties"]["NAME_2"])
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
                 popup = pformat({"Bezirk":area["properties"]["NAME_2"],**sensor})
 
-                if sensor["PM2_avg"] is not None and 0 < sensor["PM2_avg"] < 999:
-                    pm2_avgList.append(sensor["PM2_avg"])
+                self.setFoliumCircle(lat=lat, long=lon, popup=popup, color='blue').add_to(sfg)
 
-                self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
+                # Roter Kreis wenn PM2_avg wert über 500
+                if sensor["PM2_avg"] is not None and sensor["PM2_avg"] > 500:
+                    self.setFoliumCircle(lat=lat, long=lon, popup=popup, color='red').add_to(sfgo500)
+
                 sensorCount += 1
 
+                if sensor["PM2_avg"] is not None and 0 < sensor["PM2_avg"] < 999:
+                    pm2_avgList.append(sensor["PM2_avg"])
+                    sensorCountFiltered += 1
+
             sfgList.append(sfg)
+            sfgList0500.append(sfgo500)
 
         for item in sfgList:
             fg.add_child(item)
         self.singlePoints = fg
 
+        for item in sfgList0500:
+            fgO500.add_child(item)
+        self.singlePointsO500 = fgO500
+
         self.setLabelSensorCount(str(sensorCount))
+        self.setLabelSensorCountFiltered(str(sensorCountFiltered))
         self.setLabelMinimum(str(round(min(pm2_avgList), 4)))
         self.setLabelMaximum(str(round(max(pm2_avgList), 4)))
         self.setLabelAverag(str(round(sum(pm2_avgList)/len(pm2_avgList), 4)))
@@ -172,7 +191,7 @@ class AirController(object):
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
 
-        fg = folium.FeatureGroup(name="Cluster Circles")
+        fg = folium.FeatureGroup(name="Clustered Sensors", show=False)
         sfgList = []
 
         for area in areas["features"]:
@@ -312,12 +331,12 @@ class AirController(object):
 
         #self._ui.homeWidgetMap.update()
 
-    def setFoliumCircle(self, lat:float, long:float, popup:str):
+    def setFoliumCircle(self, lat:float, long:float, popup:str, color:str):
         return folium.Circle(
             location=[lat, long],
             radius=50,
             popup=popup,
-            color='blue',
+            color=color,
             fill=True,
             fill_color='blue'
         )
@@ -346,6 +365,9 @@ class AirController(object):
 
         if self.singlePoints is not None:
             map.add_child(self.singlePoints)
+
+        if self.singlePointsO500 is not None:
+            map.add_child(self.singlePointsO500)
 
         folium.LayerControl().add_to(map)
         
@@ -420,6 +442,9 @@ class AirController(object):
 
     def setLabelSensorCount(self, sensorCount:str):
         self._ui.homeLabelSencorCount.setText("Sensor Count: " + sensorCount)
+
+    def setLabelSensorCountFiltered(self, sensorCountf: str):
+        self._ui.homeLabelSencorCountfiltered.setText("Sensor Count Filtered: " + sensorCountf)
 
     def getCoordinates(self, name):
         key = "3803f50ca47344bf87e9c165d4e7fa94"

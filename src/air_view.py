@@ -115,6 +115,11 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuTop.addWidget(sensorCountLabel)
         self.homeLabelSencorCount = sensorCountLabel
 
+        sensorCountLabelf = QLabel()
+        sensorCountLabelf.setText("Sensor Count Filtered:")
+        verticalLayoutWidgetMenuTop.addWidget(sensorCountLabelf)
+        self.homeLabelSencorCountfiltered = sensorCountLabelf
+
         loading = QLabel()
         movie = QMovie('./data/gif/ajax-loader.gif')
         loading.setMovie(movie)
