@@ -32,7 +32,7 @@ class AirModel(metaclass=Singleton):
             logger.error(str(err)+"\n Are you connected via VPN ? Also check the config.py Configurations.")
             status = sys.exit()
 
-        self.db = client.airq_db2
+        self.db = client.airq_db
         self.sensors_col = self.db.airq_sensors
         self.areas_col = self.db.areas
         self.smoltest_col = self.db.smoltest

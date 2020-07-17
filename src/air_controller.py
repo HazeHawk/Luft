@@ -118,6 +118,10 @@ class AirController(object):
         sfgList = []
 
         sensorCount = 0
+        minimumPm2 = 9999
+        maximumPm2 = 0
+        averagePm2 = 0
+        medianPm2 = 0
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         with open('data/areas/bezirke.json', encoding='utf-8') as f:
@@ -132,6 +136,8 @@ class AirController(object):
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
                 popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+
+                #if minimumPm2 > sensor
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
                 sensorCount += 1
@@ -419,12 +425,6 @@ class AirController(object):
         self._ui.m.location = coordinates
         self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
         self._ui.homeWidgetMap.update()
-
-    def thread_test(self):
-        self.thread = QThreadData([self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.buildFoliumMap])
-        self.thread.start()
-
-        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_map)
 
 
 
