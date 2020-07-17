@@ -7,6 +7,7 @@ import pyqtgraph
 
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWebEngineWidgets import *
 from PySide2.QtWidgets import *
 from src.config import Configuration
@@ -15,9 +16,11 @@ _cfg = Configuration()
 
 logger = _cfg.LOGGER
 
-class AirView(object):
+class AirView(QMainWindow):
     def __init__(self):
+        QMainWindow.__init__(self)
         self.foliumStandardLocation()
+        self.saveFoliumToHtmlInDirectory()
         pass
 
     def setupUi(self, Form):
@@ -44,10 +47,6 @@ class AirView(object):
         self.widgetHighlights = QWidget()
         tabWidget.addTab(self.buildHighlights(self.widgetHighlights), "Highlights")
 
-        #Forecast Tab
-        self.widgetForecast = QWidget()
-        tabWidget.addTab(self.buildForecast(self.widgetForecast), "Forecast")
-
         #Info Tab
         self.widgetInfo = QWidget()
         tabWidget.addTab(self.buildInfo(self.widgetInfo), "Info")
@@ -62,13 +61,6 @@ class AirView(object):
             location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12
         )
 
-    def saveFoliumToHtml(self):
-        data = io.BytesIO()
-
-        self.m.save(data, close_file=False)
-
-        return data
-
     def saveFoliumToHtmlInDirectory(self):
         self.m.save('./data/html/map.html', close_file=False)
 
@@ -82,6 +74,9 @@ class AirView(object):
 
         widgetMenuTop = QWidget(widgetMenu)
         verticalLayoutWidgetMenuTop = QVBoxLayout(widgetMenuTop)
+
+        widgetMenuMiddle = QWidget(widgetMenu)
+        verticalLayoutWidgetMenuMiddle = QVBoxLayout(widgetMenuMiddle)
 
         widgetMenuBottom = QWidget(widgetMenu)
         verticalLayoutWidgetMenuBottom = QVBoxLayout(widgetMenuBottom)
@@ -100,6 +95,11 @@ class AirView(object):
         verticalLayoutWidgetMenuTop.addWidget(medianLabel)
         self.homeLabelMedian = medianLabel
 
+        averageLabel = QLabel()
+        averageLabel.setText("Average:")
+        verticalLayoutWidgetMenuTop.addWidget(averageLabel)
+        self.homeLabelAverage = averageLabel
+
         minimalLabel = QLabel()
         minimalLabel.setText("Minimal:")
         verticalLayoutWidgetMenuTop.addWidget(minimalLabel)
@@ -110,15 +110,18 @@ class AirView(object):
         verticalLayoutWidgetMenuTop.addWidget(maximalLabel)
         self.homeLabelMaximal = maximalLabel
 
-        averageLabel = QLabel()
-        averageLabel.setText("Average:")
-        verticalLayoutWidgetMenuTop.addWidget(averageLabel)
-        self.homeLabelAverage = averageLabel
-
         sensorCountLabel = QLabel()
         sensorCountLabel.setText("Sensor Count:")
         verticalLayoutWidgetMenuTop.addWidget(sensorCountLabel)
         self.homeLabelSencorCount = sensorCountLabel
+
+        loading = QLabel()
+        movie = QMovie('./data/gif/ajax-loader.gif')
+        loading.setMovie(movie)
+        verticalLayoutWidgetMenuMiddle.addWidget(loading)
+        loading.hide()
+        self.homeLoadingLabel = loading
+        self.homeLoadingMovie = movie
 
         # Bottom
         configurationTitle = QLabel()
@@ -126,7 +129,7 @@ class AirView(object):
         verticalLayoutWidgetMenuBottom.addWidget(configurationTitle)
 
         startLabel = QLabel()
-        startLabel.setText("Start:")
+        startLabel.setText("Start Date:")
         verticalLayoutWidgetMenuBottom.addWidget(startLabel)
 
         dateEditStart = QDateEdit()
@@ -135,8 +138,17 @@ class AirView(object):
         verticalLayoutWidgetMenuBottom.addWidget(dateEditStart)
         self.homeDateEditStart = dateEditStart
 
+        startTimeLabel = QLabel()
+        startTimeLabel.setText("Start Time:")
+        verticalLayoutWidgetMenuBottom.addWidget(startTimeLabel)
+
+        timeEditStart = QTimeEdit()
+        timeEditStart.setTime(QTime(9, 0, 0))
+        verticalLayoutWidgetMenuBottom.addWidget(timeEditStart)
+        self.homeTimeEditStart = timeEditStart
+
         endLabel = QLabel()
-        endLabel.setText("End:")
+        endLabel.setText("End Date:")
         verticalLayoutWidgetMenuBottom.addWidget(endLabel)
 
         dateEditEnd = QDateEdit()
@@ -144,6 +156,15 @@ class AirView(object):
         dateEditEnd.setDateTime(QDateTime.currentDateTime())
         verticalLayoutWidgetMenuBottom.addWidget(dateEditEnd)
         self.homeDateEditEnd = dateEditEnd
+
+        endTimeLabel = QLabel()
+        endTimeLabel.setText("End Time:")
+        verticalLayoutWidgetMenuBottom.addWidget(endTimeLabel)
+
+        timeEditEnd = QTimeEdit()
+        timeEditEnd.setTime(QTime(10, 0, 0))
+        verticalLayoutWidgetMenuBottom.addWidget(timeEditEnd)
+        self.homeTimeEditEnd = timeEditEnd
 
         button = QPushButton()
         button.setText('Click Me')
@@ -153,8 +174,7 @@ class AirView(object):
         verticalLayoutWidgetMenu.addWidget(widgetMenuTop)
         verticalLayoutWidgetMenu.setStretch(0,1)
 
-        emptyWidget = QWidget()
-        verticalLayoutWidgetMenu.addWidget(emptyWidget)
+        verticalLayoutWidgetMenu.addWidget(widgetMenuMiddle)
         verticalLayoutWidgetMenu.setStretch(1,1)
 
         verticalLayoutWidgetMenu.addWidget(widgetMenuBottom)
@@ -167,20 +187,10 @@ class AirView(object):
 
         widgetMap = QWebEngineView(mapWidget)
         self.foliumStandardLocation()
-        widgetMap.setHtml(self.saveFoliumToHtml().getvalue().decode())
+        widgetMap.load(QUrl('file:/data/html/map.html'))
         self.homeWidgetMap = widgetMap
 
         verticalLayout.addWidget(widgetMap)
-
-        # Kontrollfeld unten
-        widgetMapControlls = QWidget(mapWidget)
-        verticalLayoutMapControlls = QVBoxLayout(widgetMapControlls)
-
-        slider = QSlider(Qt.Horizontal)
-        verticalLayoutMapControlls.addWidget(slider)
-        self.homeSlider = slider
-
-        verticalLayout.addWidget(widgetMapControlls)
 
         verticalLayout.setStretch(0, 5)
         verticalLayout.setStretch(1, 1)
@@ -286,39 +296,6 @@ class AirView(object):
         highlights.setLayout(vBox2)
 
         return highlights
-
-
-    def buildForecast(self, forecast):
-
-        horizontalLayout_4 = QHBoxLayout(forecast)
-
-        widgetForecastMenu = QWidget(forecast)
-
-        horizontalLayout_4.addWidget(widgetForecastMenu)
-
-        widget_3 = QWidget(forecast)
-
-        verticalLayout_2 = QVBoxLayout(widget_3)
-
-        widgetForecastMap = QWebEngineView(widget_3)
-        widgetForecastMap.setHtml(self.saveFoliumToHtml().getvalue().decode())
-
-        verticalLayout_2.addWidget(widgetForecastMap)
-
-        widgetForecastMapControlls = QWidget(widget_3)
-
-
-        verticalLayout_2.addWidget(widgetForecastMapControlls)
-
-        verticalLayout_2.setStretch(0, 3)
-        verticalLayout_2.setStretch(1, 1)
-
-        horizontalLayout_4.addWidget(widget_3)
-
-        horizontalLayout_4.setStretch(0, 1)
-        horizontalLayout_4.setStretch(1, 4)
-
-        return forecast
 
     def buildInfo(self, info):
         horizontalLayout_5 = QVBoxLayout(info)

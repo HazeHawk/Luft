@@ -20,13 +20,13 @@ class Configuration(metaclass=Singleton):
 
         # DEBUG Mode
         self.DEBUG = True
-
+        
         #Logger
         self.LOGGER = logging.getLogger(__name__)
         format = "%(asctime)s - %(threadName)s - %(levelname)s | %(message)s"
         logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
 
-        
+
         LOG_PATH = '.\\logs\\'
         fh = logging.FileHandler(LOG_PATH+'query_logger.log', encoding='UTF-8')
         self.Q_LOGGER = logging.getLogger('querylogger')
@@ -35,7 +35,6 @@ class Configuration(metaclass=Singleton):
         if self.DEBUG:
             self.LOGGER.setLevel(logging.DEBUG)
             self.Q_LOGGER.setLevel(logging.DEBUG)
-
 
         #Mongo-DB
         self.MONGO_HOST = 'hucserv193'
