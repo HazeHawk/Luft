@@ -345,6 +345,7 @@ class AirController(object):
         map.save('./data/html/map.html', close_file=False)
 
     def home_loading_start(self):
+        self._ui.homeButtonSendData.setEnabled(False)
         self._ui.homeLoadingLabel.show()
         self._ui.homeLoadingMovie.start()
 
@@ -354,10 +355,11 @@ class AirController(object):
         self._ui.homeButtonSendData.setEnabled(True)
 
     def homeButtonSendClicked(self):
+        self._ui.homeButtonSendData.setEnabled(False)
+
         self.setHomeTimeStart()
         self.setHomeTimeEnd()
 
-        self._ui.homeButtonSendData.setEnabled(False)
         self.load_view_util()
         #self.thread_test()
 
@@ -419,6 +421,7 @@ class AirController(object):
         return [lat, lng];
 
     def gethomeLineEditPosition(self):
+        self.home_loading_start()
         city = self._ui.homeLineEditPosition.text()
         coordinates = self.getCoordinates(city)
         #self._ui.m.location = [48.77915707462204, -9.175987243652344]
