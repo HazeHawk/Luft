@@ -53,6 +53,13 @@ class AirController(object):
 
         self.location = [48.77915707462204, 9.175987243652344]
 
+        self.messageBox = QMessageBox()
+        self.messageBox.setIcon(QMessageBox.Information)
+        self.messageBox.setWindowTitle("Warning!")
+        self.messageBox.setText("The input position is non existent!")
+        self.messageBox.setInformativeText("Please enter a valid location.")
+        self.messageBox.setStandardButtons(QMessageBox.Ok)
+
         self.choropleth = None
         self.clusterPoints = None
         self.singlePoints = None
@@ -346,12 +353,14 @@ class AirController(object):
 
     def home_loading_start(self):
         self._ui.homeButtonSendData.setEnabled(False)
+        self._ui.homeLineEditPosition.setEnabled(False)
         self._ui.homeLoadingLabel.show()
         self._ui.homeLoadingMovie.start()
 
     def home_loading_end(self):
         self._ui.homeLoadingLabel.hide()
         self._ui.homeLoadingMovie.stop()
+        self._ui.homeLineEditPosition.setEnabled(True)
         self._ui.homeButtonSendData.setEnabled(True)
 
     def homeButtonSendClicked(self):
@@ -422,12 +431,18 @@ class AirController(object):
 
     def gethomeLineEditPosition(self):
         self.home_loading_start()
-        city = self._ui.homeLineEditPosition.text()
-        coordinates = self.getCoordinates(city)
-        #self._ui.m.location = [48.77915707462204, -9.175987243652344]
-        self.location = coordinates
-        self.refresh_home_util()
-        self._ui.homeWidgetMap.update()
+        try:
+            city = self._ui.homeLineEditPosition.text()
+            coordinates = self.getCoordinates(city)
+            #self._ui.m.location = [48.77915707462204, -9.175987243652344]
+            self.location = coordinates
+            self.refresh_home_util()
+        except:
+            self.home_loading_end()
+            self.messageBox.show()
+
+
+
 
 
 
