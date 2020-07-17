@@ -55,8 +55,6 @@ class AirController(object):
 
         self.model = AirModel()
 
-        self.pool = QThreadPool()
-
     def test(self):
         sensors = self.model.get_sensors()
         jan = datetime(year=2020,month=1,day=1)
@@ -84,22 +82,7 @@ class AirController(object):
 
     def load_home_data(self):
 
-        start_time = self.getHomeDateStart().toPython()
-        start_time = start_time+relativedelta(
-            hours=self.getHomeTimeStart().hour(), 
-            minutes=self.getHomeTimeStart().minute(), 
-            seconds=self.getHomeTimeStart().second()
-        )
-
-        end_time = self.getHomeDateEnd().toPython()
-        end_time = end_time+relativedelta(
-            hours=self.getHomeTimeEnd().hour(),
-            minutes=self.getHomeTimeEnd().minute(),
-            seconds=self.getHomeTimeEnd().second()
-        )
-
-        print(start_time)
-        print(end_time)
+        start_time, end_time = self.getTimeframe()
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         #areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
@@ -129,9 +112,7 @@ class AirController(object):
         self.choropleth = self.choroplethTest(geometry=areas, data=dataFrameData)
 
     def load_single_circle_home(self):
-        today = datetime(2020,6,20) # tmp
-        start_time = today
-        end_time = today+relativedelta(hours=1)
+        start_time, end_time = self.getTimeframe()
 
         fg = folium.FeatureGroup(name="Single Circles")
         sfgList = []
@@ -164,9 +145,7 @@ class AirController(object):
         self.setLabelSensorCount(sensorCount)
 
     def load_cluster_circle_home(self):
-        today = datetime(2020,6,20) # tmp
-        start_time = today
-        end_time = today+relativedelta(hours=1)
+        start_time, end_time = self.getTimeframe()
 
         with open('data/areas/bezirke.json', encoding='utf-8') as f:
             areas = json.load(f)
@@ -200,6 +179,24 @@ class AirController(object):
         for item in sfgList:
             fg.add_child(item)
         self.clusterPoints = fg
+
+    def getTimeframe(self):
+
+        start_time = self.getHomeDateStart().toPython()
+        start_time = start_time + relativedelta(
+            hours=self.getHomeTimeStart().hour(),
+            minutes=self.getHomeTimeStart().minute(),
+            seconds=self.getHomeTimeStart().second()
+        )
+
+        end_time = self.getHomeDateEnd().toPython()
+        end_time = end_time + relativedelta(
+            hours=self.getHomeTimeEnd().hour(),
+            minutes=self.getHomeTimeEnd().minute(),
+            seconds=self.getHomeTimeEnd().second()
+        )
+
+        return start_time, end_time
 
     def load_analysis(self, listID:list, listAVG:list):
 
