@@ -7,6 +7,7 @@ import pyqtgraph
 
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
+from PySide2.QtGui import *
 from PySide2.QtWebEngineWidgets import *
 from PySide2.QtWidgets import *
 from src.config import Configuration
@@ -15,9 +16,11 @@ _cfg = Configuration()
 
 logger = _cfg.LOGGER
 
-class AirView(object):
+class AirView(QMainWindow):
     def __init__(self):
+        QMainWindow.__init__(self)
         self.foliumStandardLocation()
+        self.saveFoliumToHtmlInDirectory()
         pass
 
     def setupUi(self, Form):
@@ -62,13 +65,6 @@ class AirView(object):
             location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12
         )
 
-    def saveFoliumToHtml(self):
-        data = io.BytesIO()
-
-        self.m.save(data, close_file=False)
-
-        return data
-
     def saveFoliumToHtmlInDirectory(self):
         self.m.save('./data/html/map.html', close_file=False)
 
@@ -82,6 +78,9 @@ class AirView(object):
 
         widgetMenuTop = QWidget(widgetMenu)
         verticalLayoutWidgetMenuTop = QVBoxLayout(widgetMenuTop)
+
+        widgetMenuMiddle = QWidget(widgetMenu)
+        verticalLayoutWidgetMenuMiddle = QVBoxLayout(widgetMenuMiddle)
 
         widgetMenuBottom = QWidget(widgetMenu)
         verticalLayoutWidgetMenuBottom = QVBoxLayout(widgetMenuBottom)
@@ -120,13 +119,21 @@ class AirView(object):
         verticalLayoutWidgetMenuTop.addWidget(sensorCountLabel)
         self.homeLabelSencorCount = sensorCountLabel
 
+        loading = QLabel()
+        movie = QMovie('./data/gif/ajax-loader.gif')
+        loading.setMovie(movie)
+        verticalLayoutWidgetMenuMiddle.addWidget(loading)
+        loading.hide()
+        self.homeLoadingLabel = loading
+        self.homeLoadingMovie = movie
+
         # Bottom
         configurationTitle = QLabel()
         configurationTitle.setText("Configuration:")
         verticalLayoutWidgetMenuBottom.addWidget(configurationTitle)
 
         startLabel = QLabel()
-        startLabel.setText("Start:")
+        startLabel.setText("Start Date:")
         verticalLayoutWidgetMenuBottom.addWidget(startLabel)
 
         dateEditStart = QDateEdit()
@@ -135,8 +142,17 @@ class AirView(object):
         verticalLayoutWidgetMenuBottom.addWidget(dateEditStart)
         self.homeDateEditStart = dateEditStart
 
+        startTimeLabel = QLabel()
+        startTimeLabel.setText("Start Time:")
+        verticalLayoutWidgetMenuBottom.addWidget(startTimeLabel)
+
+        timeEditStart = QTimeEdit()
+        timeEditStart.setTime(QTime(9, 0, 0))
+        verticalLayoutWidgetMenuBottom.addWidget(timeEditStart)
+        self.homeTimeEditStart = timeEditStart
+
         endLabel = QLabel()
-        endLabel.setText("End:")
+        endLabel.setText("End Date:")
         verticalLayoutWidgetMenuBottom.addWidget(endLabel)
 
         dateEditEnd = QDateEdit()
@@ -144,6 +160,15 @@ class AirView(object):
         dateEditEnd.setDateTime(QDateTime.currentDateTime())
         verticalLayoutWidgetMenuBottom.addWidget(dateEditEnd)
         self.homeDateEditEnd = dateEditEnd
+
+        endTimeLabel = QLabel()
+        endTimeLabel.setText("End Time:")
+        verticalLayoutWidgetMenuBottom.addWidget(endTimeLabel)
+
+        timeEditEnd = QTimeEdit()
+        timeEditEnd.setTime(QTime(10, 0, 0))
+        verticalLayoutWidgetMenuBottom.addWidget(timeEditEnd)
+        self.homeTimeEditEnd = timeEditEnd
 
         button = QPushButton()
         button.setText('Click Me')
@@ -153,8 +178,7 @@ class AirView(object):
         verticalLayoutWidgetMenu.addWidget(widgetMenuTop)
         verticalLayoutWidgetMenu.setStretch(0,1)
 
-        emptyWidget = QWidget()
-        verticalLayoutWidgetMenu.addWidget(emptyWidget)
+        verticalLayoutWidgetMenu.addWidget(widgetMenuMiddle)
         verticalLayoutWidgetMenu.setStretch(1,1)
 
         verticalLayoutWidgetMenu.addWidget(widgetMenuBottom)
@@ -167,7 +191,7 @@ class AirView(object):
 
         widgetMap = QWebEngineView(mapWidget)
         self.foliumStandardLocation()
-        widgetMap.setHtml(self.saveFoliumToHtml().getvalue().decode())
+        widgetMap.load(QUrl('file:/data/html/map.html'))
         self.homeWidgetMap = widgetMap
 
         verticalLayout.addWidget(widgetMap)
@@ -301,7 +325,7 @@ class AirView(object):
         verticalLayout_2 = QVBoxLayout(widget_3)
 
         widgetForecastMap = QWebEngineView(widget_3)
-        widgetForecastMap.setHtml(self.saveFoliumToHtml().getvalue().decode())
+        widgetForecastMap.load(QUrl('file:/data/html/map.html'))
 
         verticalLayout_2.addWidget(widgetForecastMap)
 

@@ -1,10 +1,11 @@
 
 import json
 import sys
+import threading
 from datetime import date, datetime
 from pprint import pformat
-import threading
 
+import altair.vegalite.v3 as alt
 import folium
 import pandas as pd
 import pymongo as pm
@@ -15,11 +16,11 @@ from PySide2.QtCharts import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import QApplication, QStyleFactory, QWidget
-import altair.vegalite.v3 as alt
 
 from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
+from src.qthread_data import QThreadData
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -36,45 +37,70 @@ class AirController(object):
         self._ui.setupUi(self.widget)
         self._ui.homeLineEditPosition.returnPressed.connect(self.gethomeLineEditPosition)
 
+        self._ui.homeDateEditStart.setMinimumDate(QDate(2020, 3, 1))
+        self._ui.homeDateEditStart.setMaximumDate(QDate(2020, 6, 30))
+        self._ui.homeDateEditStart.setDate(QDate(2020, 3, 1))
         self._homeDateStart = self._ui.homeDateEditStart.date()
-        self._homeDateEnd = self._ui.homeDateEditEnd.date()
         self._ui.homeDateEditStart.dateChanged.connect(self.setHomeDateStart)
+
+        self._homeTimeStart = self._ui.homeTimeEditStart.time()
+
+        self._ui.homeDateEditEnd.setMinimumDate(QDate(2020, 3, 1))
+        self._ui.homeDateEditEnd.setMaximumDate(QDate(2020, 6, 30))
+        self._ui.homeDateEditEnd.setDate(QDate(2020, 3, 1))
+        self._homeDateEnd = self._ui.homeDateEditEnd.date()
         self._ui.homeDateEditEnd.dateChanged.connect(self.setHomeDateEnd)
+
+        self._homeTimeEnd = self._ui.homeTimeEditEnd.time()
+
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
+
+        self.choropleth = None
+        self.clusterPoints = None
+        self.singlePoints = None
 
         self.model = AirModel()
 
-
     def run(self):
-
         if False:
-            self.load_home_data()
-            self.load_cluster_circle_home()
-            self.load_single_circle_home()
-            folium.LayerControl().add_to(self._ui.m)
-            self._refresh_home_map()
+            self.pool = QThreadPool()
+            self.widget.show()
+            self._ui.homeButtonSendData.setEnabled(False)
+            self.load_view_util()
         else:
-            #self.load_single_circle_home()
             self.testload_altair_circle()
-            #self.model._test_queries()
-            #status = self.model.db.command("serverStatus")
-            #_cfg.Q_LOGGER.debug(pformat(status))
+            self.widget.show()
 
-        self.widget.show()
         logger.info("Running Over is dono")
 
-    def load_home_data(self, timeframe=None):
+    def load_view_util(self):
+        self.home_loading_start()
 
-        if not timeframe:
-            d = date.today()
-            today = datetime(d.year, d.month, d.day)
+        #tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        tasks = [self.load_home_data]
+        self.thread = QThreadData(tasks)
+        self.thread.start()
+        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
+        self.thread.exit()
 
-            today = datetime(2020,6,20) # tmp
+    def load_home_data(self):
 
-            start_time = today
-            end_time = today+relativedelta(hours=1)
+        start_time = self.getHomeDateStart().toPython()
+        start_time = start_time+relativedelta(
+            hours=self.getHomeTimeStart().hour(),
+            minutes=self.getHomeTimeStart().minute(),
+            seconds=self.getHomeTimeStart().second()
+        )
 
-        stuttgart_geo = self.model.get_stuttgart_geo()
+        end_time = self.getHomeDateEnd().toPython()
+        end_time = end_time+relativedelta(
+            hours=self.getHomeTimeEnd().hour(),
+            minutes=self.getHomeTimeEnd().minute(),
+            seconds=self.getHomeTimeEnd().second()
+        )
+
+        print(start_time)
+        print(end_time)
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         #areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
@@ -90,8 +116,6 @@ class AirController(object):
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
 
             for i, sensor in enumerate(cursor):
-                if i == 5:
-                    break
                 sensor['NAME_2'] = area["properties"]["NAME_2"]
                 logger.debug(pformat(sensor))
                 listID.append(area["properties"]["NAME_2"])
@@ -103,42 +127,66 @@ class AirController(object):
         self.load_highlights(listID, listAVG)
 
         dataFrameData = pd.DataFrame.from_dict(data)
-        self.choroplethTest(geometry=areas, data=dataFrameData).add_to(self._ui.m)
-
-        # create markes
-        #Folium Tooltip enables to display Dictionaries as tooltips for the data.
+        self.choropleth = self.choroplethTest(geometry=areas, data=dataFrameData)
 
     def load_single_circle_home(self):
         today = datetime(2020,6,20) # tmp
         start_time = today
         end_time = today+relativedelta(days=1)
 
-        areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        fg = folium.FeatureGroup(name="Single Circles")
+        sfgList = []
 
-        for area in areas:
+        sensorCount = 0
+
+        self.popup_list = []
+
+        #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        with open('data/areas/bezirke.json', encoding='utf-8') as f:
+            areas = json.load(f)
+
+        for area in areas["features"]:
             geo = {'$geometry': area['geometry']}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
-            fg = folium.FeatureGroup(name="Single points " + area["properties"]["NAME_2"]).add_to(self._ui.m)
+            sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single points " + area["properties"]["NAME_2"])
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
                 popup = self.get_sensor_popup(sensor_id=sensor["_id"],
                                               timeframe=(start_time, end_time), time_group="d")
-                self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(fg)
+                #popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+                #popup = folium.Popup("<html><body>data is loading</body></html>")
+                self.popup_list.append(popup)
 
-            self._refresh_home_map()
-            print(i)
-            print(area["properties"]["NAME_2"])
+                self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
+                sensorCount += 1
+                if (sensorCount==10):
+                    break
+
+            sfgList.append(sfg)
+            break
+
+        for item in sfgList:
+            fg.add_child(item)
+        self.singlePoints = fg
+
+        self.setLabelSensorCount(sensorCount)
 
     def load_cluster_circle_home(self):
         today = datetime(2020,6,20) # tmp
         start_time = today
         end_time = today+relativedelta(hours=0.5)
 
-        areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        with open('data/areas/bezirke.json', encoding='utf-8') as f:
+            areas = json.load(f)
 
-        for area in areas:
+        #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+
+        fg = folium.FeatureGroup(name="Cluster Circles")
+        sfgList = []
+
+        for area in areas["features"]:
             location_list = []
             popup_list = []
 
@@ -156,16 +204,16 @@ class AirController(object):
                 location_list.append([lat, lon])
                 popup_list.append(popup)
 
-            fg = folium.FeatureGroup(name=area["properties"]["NAME_2"]).add_to(self._ui.m)
+            sfg = folium.plugins.FeatureGroupSubGroup(fg, name=area["properties"]["NAME_2"])
 
             cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
-            cluster.add_to(fg)
+            cluster.add_to(sfg)
 
-            print(i)
-            print(area["properties"]["NAME_2"])
+            sfgList.append(sfg)
 
-        #folium.LayerControl().add_to(self._ui.m)
-        #self._refresh_home_map()
+        for item in sfgList:
+            fg.add_child(item)
+        self.clusterPoints = fg
 
 
     def load_analysis(self, listID:list, listAVG:list):
@@ -347,22 +395,58 @@ class AirController(object):
             fill_color='blue'
         )
 
+    def refresh_home_util(self):
+        tasks = [self.buildFoliumMap]
+        self.thread = QThreadData(tasks)
+        self.thread.start()
+        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_map)
+        self.thread.exit()
 
-
-    def _refresh_home_map(self):
-        self._ui.saveFoliumToHtmlInDirectory()
-        self._ui.homeWidgetMap.load(QUrl('file:/data/html/map.html'))
-        #self._ui.homeWidgetMap.setHtml(self._ui.saveFoliumToHtml().getvalue().decode())
+    def refresh_home_map(self):
+        self._ui.homeWidgetMap.reload()
         self._ui.homeWidgetMap.update()
+        self.home_loading_end()
+
+    def buildFoliumMap(self):
+
+        map = folium.Map(location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12)
+
+        if self.choropleth is not None:
+            map.add_child(self.choropleth)
+
+        if self.clusterPoints is not None:
+            map.add_child(self.clusterPoints)
+
+        if self.singlePoints is not None:
+            map.add_child(self.singlePoints)
+
+        folium.LayerControl().add_to(map)
+
+        map.save('./data/html/map.html', close_file=False)
+
+    def home_loading_start(self):
+        self._ui.homeLoadingLabel.show()
+        self._ui.homeLoadingMovie.start()
+
+    def home_loading_end(self):
+        self._ui.homeLoadingLabel.hide()
+        self._ui.homeLoadingMovie.stop()
+        self._ui.homeButtonSendData.setEnabled(True)
 
 
 
     def homeButtonSendClicked(self):
-        self.get_current_map_part()
+        self.setHomeTimeStart()
+        self.setHomeTimeEnd()
+
+        self._ui.homeButtonSendData.setEnabled(False)
+        self.load_view_util()
+        #self.thread_test()
 
     def setHomeDateStart(self):
         logger.debug(self._ui.homeDateEditStart.date())
         self._homeDateStart = self._ui.homeDateEditStart.date()
+        self._ui.homeDateEditEnd.setMinimumDate(self._ui.homeDateEditStart.date())
 
     def getHomeDateStart(self):
         return self._homeDateStart
@@ -373,6 +457,25 @@ class AirController(object):
 
     def getHomeDateEnd(self):
         return self._homeDateEnd
+
+    def setHomeTimeStart(self):
+        logger.debug(self._ui.homeTimeEditStart.time())
+        self._homeTimeStart = self._ui.homeTimeEditStart.time()
+
+    def getHomeTimeStart(self):
+        return self._homeTimeStart
+
+    def setHomeTimeEnd(self):
+        logger.debug(self._ui.homeTimeEditEnd.time())
+
+        if (self._homeTimeStart.toPython() > self._ui.homeTimeEditEnd.time().toPython()):
+            self._homeTimeEnd = self._homeTimeStart.addSecs(3600)
+            self._ui.homeTimeEditEnd.setTime(self._homeTimeStart.addSecs(3600))
+        else:
+            self._homeTimeEnd = self._ui.homeTimeEditEnd.time()
+
+    def getHomeTimeEnd(self):
+        return self._homeTimeEnd
 
     def setLabelMedian(self, median: str):
         self._ui.homeLabelMedian.setText(median)
@@ -386,8 +489,8 @@ class AirController(object):
     def setLabelAverag(self, average:str):
         self._ui.homeLabelAverage.setText(average)
 
-    def setLabelSensorCount(self, sensorCount: str):
-        self._ui.homeLabelSencorCount.setText(sensorCount)
+    def setLabelSensorCount(self, sensorCount:int):
+        self._ui.homeLabelSencorCount.setText("Sensor Count: " + str(sensorCount))
 
     def getCoordinates(self, name):
         key = "3803f50ca47344bf87e9c165d4e7fa94"
@@ -407,8 +510,6 @@ class AirController(object):
 
     def get_current_map_part(self):
         print("Nix")
-
-
 
     # Test Queries for ze Trash later
     def testload_altair_circle(self):
@@ -430,3 +531,17 @@ class AirController(object):
         circle.add_to(self._ui.m)
 
         self._refresh_home_map()
+    def thread_test(self):
+        self.thread = QThreadData([self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.buildFoliumMap])
+        self.thread.start()
+
+        self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_map)
+
+
+
+
+
+
+
+
+

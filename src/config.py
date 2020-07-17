@@ -36,7 +36,6 @@ class Configuration(metaclass=Singleton):
             self.LOGGER.setLevel(logging.DEBUG)
             self.Q_LOGGER.setLevel(logging.DEBUG)
 
-
         #Mongo-DB
         self.MONGO_HOST = 'hucserv193'
         self.MONGO_PORT = 8888
