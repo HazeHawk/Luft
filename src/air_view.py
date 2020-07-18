@@ -197,9 +197,6 @@ class AirView(QMainWindow):
 
         verticalLayout.addWidget(widgetMap)
 
-        verticalLayout.setStretch(0, 5)
-        verticalLayout.setStretch(1, 1)
-
         horizontalLayout.addWidget(mapWidget)
 
         horizontalLayout.setStretch(1, 4)
@@ -271,25 +268,28 @@ class AirView(QMainWindow):
 
 
     def buildHighlights(self, highlights):
-        scroll = QScrollArea()
         highlightsWidget = QWidget()
         vBox = QGridLayout()
 
-        self.highlightsQChart = QtCharts.QChart()
+        self.scatterWidget = QWidget(highlights)
+        verticalLayout = QVBoxLayout(self.scatterWidget)
 
+        self.scatterWebView = QWebEngineView(self.scatterWidget)
+        self.scatterWebView.load(QUrl('file:/data/html/scatter.html'))
+        verticalLayout.addWidget(self.scatterWebView)
+
+        vBox.addWidget(self.scatterWidget)
+
+        self.highlightsQChart = QtCharts.QChart()
         chartview = QtCharts.QChartView(self.highlightsQChart)
         vBox.addWidget(chartview)
-        '''
-        for i in range(1, 10):
-            object = pyqtgraph.PlotWidget(highlights)
-            hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-            temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
-            object.plot(hour, temperature)
-            vBox.setRowMinimumHeight(i - 1, 500)
-            vBox.addWidget(object)
-        '''
+
+        for i in range(0, vBox.rowCount()):
+            vBox.setRowMinimumHeight(i, 700)
+
         highlightsWidget.setLayout(vBox)
 
+        scroll = QScrollArea()
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setWidgetResizable(True)

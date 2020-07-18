@@ -3,7 +3,9 @@ from datetime import date, datetime
 from pprint import pformat
 import json
 import folium
-import altair as alt
+import altair.vegalite.v3 as alt
+from altair_saver import save as altSave
+from chromedriver_py import binary_path
 from folium.plugins import MarkerCluster
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
@@ -16,8 +18,8 @@ from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
 from src.qthread_data import QThreadData
-import numpy
 import statistics
+
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -65,6 +67,8 @@ class AirController(object):
         self.clusterPoints = None
         self.singlePoints = None
         self.singlePointsO500 = None
+
+        alt.data_transformers.disable_max_rows()
 
         self.model = AirModel()
 
@@ -194,6 +198,10 @@ class AirController(object):
         fg = folium.FeatureGroup(name="Clustered Sensors", show=False)
         sfgList = []
 
+        listpm2max = []
+        listpm2min = []
+        listbezirk = []
+
         for area in areas["features"]:
             location_list = []
             popup_list = []
@@ -208,12 +216,26 @@ class AirController(object):
                 location_list.append([lat, lon])
                 popup_list.append(popup)
 
+                #scatter plot daten
+                if sensor is not None and area["properties"]["NAME_2"] is not None:
+                    listpm2max.append(sensor["PM2_min"])
+                    listpm2min.append(sensor["PM2_max"])
+                    listbezirk.append(str(area["properties"]["NAME_2"]))
+
             sfg = folium.plugins.FeatureGroupSubGroup(fg, name=area["properties"]["NAME_2"])
 
             cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
             cluster.add_to(sfg)
 
             sfgList.append(sfg)
+
+        data = {
+            'PM2MAX': listpm2max,
+            'PM2MIN': listpm2min,
+            'Bezirk': listbezirk
+        }
+
+        self.scatter_plot_all_sensors(data)
 
         for item in sfgList:
             fg.add_child(item)
@@ -236,6 +258,26 @@ class AirController(object):
         )
 
         return start_time, end_time
+
+    def scatter_plot_all_sensors(self, data:dict):
+
+
+        df = pd.DataFrame.from_dict(data)
+
+        brush = alt.selection(type='interval', resolve='global')
+
+        base = alt.Chart(df).mark_point().encode(
+            y='PM2MAX',
+            x='PM2MIN',
+            color=alt.condition(brush, 'Bezirk', alt.ColorValue('gray'))
+        ).add_selection(
+            brush
+        ).properties(
+            width=500,
+            height=500
+        )
+
+        base.save('./data/html/scatter.html')
 
     def load_analysis(self, listID:list, listAVG:list):
 
@@ -351,6 +393,8 @@ class AirController(object):
     def refresh_home_map(self):
         self._ui.homeWidgetMap.reload()
         self._ui.homeWidgetMap.update()
+        self._ui.scatterWebView.reload()
+        self._ui.scatterWebView.update()
         self.home_loading_end()
 
     def buildFoliumMap(self):
