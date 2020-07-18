@@ -15,26 +15,30 @@ _cfg = Configuration()
 logger = _cfg.LOGGER
 q_logger = _cfg.Q_LOGGER
 
-client = pm.MongoClient(host=_cfg.MONGO_HOST, port=_cfg.MONGO_PORT, username=_cfg.MONGO_USERNAME,
-                                 password=_cfg.MONGO_PASSWORD, serverSelectionTimeoutMS=1)
-
-db = client.airq_db
-sensor_col = db.airq_sensors
-
 def work_on_q(q):
     working = True
     logger.info("Start QQ")
+    old_id = None
+    client = pm.MongoClient(host=_cfg.MONGO_HOST, port=_cfg.MONGO_PORT, username=_cfg.MONGO_USERNAME,
+                                 password=_cfg.MONGO_PASSWORD, serverSelectionTimeoutMS=1)
 
+    db = client.airq_db
+    sensor_col = db.airq_sensors
     while working:
         try:
-            sensor_id, start_date = q.get(timeout=100)
-            insert_to_db(start_date, sensor_id)
-        except queue.Full as e:
+            sensor_id, start_date = q.get(timeout=150)
+            insert_to_db(db, start_date, sensor_id)
+            if old_id != sensor_id and start_date.hour==0:
+                logger.debug(f"Work on next ID {sensor_id} ")
+            old_id = sensor_id
+        except queue.Empty as e:
             working = False
+            logger.info("Shutdown QQ")
 
     logger.info(f"Done QQ at {sensor_id} and {start_date}")
 
-def insert_to_db(start_date: datetime.datetime, sensor_id: int):
+def insert_to_db(db, start_date: datetime.datetime, sensor_id: int):
+
     pip = []
     start_date = start_date
     end_date = start_date+relativedelta(hours=1)
@@ -65,13 +69,20 @@ def insert_to_db(start_date: datetime.datetime, sensor_id: int):
 
     stages = [match, group, setter, unset, merge]
 
-    cursor = sensor_col.aggregate(pipeline=stages, allowDiskUse=True)
+    cursor = db.airq_sensors.aggregate(pipeline=stages, allowDiskUse=True)
 
     for sensor in cursor:
         print(sensor)
 
 
 def main():
+
+    client = pm.MongoClient(host=_cfg.MONGO_HOST, port=_cfg.MONGO_PORT, username=_cfg.MONGO_USERNAME,
+                                 password=_cfg.MONGO_PASSWORD, serverSelectionTimeoutMS=1)
+
+    db = client.airq_db
+    sensor_col = db.airq_sensors
+
     q = Queue()
     p1 = Process(target=work_on_q, args=(q,), name="NUBKEKS")
     p2 = Process(target=work_on_q, args=(q,), name="DERPKEKS")
@@ -83,30 +94,29 @@ def main():
     p8 = Process(target=work_on_q, args=(q,), name="achtkeks")
 
 
+    broke = 3859
+    result = db.airq_sensors_fixed.delete_many({"sensor_id": broke})
+
+    t0 = time.time()
+    sensor_id_list = sensor_col.find(projection={"sensor_id":1}).distinct("sensor_id")
+
     p1.start()
     p2.start()
     p3.start()
     p4.start()
     p5.start()
     p6.start()
-    #p7.start()
-    #p8.start()
-
-    broke = 1685
-    result = db.airq_sensors_fixed.delete_many({"sensor_id": broke})
-
-    t0 = time.time()
-    sensor_id_list = sensor_col.find(projection={"sensor_id":1}).distinct("sensor_id")
+    p7.start()
+    p8.start()
 
     last_date = datetime.datetime(2020,7,1)
 
     for sensor_id in sensor_id_list:
-        if sensor_id < 1685:
+        if sensor_id < broke:
             print(f'skip {sensor_id}')
             continue
 
-        if q.qsize > 2000:
-            time.sleep(10)
+
         # query dataset
         print(sensor_id)
         first_date = datetime.datetime(2020,3,1)
@@ -117,6 +127,11 @@ def main():
             q.put(params)
 
             first_date = first_date+relativedelta(hours=1)
+
+        if q.qsize() > 50000:
+            logger.debug(q.qsize())
+            time.sleep(5)
+            logger.debug(f"done Sleep!! what is my size? Oh it is: {q.qsize()}")
     t1 = time.time()
 
     print(t1-t0)
@@ -129,8 +144,8 @@ def main():
     p4.join()
     p5.join()
     p6.join()
-    #p7.join()
-    #p8.join()
+    p7.join()
+    p8.join()
     print("Donus maximus")
 
 

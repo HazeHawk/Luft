@@ -34,7 +34,7 @@ class AirModel(metaclass=Singleton):
             status = sys.exit()
 
         self.db = client.airq_db
-        self.sensors_col = self.db.airq_sensors_fixed
+        self.sensors_col = self.db.airq_sensors
         self.areas_col = self.db.areas
         self.client = client
 

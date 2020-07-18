@@ -1,4 +1,4 @@
-
+import time
 import json
 import statistics
 import sys
@@ -142,10 +142,11 @@ class AirController(object):
             sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single points " + area["properties"]["NAME_2"])
 
             for i, sensor in enumerate(cursor):
+                t0 = time.time()
                 lon, lat = sensor["location"]["coordinates"]
-                popup = self.get_sensor_popup(sensor_id=sensor["_id"],
-                                              timeframe=(start_time, end_time), time_group="h")
-                #popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+                #popup = self.get_sensor_popup(sensor_id=sensor["_id"],
+                #                              timeframe=(start_time, end_time), time_group="h")
+                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
                 #popup = folium.Popup("<html><body>data is loading</body></html>")
                 self.popup_list.append(popup)
 
@@ -153,15 +154,12 @@ class AirController(object):
                     pm2_avgList.append(sensor["PM2_avg"])
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
-
-
-
-
                 sensorCount += 1
-                logger.debug(sensorCount)
+                #logger.debug(sensorCount)
+                t1 = time.time()
+                logger.debug(f"{sensor['_id']} took {t1-t0} s")
 
             sfgList.append(sfg)
-            break
 
         for item in sfgList:
             fg.add_child(item)
