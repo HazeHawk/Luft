@@ -112,12 +112,9 @@ class AirModel(metaclass=Singleton):
         ''' Returns cursor object of an area query.
             By default the query return only the geometry of the document.
             For unfiltered document, use projection=None
-
             Parameters:
-
                 Bundesland - 2 Character String in Options: ['BW','BY','BE','BB','HB','HH','HE','MV','NI','NW','RP','SL','SN','ST','SH','TH']
                 https://de.wikipedia.org/wiki/ISO_3166-2%3ADE is the convention for bundesländer abbrevation.
-
                 bezirk - free string e.g. Stuttgart. (CASE SENSITIVE!)
         '''
         BL_OPTIONS= ['BW','BY','BE','BB','HB','HH','HE','MV','NI','NW','RP','SL','SN','ST','SH','TH']
@@ -150,14 +147,11 @@ class AirModel(metaclass=Singleton):
     def find_sensors_by(self, geometry=None, timeframe=(None, None), group_by=None, sort_by=None, projection=None, show_debug=False):
         ''' Sort & projection sind noch nicht implementiert. Ist aber "einfach"
         Geometry, Timeframe und group_by funtionieren.
-
         Wenn ihr group_by nutzen wollt.
         group_by = sensor_id
-
         TimeFrame example für Tag
         start_date = day
         end_date = start_date+relativedelta(days=1)
-
         '''
         match, group, sort = None, None, None
         pip = []
@@ -215,7 +209,6 @@ class AirModel(metaclass=Singleton):
     def find_single_sensor(self, sensor_id, timeframe, group_by=None, show_debug=False):
         """Return Cursor Object with aggregated sensor data of a specific sensor. The data can
         be grouped by hour, day, month or year. Make sure that the time frame is appropriately.
-
             group_by
                 - Must be in ["y","m","d","h"]
         """
@@ -405,11 +398,6 @@ class AirModel(metaclass=Singleton):
         #logger.debug(f'QUERY: {query}')
         results = self.sensors_col.find(filter=query)
         return results
-
-
-
-
-
 
 if __name__ == 'main':
     pass

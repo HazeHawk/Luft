@@ -47,10 +47,6 @@ class AirView(QMainWindow):
         self.widgetHighlights = QWidget()
         tabWidget.addTab(self.buildHighlights(self.widgetHighlights), "Highlights")
 
-        #Forecast Tab
-        self.widgetForecast = QWidget()
-        tabWidget.addTab(self.buildForecast(self.widgetForecast), "Forecast")
-
         #Info Tab
         self.widgetInfo = QWidget()
         tabWidget.addTab(self.buildInfo(self.widgetInfo), "Info")
@@ -99,6 +95,11 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuTop.addWidget(medianLabel)
         self.homeLabelMedian = medianLabel
 
+        averageLabel = QLabel()
+        averageLabel.setText("Average:")
+        verticalLayoutWidgetMenuTop.addWidget(averageLabel)
+        self.homeLabelAverage = averageLabel
+
         minimalLabel = QLabel()
         minimalLabel.setText("Minimal:")
         verticalLayoutWidgetMenuTop.addWidget(minimalLabel)
@@ -108,11 +109,6 @@ class AirView(QMainWindow):
         maximalLabel.setText("Maximal:")
         verticalLayoutWidgetMenuTop.addWidget(maximalLabel)
         self.homeLabelMaximal = maximalLabel
-
-        averageLabel = QLabel()
-        averageLabel.setText("Average:")
-        verticalLayoutWidgetMenuTop.addWidget(averageLabel)
-        self.homeLabelAverage = averageLabel
 
         sensorCountLabel = QLabel()
         sensorCountLabel.setText("Sensor Count:")
@@ -195,16 +191,6 @@ class AirView(QMainWindow):
         self.homeWidgetMap = widgetMap
 
         verticalLayout.addWidget(widgetMap)
-
-        # Kontrollfeld unten
-        widgetMapControlls = QWidget(mapWidget)
-        verticalLayoutMapControlls = QVBoxLayout(widgetMapControlls)
-
-        slider = QSlider(Qt.Horizontal)
-        verticalLayoutMapControlls.addWidget(slider)
-        self.homeSlider = slider
-
-        verticalLayout.addWidget(widgetMapControlls)
 
         verticalLayout.setStretch(0, 5)
         verticalLayout.setStretch(1, 1)
@@ -310,39 +296,6 @@ class AirView(QMainWindow):
         highlights.setLayout(vBox2)
 
         return highlights
-
-
-    def buildForecast(self, forecast):
-
-        horizontalLayout_4 = QHBoxLayout(forecast)
-
-        widgetForecastMenu = QWidget(forecast)
-
-        horizontalLayout_4.addWidget(widgetForecastMenu)
-
-        widget_3 = QWidget(forecast)
-
-        verticalLayout_2 = QVBoxLayout(widget_3)
-
-        widgetForecastMap = QWebEngineView(widget_3)
-        widgetForecastMap.load(QUrl('file:/data/html/map.html'))
-
-        verticalLayout_2.addWidget(widgetForecastMap)
-
-        widgetForecastMapControlls = QWidget(widget_3)
-
-
-        verticalLayout_2.addWidget(widgetForecastMapControlls)
-
-        verticalLayout_2.setStretch(0, 3)
-        verticalLayout_2.setStretch(1, 1)
-
-        horizontalLayout_4.addWidget(widget_3)
-
-        horizontalLayout_4.setStretch(0, 1)
-        horizontalLayout_4.setStretch(1, 4)
-
-        return forecast
 
     def buildInfo(self, info):
         horizontalLayout_5 = QVBoxLayout(info)
