@@ -271,14 +271,17 @@ class AirView(QMainWindow):
         highlightsWidget = QWidget()
         vBox = QGridLayout()
 
-        self.scatterWidget = QWidget(highlights)
-        verticalLayout = QVBoxLayout(self.scatterWidget)
+        self.highlightsBWAVG = QtCharts.QChart()
+        chartviewbwavg = QtCharts.QChartView(self.highlightsBWAVG)
+        vBox.addWidget(chartviewbwavg)
 
-        self.scatterWebView = QWebEngineView(self.scatterWidget)
-        self.scatterWebView.load(QUrl('file:/data/html/scatter.html'))
-        verticalLayout.addWidget(self.scatterWebView)
+        self.highlightsScatterChart = QtCharts.QChart()
+        chartviewsc = QtCharts.QChartView(self.highlightsScatterChart)
+        vBox.addWidget(chartviewsc)
 
-        vBox.addWidget(self.scatterWidget)
+        self.highlightsScatterChart250 = QtCharts.QChart()
+        chartviewsc250 = QtCharts.QChartView(self.highlightsScatterChart250)
+        vBox.addWidget(chartviewsc250)
 
         self.highlightsQChart = QtCharts.QChart()
         chartview = QtCharts.QChartView(self.highlightsQChart)

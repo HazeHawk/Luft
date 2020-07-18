@@ -90,7 +90,7 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
-        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.load_line_chart]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
@@ -241,6 +241,66 @@ class AirController(object):
             fg.add_child(item)
         self.clusterPoints = fg
 
+    def load_line_chart(self):
+        start_time = self.getHomeDateStart().toPython()
+        start_time = start_time + relativedelta(
+            hour=0,
+            minute=0,
+            second=0
+        )
+
+        d2 = datetime(2020, 6, 1, 0, 0, 0)
+
+        if start_time > d2:
+            start_time = datetime(2020, 6, 1, 0, 0, 0)
+
+        listID = []
+        listAVG = []
+        pMax = 0
+
+        # areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
+
+        for i in range(1, 24):
+            end_time = start_time + relativedelta(hours=1)
+            pAvg = 0
+
+            for area in areas["features"]:
+                geo = {"$geometry": area["geometry"]}
+                cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
+
+                for sensor in cursor:
+                    pAvg += sensor['PM2_avg']
+
+            listID.append(start_time)
+            listAVG.append(pAvg/4)
+
+            if pMax < pAvg/4:
+                pMax = pAvg/4
+
+            start_time = start_time + relativedelta(hours=1)
+
+        series = QtCharts.QLineSeries()
+
+        for date, avg in zip(listID, listAVG):
+            series.append(float(QDateTime(date.year, date.month, date.day, date.hour, 0, 0).toMSecsSinceEpoch()), avg)
+
+        self._ui.highlightsBWAVG.addSeries(series)
+        self._ui.highlightsBWAVG.setTitle('Baden Würtemberg Average')
+
+        dateaxis = QtCharts.QDateTimeAxis()
+        dateaxis.setTickCount(24)
+        dateaxis.setTitleText('Date')
+        dateaxis.setFormat('MMM YYYY')
+        self._ui.highlightsBWAVG.addAxis(dateaxis, Qt.AlignBottom)
+
+        value_axis = QtCharts.QValueAxis()
+        value_axis.setRange(0, round(pMax, 0))
+        value_axis.setTickCount(5)
+        value_axis.setTitleText('PM2 Average')
+        self._ui.highlightsBWAVG.addAxis(value_axis, Qt.AlignLeft)
+
+
     def getTimeframe(self):
 
         start_time = self.getHomeDateStart().toPython()
@@ -261,26 +321,60 @@ class AirController(object):
 
     def scatter_plot_all_sensors(self, data:dict):
 
+        series = QtCharts.QScatterSeries()
+        series.setMarkerShape(QtCharts.QScatterSeries.MarkerShapeCircle)
+        series.setMarkerSize(15)
 
-        df = pd.DataFrame.from_dict(data)
+        for pm2min, pm2max in zip(data['PM2MIN'], data['PM2MAX']):
+            if pm2min is not None and pm2max is not None:
+                series.append(pm2min, pm2max)
 
-        brush = alt.selection(type='interval', resolve='global')
+        self._ui.highlightsScatterChart.addSeries(series)
+        self._ui.highlightsScatterChart.setTitle('Scatter of all Sensors PM2 min/max')
+        self._ui.highlightsScatterChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
 
-        base = alt.Chart(df).mark_point().encode(
-            y='PM2MAX',
-            x='PM2MIN',
-            color=alt.condition(brush, 'Bezirk', alt.ColorValue('gray'))
-        ).add_selection(
-            brush
-        ).properties(
-            width=500,
-            height=500
-        )
+        value_axis = QtCharts.QValueAxis()
+        value_axis.setRange(0, 1000)
+        value_axis.setTickCount(5)
+        value_axis.setTitleText('PM2 maximal')
 
-        base.save('./data/html/scatter.html')
+        self._ui.highlightsScatterChart.addAxis(value_axis, Qt.AlignLeft)
+
+        value_axis = QtCharts.QValueAxis()
+        value_axis.setRange(0, 1000)
+        value_axis.setTickCount(5)
+        value_axis.setTitleText('PM2 minimal')
+
+        self._ui.highlightsScatterChart.addAxis(value_axis, Qt.AlignBottom)
+
+        #250
+        series = QtCharts.QScatterSeries()
+        series.setMarkerShape(QtCharts.QScatterSeries.MarkerShapeCircle)
+        series.setMarkerSize(15)
+
+        for pm2min, pm2max in zip(data['PM2MIN'], data['PM2MAX']):
+            if pm2min is not None and pm2min < 250 and pm2max is not None and pm2max < 250:
+                series.append(pm2min, pm2max)
+
+        self._ui.highlightsScatterChart250.addSeries(series)
+        self._ui.highlightsScatterChart250.setTitle('Scatter of all Sensors PM2 min/max lower than 250')
+        self._ui.highlightsScatterChart250.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+
+        value_axis = QtCharts.QValueAxis()
+        value_axis.setRange(0, 250)
+        value_axis.setTickCount(5)
+        value_axis.setTitleText('PM2 maximal')
+
+        self._ui.highlightsScatterChart250.addAxis(value_axis, Qt.AlignLeft)
+
+        value_axis = QtCharts.QValueAxis()
+        value_axis.setRange(0, 250)
+        value_axis.setTickCount(5)
+        value_axis.setTitleText('PM2 minimal')
+
+        self._ui.highlightsScatterChart250.addAxis(value_axis, Qt.AlignBottom)
 
     def load_analysis(self, listID:list, listAVG:list):
-
         listID = listID[:4]
         listAVG = listAVG[:4]
 
@@ -393,8 +487,6 @@ class AirController(object):
     def refresh_home_map(self):
         self._ui.homeWidgetMap.reload()
         self._ui.homeWidgetMap.update()
-        self._ui.scatterWebView.reload()
-        self._ui.scatterWebView.update()
         self.home_loading_end()
 
     def buildFoliumMap(self):
