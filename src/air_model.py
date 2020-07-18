@@ -34,9 +34,8 @@ class AirModel(metaclass=Singleton):
             status = sys.exit()
 
         self.db = client.airq_db
-        self.sensors_col = self.db.airq_sensors
+        self.sensors_col = self.db.airq_sensors_fixed
         self.areas_col = self.db.areas
-        self.smoltest_col = self.db.smoltest
         self.client = client
 
         index_thread = threading.Thread(target=self.create_index, daemon=True, name="Index_Thread")
@@ -108,79 +107,6 @@ class AirModel(metaclass=Singleton):
         query_filter = {'$geometry': area['geometry']} # "$geometry"is need for the pymongo Query
         return query_filter
 
-    #TODO die GeoQuery sollte direkt nach einem Read ein zu ein, so aufgerufen werden. Also das dict.
-    # Überarbeiten wenn das nicht klappt
-    def find_sensors_by_old(self, geometry=None, timestamp=None, day=None, month=None, year=None, timeframe=None):
-        ''' Query Mongo DB for finding sensor data in specific area and timeframe.
-            If several parameters are given it will usually interpreted as AND Operator!
-            Query Filters are in dictionary format(essentially JSON).
-            Checkout PyMongo docs or official MongoDB docs
-            (https://docs.mongodb.com/manual/tutorial/query-documents/)
-            for more details regarding the matching operators.
-
-            Parameters:
-                time-related parameters should be a datetime object.
-                timeframe: Tuple with start and ending date (start, end) of type datetimeobj
-                day, month, year filter by just 1 month!
-
-
-            Geometry Example
-
-            geometry = {"$geometry": {"type": "Polygon",
-                                    "coordinates": [[9.0,48.0],[10.0,48.0],[10.0,50.0],[9.0,50.0],[9.0,48.0]]
-                                    }
-                    }
-            geometry = {"$box": [[ 10,50],[ 9,48 ]]}
-
-            Timestamp Example
-
-            time = datetime.fromisoformat('2020-06-10')
-
-            Make sure that the time attribute is an datetime Object.
-        '''
-        params = []
-        start_date, end_date = None, None
-
-        arg_num = list(locals().values()).count(None)
-        if all(param is None for param in locals().values()):
-            raise(ValueError("At least one argument must be set."))
-        time_vars = [day, month, year, timeframe, timestamp]
-
-        if time_vars.count(None)<4:
-            raise(ValueError("Only one timefilter (day, month, year, timeframe, timestamp) can be chosen!"))
-
-        if geometry is not None:
-            geo_match = {"location": {"$geoWithin": geometry}}
-            params.append(geo_match)
-
-        if not all(item is None for item in time_vars):
-            if (timeframe is not None):
-                start_date, end_date = timeframe
-            elif day is not None:
-                start_date = day
-                end_date = start_date+relativedelta(days=1)
-            elif month is not None:
-                start_date = month
-                end_date = start_date+relativedelta(months=1)
-            elif year is not None:
-                start_date = year
-                end_date = start_date+relativedelta(years=1)
-            #time_match = {"timestamp": {"$and": [{"$gte": start_date}, {"$lt": end_date}]}}
-            time_match = {"$and": [{"timestamp": {"$gte": start_date}}, {"timestamp": {"$lt": end_date}}]}
-            #time_match = {"timestamp": {"$gte": start_date}, "timestamp": {"$lt": end_date}}
-            if timestamp is not None:
-                time_match = {"timestamp": timestamp}
-
-            params.append(time_match)
-
-        if len(params) == 1:
-            query = params[0]
-        else:
-            query = {**geo_match, **time_match}
-
-        #logger.debug(f'QUERY: {query}')
-        results = self.sensors_col.find(filter=query)
-        return results
 
     def find_area_by(self, bundesland=None, bezirk=None,  projection={"_id":0, "geometry":1}, as_ft_collection=False):
         ''' Returns cursor object of an area query.
@@ -408,80 +334,82 @@ class AirModel(metaclass=Singleton):
                 if i==10:
                     break
 
-    def fix_data(self):
-        new_col = self.db.airq_sensors_fixed
-        sensors = self.get_sensors_col()
-        sensor_id_list = sensors.find(projection={"sensor_id":1}).distinct("sensor_id")
+     #TODO die GeoQuery sollte direkt nach einem Read ein zu ein, so aufgerufen werden. Also das dict.
+    # Überarbeiten wenn das nicht klappt
+    def find_sensors_by_old(self, geometry=None, timestamp=None, day=None, month=None, year=None, timeframe=None):
+        ''' Query Mongo DB for finding sensor data in specific area and timeframe.
+            If several parameters are given it will usually interpreted as AND Operator!
+            Query Filters are in dictionary format(essentially JSON).
+            Checkout PyMongo docs or official MongoDB docs
+            (https://docs.mongodb.com/manual/tutorial/query-documents/)
+            for more details regarding the matching operators.
 
-        start_date = datetime(2020,3,1)
-
-        for sensor_id in sensor_id_list:
-            # query dataset
-            pip = []
-
-            sensor_id_match = {"sensor_id": sensor_id}
-            start_match = {"timestamp": {"$gte": start_date}}
-            end_match = {"timestamp": {"$lt": end_date}}
-            matches = {"$and": [sensor_id_match, start_match, end_match]}
-            time_match
+            Parameters:
+                time-related parameters should be a datetime object.
+                timeframe: Tuple with start and ending date (start, end) of type datetimeobj
+                day, month, year filter by just 1 month!
 
 
-             groups = { "_id": { "$dateToString": { "format": "%Y-%m-%d-%H", "date": "$timestamp" } },
-                   "sensor_id" : {"$first": "$sensor_id"},
-                   "PM2": {"$avg": "$PM2"}, "PM10": {"$avg": "$PM10"}
-                 }
-        group = {"$group": groups} if group_by is not None else None
+            Geometry Example
 
-        start_date, end_date = timeframe
-        diff = end_date-start_date
+            geometry = {"$geometry": {"type": "Polygon",
+                                    "coordinates": [[9.0,48.0],[10.0,48.0],[10.0,50.0],[9.0,50.0],[9.0,48.0]]
+                                    }
+                    }
+            geometry = {"$box": [[ 10,50],[ 9,48 ]]}
 
+            Timestamp Example
 
+            time = datetime.fromisoformat('2020-06-10')
 
-        match = {"$match": matches}
+            Make sure that the time attribute is an datetime Object.
+        '''
+        params = []
+        start_date, end_date = None, None
 
+        arg_num = list(locals().values()).count(None)
+        if all(param is None for param in locals().values()):
+            raise(ValueError("At least one argument must be set."))
+        time_vars = [day, month, year, timeframe, timestamp]
 
+        if time_vars.count(None)<4:
+            raise(ValueError("Only one timefilter (day, month, year, timeframe, timestamp) can be chosen!"))
 
-        project1 = {"$project": { "_id" : 0 , "sensor_id" : 1,
-                                 "timestamp": 1,
-                                 "PM2": 1, "PM10":1}
-                    } if group_by is not None else None
+        if geometry is not None:
+            geo_match = {"location": {"$geoWithin": geometry}}
+            params.append(geo_match)
 
-        # Group projection
-        #Group_by, maybe prepare some options
-        groups = { "_id": { "$dateToString": { "format": GROUP_PARAM[group_by], "date": "$timestamp" } },
-                   "sensor_id" : {"$first": "$sensor_id"},
-                   "PM2": {"$avg": "$PM2"}, "PM10": {"$avg": "$PM10"}
-                 }
-        group = {"$group": groups} if group_by is not None else None
+        if not all(item is None for item in time_vars):
+            if (timeframe is not None):
+                start_date, end_date = timeframe
+            elif day is not None:
+                start_date = day
+                end_date = start_date+relativedelta(days=1)
+            elif month is not None:
+                start_date = month
+                end_date = start_date+relativedelta(months=1)
+            elif year is not None:
+                start_date = year
+                end_date = start_date+relativedelta(years=1)
+            time_match = {"$and": [{"timestamp": {"$gte": start_date}}, {"timestamp": {"$lt": end_date}}]}
+            if timestamp is not None:
+                time_match = {"timestamp": timestamp}
 
-        #Sort
-        sort = {"$sort" : {"_id":1}} if group_by is not None else None
+            params.append(time_match)
 
-        #Stages
-        stages = [match, project1, group, sort]
-        for stage in stages:
-            if stage is not None:
-                pip.append(stage)
+        if len(params) == 1:
+            query = params[0]
+        else:
+            query = {**geo_match, **time_match}
 
-        if show_debug:
-            q_logger.debug(f"ExplainCursor with EXEC - {datetime.datetime.now().time()}")
-            explain_aggregate = self.db.command('explain', {'aggregate': 'airq_sensors', 'pipeline': pip, 'cursor': {}}, verbosity='executionStats')
-            q_logger.debug(pformat(explain_aggregate))
+        #logger.debug(f'QUERY: {query}')
+        results = self.sensors_col.find(filter=query)
+        return results
 
-        cursor = self.sensors_col.aggregate(pipeline=pip, allowDiskUse=True)
-        return cursor
-
-
-
-
-
-
-            self.find_single_sensor(sensor_id=sensor_id, )
 
 
 
 
 
 if __name__ == 'main':
-    model = AirModel()
-    model.fix_data()
+    pass
