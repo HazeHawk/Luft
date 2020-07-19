@@ -90,15 +90,11 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
-        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.load_line_chart]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
         self.thread.exit()
-
-        self.lineChartThread = QThreadData([self.load_line_chart])
-        self.lineChartThread.start()
-        self.lineChartThread.exit()
 
     def load_home_data(self):
 
@@ -253,7 +249,7 @@ class AirController(object):
             second=0
         )
 
-        d2 = datetime(2020, 6, 1, 0, 0, 0)
+        d2 = datetime(2020, 6, 30, 0, 0, 0)
 
         if start_time > d2:
             start_time = d2
@@ -262,13 +258,18 @@ class AirController(object):
         listAVG = []
         pMax = 0
 
+        series = QtCharts.QLineSeries()
+
+        #BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
+
         # areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
 
-        for i in range(1, 8):
+        for i in range(1, 26):
 
-            end_time = start_time + relativedelta(days=1)
+            end_time = start_time + relativedelta(hours=1)
             pAvg = 0
+            count = 0
 
             for area in areas["features"]:
                 geo = {"$geometry": area["geometry"]}
@@ -277,26 +278,26 @@ class AirController(object):
                 for sensor in cursor:
                     pAvg += sensor['PM2_avg']
 
+            count += 1
+
             listID.append(start_time)
             listAVG.append(pAvg/4)
 
-            if pMax < pAvg/4:
-                pMax = pAvg/4
+            if pMax < pAvg/count:
+                pMax = pAvg/count
 
-            start_time = start_time + relativedelta(days=1)
-
-        series = QtCharts.QLineSeries()
+            start_time = start_time + relativedelta(hours=1)
 
         for date, avg in zip(listID, listAVG):
             series.append(float(QDateTime(date.year, date.month, date.day, date.hour, 0, 0).toMSecsSinceEpoch()), avg)
 
         self._ui.highlightsBWAVG.addSeries(series)
-        self._ui.highlightsBWAVG.setTitle('Baden Würtemberg Average 7 Days')
+        self._ui.highlightsBWAVG.setTitle('Baden Würtemberg Average one Day')
 
         dateaxis = QtCharts.QDateTimeAxis()
-        dateaxis.setTickCount(9)
-        dateaxis.setTitleText('Date')
-        dateaxis.setFormat('dd MM yy')
+        dateaxis.setTickCount(13)
+        dateaxis.setTitleText('Hour')
+        dateaxis.setFormat('hh:mm:ss')
         self._ui.highlightsBWAVG.addAxis(dateaxis, Qt.AlignBottom)
         series.attachAxis(dateaxis)
 
