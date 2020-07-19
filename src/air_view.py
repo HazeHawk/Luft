@@ -266,8 +266,7 @@ class AirView(QMainWindow):
 
         BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
         cb1 = QComboBox(controlls)
-        for item in BL_OPTIONS:
-            cb1.addItem(item)
+        cb1.addItems(BL_OPTIONS)
         self.highlightsCompareCombo1 = cb1
 
         horiLay.addWidget(cb1)
@@ -278,8 +277,7 @@ class AirView(QMainWindow):
         horiLay.addWidget(button)
 
         cb2 = QComboBox(controlls)
-        for item in BL_OPTIONS:
-            cb2.addItem(item)
+        cb2.addItems(BL_OPTIONS)
         cb2.setCurrentIndex(1)
         self.highlightsCompareCombo2 = cb2
 

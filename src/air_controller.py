@@ -54,6 +54,8 @@ class AirController(object):
 
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
         self._ui.highlightsCompareButton.clicked.connect(self.reload_linechart)
+        self._ui.highlightsCompareCombo1.activated.connect(self.combochecker)
+        self.combochecker()
 
         self.location = [48.77915707462204, 9.175987243652344]
 
@@ -580,6 +582,11 @@ class AirController(object):
 
         self.load_view_util()
         #self.thread_test()
+
+    def combochecker(self):
+        self._ui.highlightsCompareCombo2.clear()
+        self._ui.highlightsCompareCombo2.addItems(['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH'])
+        self._ui.highlightsCompareCombo2.removeItem(self._ui.highlightsCompareCombo1.currentIndex())
 
     def setHomeDateStart(self):
         logger.debug(self._ui.homeDateEditStart.date())
