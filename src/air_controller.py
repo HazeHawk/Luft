@@ -90,11 +90,15 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
-        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.load_line_chart]
+        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
         self.thread.exit()
+
+        self.lineChartThread = QThreadData([self.load_line_chart])
+        self.lineChartThread.start()
+        self.lineChartThread.exit()
 
     def load_home_data(self):
 
@@ -218,8 +222,8 @@ class AirController(object):
 
                 #scatter plot daten
                 if sensor is not None and area["properties"]["NAME_2"] is not None:
-                    listpm2max.append(sensor["PM2_min"])
-                    listpm2min.append(sensor["PM2_max"])
+                    listpm2min.append(sensor["PM2_min"])
+                    listpm2max.append(sensor["PM2_max"])
                     listbezirk.append(str(area["properties"]["NAME_2"]))
 
             sfg = folium.plugins.FeatureGroupSubGroup(fg, name=area["properties"]["NAME_2"])
@@ -252,7 +256,7 @@ class AirController(object):
         d2 = datetime(2020, 6, 1, 0, 0, 0)
 
         if start_time > d2:
-            start_time = datetime(2020, 6, 1, 0, 0, 0)
+            start_time = d2
 
         listID = []
         listAVG = []
@@ -261,8 +265,9 @@ class AirController(object):
         # areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
 
-        for i in range(1, 24):
-            end_time = start_time + relativedelta(hours=1)
+        for i in range(1, 8):
+
+            end_time = start_time + relativedelta(days=1)
             pAvg = 0
 
             for area in areas["features"]:
@@ -278,7 +283,7 @@ class AirController(object):
             if pMax < pAvg/4:
                 pMax = pAvg/4
 
-            start_time = start_time + relativedelta(hours=1)
+            start_time = start_time + relativedelta(days=1)
 
         series = QtCharts.QLineSeries()
 
@@ -286,13 +291,14 @@ class AirController(object):
             series.append(float(QDateTime(date.year, date.month, date.day, date.hour, 0, 0).toMSecsSinceEpoch()), avg)
 
         self._ui.highlightsBWAVG.addSeries(series)
-        self._ui.highlightsBWAVG.setTitle('Baden Würtemberg Average')
+        self._ui.highlightsBWAVG.setTitle('Baden Würtemberg Average 7 Days')
 
         dateaxis = QtCharts.QDateTimeAxis()
-        dateaxis.setTickCount(24)
+        dateaxis.setTickCount(9)
         dateaxis.setTitleText('Date')
-        dateaxis.setFormat('MMM YYYY')
+        dateaxis.setFormat('dd MM yy')
         self._ui.highlightsBWAVG.addAxis(dateaxis, Qt.AlignBottom)
+        series.attachAxis(dateaxis)
 
         value_axis = QtCharts.QValueAxis()
         value_axis.setRange(0, round(pMax, 0))
