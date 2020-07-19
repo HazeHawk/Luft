@@ -69,6 +69,15 @@ class AirController(object):
         self.singlePoints = None
         self.singlePointsO500 = None
 
+        self.dateaxis = QtCharts.QDateTimeAxis()
+        self.value_axis = QtCharts.QValueAxis()
+        self.anaaxisX = QtCharts.QBarCategoryAxis()
+        self.anaaxisY = QtCharts.QValueAxis()
+        self.scattervalue_axis = QtCharts.QValueAxis()
+        self.scattervalue_axisbot = QtCharts.QValueAxis()
+        self.scattervalue_axis2 = QtCharts.QValueAxis()
+        self.scattervalue_axisbot2 = QtCharts.QValueAxis()
+
         self.model = AirModel()
 
     def test(self):
@@ -98,7 +107,23 @@ class AirController(object):
         self.thread.exit()
 
     def clear_diagramms(self):
-        self._ui.analysisChart
+        self._ui.analysisChart.removeAllSeries()
+        self._ui.analysisChart.removeAxis(self.anaaxisY)
+        self._ui.analysisChart.removeAxis(self.anaaxisX)
+
+        self._ui.highlightsBWAVG.removeAllSeries()
+        self._ui.highlightsBWAVG.removeAxis(self.dateaxis)
+        self._ui.highlightsBWAVG.removeAxis(self.value_axis)
+
+        self._ui.highlightsScatterChart.removeAllSeries()
+        self._ui.highlightsScatterChart.removeAxis(self.scattervalue_axis)
+        self._ui.highlightsScatterChart.removeAxis(self.scattervalue_axisbot)
+
+        self._ui.highlightsScatterChart250.removeAllSeries()
+        self._ui.highlightsScatterChart250.removeAxis(self.scattervalue_axis2)
+        self._ui.highlightsScatterChart250.removeAxis(self.scattervalue_axisbot2)
+
+        self._ui.highlightsQChart.removeAllSeries()
 
     def load_home_data(self):
 
@@ -135,7 +160,7 @@ class AirController(object):
         start_time, end_time = self.getTimeframe()
 
         fg = folium.FeatureGroup(name="Single Sensors", show=False)
-        fgO500 = folium.FeatureGroup(name="Single Sensors over 500", show=False)
+        fgO500 = folium.FeatureGroup(name="Single Sensors over PM2 AVG 500", show=False)
 
         sfgList = []
         sfgList0500 = []
@@ -184,12 +209,12 @@ class AirController(object):
 
         self.setLabelSensorCount(str(sensorCount))
         self.setLabelSensorCountFiltered(str(sensorCountFiltered))
-        self.setLabelMinimum(str(round(min(pm2_avgList), 4)))
-        self.setLabelMaximum(str(round(max(pm2_avgList), 4)))
-        self.setLabelAverag(str(round(sum(pm2_avgList)/len(pm2_avgList), 4)))
+        self.setLabelMinimum(str(round(min(pm2_avgList), 3)))
+        self.setLabelMaximum(str(round(max(pm2_avgList), 3)))
+        self.setLabelAverag(str(round(sum(pm2_avgList)/len(pm2_avgList), 3)))
 
         pm2_avgList.sort()
-        self.setLabelMedian(str(round(statistics.median(pm2_avgList), 4)))
+        self.setLabelMedian(str(round(statistics.median(pm2_avgList), 3)))
 
     def load_cluster_circle_home(self):
         start_time, end_time = self.getTimeframe()
@@ -316,6 +341,8 @@ class AirController(object):
         self.value_axis.setTitleText('PM2 Average')
         self._ui.highlightsBWAVG.addAxis(self.value_axis, Qt.AlignLeft)
 
+        self._ui.highlightsBWAVG.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+
     def reload_linechart(self):
         self._ui.highlightsBWAVG.removeAllSeries()
         self._ui.highlightsBWAVG.removeAxis(self.dateaxis)
@@ -356,19 +383,19 @@ class AirController(object):
         self._ui.highlightsScatterChart.setTitle('Scatter of all Sensors PM2 min/max')
         self._ui.highlightsScatterChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
 
-        value_axis = QtCharts.QValueAxis()
-        value_axis.setRange(0, 1000)
-        value_axis.setTickCount(5)
-        value_axis.setTitleText('PM2 maximal')
+        self.scattervalue_axis = QtCharts.QValueAxis()
+        self.scattervalue_axis.setRange(0, 1000)
+        self.scattervalue_axis.setTickCount(5)
+        self.scattervalue_axis.setTitleText('PM2 maximal')
 
-        self._ui.highlightsScatterChart.addAxis(value_axis, Qt.AlignLeft)
+        self._ui.highlightsScatterChart.addAxis(self.scattervalue_axis, Qt.AlignLeft)
 
-        value_axis = QtCharts.QValueAxis()
-        value_axis.setRange(0, 1000)
-        value_axis.setTickCount(5)
-        value_axis.setTitleText('PM2 minimal')
+        self.scattervalue_axisbot = QtCharts.QValueAxis()
+        self.scattervalue_axisbot.setRange(0, 1000)
+        self.scattervalue_axisbot.setTickCount(5)
+        self.scattervalue_axisbot.setTitleText('PM2 minimal')
 
-        self._ui.highlightsScatterChart.addAxis(value_axis, Qt.AlignBottom)
+        self._ui.highlightsScatterChart.addAxis(self.scattervalue_axisbot, Qt.AlignBottom)
 
         #250
         series = QtCharts.QScatterSeries()
@@ -383,19 +410,19 @@ class AirController(object):
         self._ui.highlightsScatterChart250.setTitle('Scatter of all Sensors PM2 min/max lower than 250')
         self._ui.highlightsScatterChart250.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
 
-        value_axis = QtCharts.QValueAxis()
-        value_axis.setRange(0, 250)
-        value_axis.setTickCount(5)
-        value_axis.setTitleText('PM2 maximal')
+        self.scattervalue_axis2 = QtCharts.QValueAxis()
+        self.scattervalue_axis2.setRange(0, 250)
+        self.scattervalue_axis2.setTickCount(5)
+        self.scattervalue_axis2.setTitleText('PM2 maximal')
 
-        self._ui.highlightsScatterChart250.addAxis(value_axis, Qt.AlignLeft)
+        self._ui.highlightsScatterChart250.addAxis(self.scattervalue_axis2, Qt.AlignLeft)
 
-        value_axis = QtCharts.QValueAxis()
-        value_axis.setRange(0, 250)
-        value_axis.setTickCount(5)
-        value_axis.setTitleText('PM2 minimal')
+        self.scattervalue_axisbot2 = QtCharts.QValueAxis()
+        self.scattervalue_axisbot2.setRange(0, 250)
+        self.scattervalue_axisbot2.setTickCount(5)
+        self.scattervalue_axisbot2.setTitleText('PM2 minimal')
 
-        self._ui.highlightsScatterChart250.addAxis(value_axis, Qt.AlignBottom)
+        self._ui.highlightsScatterChart250.addAxis(self.scattervalue_axisbot2, Qt.AlignBottom)
 
     def load_analysis(self, listID:list, listAVG:list):
         listID = listID[:4]
@@ -405,10 +432,10 @@ class AirController(object):
         for item in listAVG:
             dataSet2.append(item)
 
-        axisX = QtCharts.QBarCategoryAxis()
-        axisX.append(listID)
+        self.anaaxisX = QtCharts.QBarCategoryAxis()
+        self.anaaxisX.append(listID)
 
-        axisY = QtCharts.QValueAxis()
+        self.anaaxisY = QtCharts.QValueAxis()
         min = 0
         max = 0
         for item in listAVG:
@@ -417,40 +444,41 @@ class AirController(object):
             if max<item:
                 max=item
 
-        axisY.setRange(min, max)
+        self.anaaxisY.setRange(min, max)
 
         dataSeries = QtCharts.QBarSeries()
         dataSeries.append(dataSet2)
-        dataSeries.attachAxis(axisX)
-        dataSeries.attachAxis(axisY)
+        dataSeries.attachAxis(self.anaaxisX)
+        dataSeries.attachAxis(self.anaaxisY)
 
-        self._ui.analysisChart.addAxis(axisX, Qt.AlignBottom)
-        self._ui.analysisChart.addAxis(axisY, Qt.AlignLeft)
+        self._ui.analysisChart.addAxis(self.anaaxisX, Qt.AlignBottom)
+        self._ui.analysisChart.addAxis(self.anaaxisY, Qt.AlignLeft)
 
         self._ui.analysisChart.addSeries(dataSeries)
         self._ui.analysisChart.legend().setVisible(True)
         self._ui.analysisChart.legend().setAlignment(Qt.AlignBottom)
         self._ui.analysisChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+        self._ui.analysisChart.setTitle("Averages in Baden-Würtemberg")
 
     def load_highlights(self, listID: list, listAVG: list):
 
+        lavg, lbez = zip(*sorted(zip(listAVG, listID)))
+
         series = QtCharts.QPieSeries()
 
-        for itemID, itemAVG in zip(listID, listAVG):
-            series.append(itemID, itemAVG)
-
-        slice = QtCharts.QPieSlice()
+        for itemID, itemAVG in zip(lbez[:10], lavg[:10]):
+            series.append(itemID + ' ' + str(round(itemAVG, 3)), itemAVG)
 
         for i in range(0, series.count()):
             slice = series.slices()[i]
             slice.setLabelVisible(True)
 
-        self._ui.highlightsQChart.legend().setVisible(True)
+        self._ui.highlightsQChart.legend().setVisible(False)
         self._ui.highlightsQChart.legend().setAlignment(Qt.AlignBottom)
         self._ui.highlightsQChart.addSeries(series)
         self._ui.highlightsQChart.createDefaultAxes()
         self._ui.highlightsQChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
-        self._ui.highlightsQChart.setTitle("Pie Chart Example")
+        self._ui.highlightsQChart.setTitle("The 10 Highest PM2 Averages")
 
     def get_popup_str(self):
         pass

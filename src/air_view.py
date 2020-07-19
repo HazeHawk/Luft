@@ -39,10 +39,6 @@ class AirView(QMainWindow):
         self.widgetHome = QWidget()
         tabWidget.addTab(self.buildHome(self.widgetHome), "Home")
 
-        #Analysis tab
-        self.widgetAnalysis = QWidget()
-        tabWidget.addTab(self.buildAnalysis(self.widgetAnalysis), "Analysis")
-
         # Highlights tab
         self.widgetHighlights = QWidget()
         tabWidget.addTab(self.buildHighlights(self.widgetHighlights), "Highlights")
@@ -148,7 +144,7 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuBottom.addWidget(startTimeLabel)
 
         timeEditStart = QTimeEdit()
-        timeEditStart.setTime(QTime(9, 0, 0))
+        timeEditStart.setTime(QTime(6, 0, 0))
         verticalLayoutWidgetMenuBottom.addWidget(timeEditStart)
         self.homeTimeEditStart = timeEditStart
 
@@ -167,7 +163,7 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuBottom.addWidget(endTimeLabel)
 
         timeEditEnd = QTimeEdit()
-        timeEditEnd.setTime(QTime(10, 0, 0))
+        timeEditEnd.setTime(QTime(18, 0, 0))
         verticalLayoutWidgetMenuBottom.addWidget(timeEditEnd)
         self.homeTimeEditEnd = timeEditEnd
 
@@ -202,7 +198,6 @@ class AirView(QMainWindow):
         horizontalLayout.setStretch(1, 4)
 
         return home
-
 
     def buildAnalysis(self, analysis):
 
@@ -250,18 +245,7 @@ class AirView(QMainWindow):
         widgetAnalysis.plot(hour, temperature)
         '''
 
-        self.analysisChart = QtCharts.QChart()
 
-
-        widgetAnalysis = QtCharts.QChartView(self.analysisChart)
-
-
-        self.analysisPlotWidget = widgetAnalysis
-
-        horizontalLayout_2.addWidget(widgetAnalysis)
-
-        horizontalLayout_2.setStretch(0, 1)
-        horizontalLayout_2.setStretch(1, 4)
 
 
         return analysis
@@ -321,6 +305,10 @@ class AirView(QMainWindow):
         self.highlightsQChart = QtCharts.QChart()
         chartview = QtCharts.QChartView(self.highlightsQChart)
         vBox.addWidget(chartview)
+
+        self.analysisChart = QtCharts.QChart()
+        widgetAnalysis = QtCharts.QChartView(self.analysisChart)
+        vBox.addWidget(widgetAnalysis)
 
         for i in range(0, vBox.rowCount()):
             vBox.setRowMinimumHeight(i, 700)
