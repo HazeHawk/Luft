@@ -1,25 +1,27 @@
+import json
+import statistics
 import sys
+import threading
+import time
 from datetime import date, datetime
 from pprint import pformat
-import json
-import folium
+
 import altair.vegalite.v3 as alt
-from altair_saver import save as altSave
-from chromedriver_py import binary_path
+import folium
+import numpy as np
+import pandas as pd
+from dateutil.relativedelta import *
 from folium.plugins import MarkerCluster
+from opencage.geocoder import OpenCageGeocode
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
-from dateutil.relativedelta import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
-import pandas as pd
-from opencage.geocoder import OpenCageGeocode
+
 from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
 from src.qthread_data import QThreadData
-import statistics
-
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -81,14 +83,7 @@ class AirController(object):
 
         self.model = AirModel()
 
-    def test(self):
-        sensors = self.model.get_sensors()
-        jan = datetime(year=2020,month=1,day=1)
-        cursor = self.model.find_sensors_by_old(day=jan)
-        print(cursor.explain())
-
     def run(self):
-
         self.widget.show()
 
         self.combochecker()
@@ -172,6 +167,8 @@ class AirController(object):
         sensorCountFiltered = 0
         pm2_avgList = []
 
+        self.popup_list = []
+
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         with open('data/areas/bezirke.json', encoding='utf-8') as f:
             areas = json.load(f)
@@ -184,8 +181,18 @@ class AirController(object):
             sfgo500 = folium.plugins.FeatureGroupSubGroup(fgO500, name="Single Sensors over 500 " + area["properties"]["NAME_2"])
 
             for i, sensor in enumerate(cursor):
+                #t0 = time.time()
                 lon, lat = sensor["location"]["coordinates"]
-                popup = pformat({"Bezirk":area["properties"]["NAME_2"],**sensor})
+                if False:
+                    popup = self.get_sensor_popup(sensor_id=sensor["_id"],
+                                              timeframe=(start_time, end_time), time_group="h")
+                else:
+                    data = {"Bundesland":area["properties"]["NAME_2"],**sensor}
+                    data['location'] = str(data['location']['coordinates'])
+                    df = pd.DataFrame(data, index=[0])
+                    html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
+                    popup = html
+                self.popup_list.append(popup)
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup, color='blue').add_to(sfg)
 
@@ -194,6 +201,8 @@ class AirController(object):
                     self.setFoliumCircle(lat=lat, long=lon, popup=popup, color='red').add_to(sfgo500)
 
                 sensorCount += 1
+                #t1 = time.time()
+                #logger.debug(f"{sensor['_id']} took {t1-t0} s")
 
                 if sensor["PM2_avg"] is not None and 0 < sensor["PM2_avg"] < 999:
                     pm2_avgList.append(sensor["PM2_avg"])
@@ -243,10 +252,16 @@ class AirController(object):
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
-                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+                data = {"Bundesland":area["properties"]["NAME_2"],**sensor}
+                data['location'] = str(data['location']['coordinates'])
+                df = pd.DataFrame(data, index=[0])
+                html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
+                popup = html
 
                 location_list.append([lat, lon])
                 popup_list.append(popup)
+                #if (i==10):
+                    #break
 
                 #scatter plot daten
                 if sensor is not None and area["properties"]["NAME_2"] is not None:
@@ -358,14 +373,14 @@ class AirController(object):
 
     def getTimeframe(self):
 
-        start_time = self.getHomeDateStart().toPython()
+        start_time = self.date_to_datetime(self.getHomeDateStart().toPython())
         start_time = start_time + relativedelta(
             hours=self.getHomeTimeStart().hour(),
             minutes=self.getHomeTimeStart().minute(),
             seconds=self.getHomeTimeStart().second()
         )
 
-        end_time = self.getHomeDateEnd().toPython()
+        end_time = self.date_to_datetime(self.getHomeDateEnd().toPython())
         end_time = end_time + relativedelta(
             hours=self.getHomeTimeEnd().hour(),
             minutes=self.getHomeTimeEnd().minute(),
@@ -492,11 +507,101 @@ class AirController(object):
         options_dict = {"showCoverageOnHover":True, "removeOutsideVisibleBounds":False,
                         "spiderfyOnMaxZoom":True, "maxClusterRadius":80}
         #cluster = folium.plugins.FastMarkerCluster(data=coordinates, popups=popup, name="SensorClusterLayer")
+        icons = []
 
-        cluster = MarkerCluster(locations=coordinates, popups=popup)
+        for i in range(len(popup)):
+            icon = folium.map.Icon(icon='pagelines', prefix='fa', color='darkgreen')
+            icons.append(icon)
+
+        icon_create_function = '''
+        function(cluster) {
+        return L.divIcon({html: '<b>' + cluster.getChildCount() + '</b>',
+                        className: 'marker-cluster marker-cluster-small',
+                        iconSize: new L.Point(20, 20)});
+        }
+        '''
+        cluster = MarkerCluster(locations=coordinates, popups=popup, icons=icons)
 
         return cluster
-        pass
+
+
+    def get_sensor_popup(self, sensor_id, timeframe, time_group):
+        """Return a `folium.Popup` Object, which has a multiline lineplot for a single sensor.
+
+        group_by
+            - Must be in ["y","m","d","h"] """
+        t0 = time.time()
+        cursor = self.model.find_single_sensor(sensor_id=sensor_id, timeframe=timeframe, group_by=time_group)
+        data = []
+        t1 = time.time()
+        for item in cursor:
+            item['date'] = item['_id']
+            del item['_id']
+            del item['sensor_id']
+            data.append(item)
+        t2 = time.time()
+
+        df = pd.DataFrame(data)
+        df = df.melt('date', var_name='PM_category', value_name='concentration')  #µg_per_m3
+
+        # Create a selection that chooses the nearest point & selects based on x-value
+        nearest = alt.selection(type='single', nearest=True, on='mouseover',
+                                fields=['date'], empty='none')
+
+        # The basic line
+        line = alt.Chart(df).mark_line(interpolate='basis').encode(
+            x='date:O',
+            y='concentration:Q',
+            color='PM_category:N'
+        )
+
+        # Transparent selectors across the chart. This is what tells us
+        # the x-value of the cursor
+        selectors = alt.Chart(df).mark_point().encode(
+            x='date:O',
+            opacity=alt.value(0),
+        ).add_selection(
+            nearest
+        )
+
+        # Draw points on the line, and highlight based on selection
+        points = line.mark_point().encode(
+            opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+        )
+
+        # Draw text labels near the points, and highlight based on selection
+        text = line.mark_text(align='left', dx=5, dy=-5).encode(
+            text=alt.condition(nearest, 'concentration:Q', alt.value(' '))
+        )
+
+        # Draw a rule at the location of the selection
+        rules = alt.Chart(df).mark_rule(color='gray').encode(
+            x='date:O',
+        ).transform_filter(
+            nearest
+        )
+
+        # Put the five layers into a chart and bind the data
+        layered = alt.layer(
+            line, selectors, points, rules, text
+        ).properties(
+            width=500, height=300
+        )
+
+        chart_json = layered.to_json()
+        vega = folium.VegaLite(chart_json, width=650)
+        popup = folium.Popup()
+        vega.add_to(popup)
+        t_end= time.time()
+
+        """ Takes about 0.3 seconds to build plot
+        logger.debug(f"t1 took {t1-t0} s")
+        logger.debug(f"t2 took {t2-t1} s")
+        logger.debug(f"t2 end took {t_end-t2} s")
+        logger.debug(f"t1 took {t_end-t0} s")
+        """
+        return popup
+
 
     def choroplethTest(self, geometry, data):
         choro = folium.Choropleth(
@@ -546,12 +651,12 @@ class AirController(object):
         self.home_loading_end()
 
     def buildFoliumMap(self):
-        
+
         map = folium.Map(location=self.location, tiles="Stamen Toner", zoom_start=12)
 
         if self.choropleth is not None:
             map.add_child(self.choropleth)
-            
+
         if self.clusterPoints is not None:
             map.add_child(self.clusterPoints)
 
@@ -562,7 +667,7 @@ class AirController(object):
             map.add_child(self.singlePointsO500)
 
         folium.LayerControl().add_to(map)
-        
+
         map.save('./data/html/map.html', close_file=False)
 
     def home_loading_start(self):
@@ -665,14 +770,9 @@ class AirController(object):
             self.home_loading_end()
             self.messageBox.show()
 
-
-
-
-
-
-
-
-
-
-
-
+    def date_to_datetime(self, in_date: date):
+        if isinstance(in_date, date):
+            new_date = datetime(in_date.year, in_date.month, in_date.day)
+            return new_date
+        else:
+            return in_date
