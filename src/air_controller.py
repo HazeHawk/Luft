@@ -219,14 +219,14 @@ class AirController(object):
 
     def getTimeframe(self):
 
-        start_time = self.getHomeDateStart().toPython()
+        start_time = self.date_to_datetime(self.getHomeDateStart().toPython())
         start_time = start_time + relativedelta(
             hours=self.getHomeTimeStart().hour(),
             minutes=self.getHomeTimeStart().minute(),
             seconds=self.getHomeTimeStart().second()
         )
 
-        end_time = self.getHomeDateEnd().toPython()
+        end_time = self.date_to_datetime(self.getHomeDateEnd().toPython())
         end_time = end_time + relativedelta(
             hours=self.getHomeTimeEnd().hour(),
             minutes=self.getHomeTimeEnd().minute(),
@@ -535,3 +535,10 @@ class AirController(object):
         except:
             self.home_loading_end()
             self.messageBox.show()
+
+    def date_to_datetime(self, date: datetime.date):
+        if isinstance(date, datetime.date):
+            new_date = datetime.datetime(date.year, date.month, date.day)
+            return new_date
+        else:
+            return date
