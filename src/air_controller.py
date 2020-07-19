@@ -81,9 +81,9 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
-        #tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
         #tasks = [self.load_home_data]
-        tasks = [self.load_single_circle_home]
+        #tasks = [self.load_single_circle_home]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
@@ -142,12 +142,17 @@ class AirController(object):
             sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single points " + area["properties"]["NAME_2"])
 
             for i, sensor in enumerate(cursor):
-                t0 = time.time()
+                #t0 = time.time()
                 lon, lat = sensor["location"]["coordinates"]
-                #popup = self.get_sensor_popup(sensor_id=sensor["_id"],
-                #                              timeframe=(start_time, end_time), time_group="h")
-                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
-                #popup = folium.Popup("<html><body>data is loading</body></html>")
+                if False:
+                    popup = self.get_sensor_popup(sensor_id=sensor["_id"],
+                                              timeframe=(start_time, end_time), time_group="h")
+                else:
+                    data = {"Bundesland":area["properties"]["NAME_2"],**sensor}
+                    data['location'] = str(data['location']['coordinates'])
+                    df = pd.DataFrame(data, index=[0])
+                    html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
+                    popup = folium.Popup(html)
                 self.popup_list.append(popup)
 
                 if sensor["PM2_avg"] is not None and 0 < sensor["PM2_avg"] < 999:
@@ -155,9 +160,8 @@ class AirController(object):
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
                 sensorCount += 1
-                #logger.debug(sensorCount)
-                t1 = time.time()
-                logger.debug(f"{sensor['_id']} took {t1-t0} s")
+                #t1 = time.time()
+                #logger.debug(f"{sensor['_id']} took {t1-t0} s")
 
             sfgList.append(sfg)
 
@@ -193,7 +197,11 @@ class AirController(object):
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
-                popup = pformat({"Bundesland":area["properties"]["NAME_2"],**sensor})
+                data = {"Bundesland":area["properties"]["NAME_2"],**sensor}
+                data['location'] = str(data['location']['coordinates'])
+                df = pd.DataFrame(data, index=[0])
+                html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
+                popup = folium.Popup(html)
 
                 location_list.append([lat, lon])
                 popup_list.append(popup)
@@ -296,19 +304,21 @@ class AirController(object):
         return cluster
         pass
 
-    def get_sensor_popup(self, sensor_id, timeframe, time_group):
+    def get_sensor_popup(self, sensor_id, timeframe, time_group, as_html):
         """Return a `folium.Popup` Object, which has a multiline lineplot for a single sensor.
 
         group_by
             - Must be in ["y","m","d","h"] """
+        t0 = time.time()
         cursor = self.model.find_single_sensor(sensor_id=sensor_id, timeframe=timeframe, group_by=time_group)
         data = []
-
+        t1 = time.time()
         for item in cursor:
             item['date'] = item['_id']
             del item['_id']
             del item['sensor_id']
             data.append(item)
+        t2 = time.time()
 
         df = pd.DataFrame(data)
         df = df.melt('date', var_name='PM_category', value_name='concentration')  #µg_per_m3
@@ -361,6 +371,14 @@ class AirController(object):
         vega = folium.VegaLite(chart_json, width=650)
         popup = folium.Popup()
         vega.add_to(popup)
+        t_end= time.time()
+
+        """ Takes about 0.3 seconds to build plot
+        logger.debug(f"t1 took {t1-t0} s")
+        logger.debug(f"t2 took {t2-t1} s")
+        logger.debug(f"t2 end took {t_end-t2} s")
+        logger.debug(f"t1 took {t_end-t0} s")
+        """
         return popup
 
 
