@@ -273,21 +273,9 @@ class AirController(object):
         self.clusterPoints = fg
 
     def load_line_chart(self):
-        start_time = self.getHomeDateStart().toPython()
-        start_time = start_time + relativedelta(
-            hour=0,
-            minute=0,
-            second=0
-        )
-
-        d2 = datetime(2020, 6, 30, 0, 0, 0)
-
-        if start_time > d2:
-            start_time = d2
-
         pMax = 0
 
-        self._ui.highlightsBWAVG.setTitle('Compare Countrie Average ' + str(start_time.date()))
+        self._ui.highlightsBWAVG.setTitle('Compare Countrie Average ' + str(self.getHomeDateStart().toPython()))
         series = QtCharts.QLineSeries()
 
         #BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
@@ -301,6 +289,18 @@ class AirController(object):
             listID = []
             listAVG = []
             areas = self.model.find_area_by(bundesland=bula, projection=None, as_ft_collection=True)
+
+            start_time = self.getHomeDateStart().toPython()
+            start_time = start_time + relativedelta(
+                hour=0,
+                minute=0,
+                second=0
+            )
+
+            d2 = datetime(2020, 6, 30, 0, 0, 0)
+
+            if start_time > d2:
+                start_time = d2
 
             for i in range(1, 26):
 
