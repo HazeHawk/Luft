@@ -3,6 +3,9 @@ from datetime import date, datetime
 from pprint import pformat
 import json
 import folium
+import altair.vegalite.v3 as alt
+from altair_saver import save as altSave
+from chromedriver_py import binary_path
 from folium.plugins import MarkerCluster
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
@@ -15,8 +18,8 @@ from src.air_model import AirModel
 from src.air_view import AirView
 from src.config import Configuration
 from src.qthread_data import QThreadData
-import numpy
 import statistics
+
 
 _cfg = Configuration()
 logger = _cfg.LOGGER
@@ -50,6 +53,8 @@ class AirController(object):
         self._homeTimeEnd = self._ui.homeTimeEditEnd.time()
 
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
+        self._ui.highlightsCompareButton.clicked.connect(self.reload_linechart)
+        self._ui.highlightsCompareCombo1.activated.connect(self.combochecker)
 
         self.location = [48.77915707462204, 9.175987243652344]
 
@@ -63,6 +68,16 @@ class AirController(object):
         self.choropleth = None
         self.clusterPoints = None
         self.singlePoints = None
+        self.singlePointsO500 = None
+
+        self.dateaxis = QtCharts.QDateTimeAxis()
+        self.value_axis = QtCharts.QValueAxis()
+        self.anaaxisX = QtCharts.QBarCategoryAxis()
+        self.anaaxisY = QtCharts.QValueAxis()
+        self.scattervalue_axis = QtCharts.QValueAxis()
+        self.scattervalue_axisbot = QtCharts.QValueAxis()
+        self.scattervalue_axis2 = QtCharts.QValueAxis()
+        self.scattervalue_axisbot2 = QtCharts.QValueAxis()
 
         self.model = AirModel()
 
@@ -76,6 +91,8 @@ class AirController(object):
 
         self.widget.show()
 
+        self.combochecker()
+
         self._ui.homeButtonSendData.setEnabled(False)
         self.load_view_util()
 
@@ -84,11 +101,32 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
-        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        self.clear_diagramms()
+
+        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.load_line_chart]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
         self.thread.exit()
+
+    def clear_diagramms(self):
+        self._ui.analysisChart.removeAllSeries()
+        self._ui.analysisChart.removeAxis(self.anaaxisY)
+        self._ui.analysisChart.removeAxis(self.anaaxisX)
+
+        self._ui.highlightsBWAVG.removeAllSeries()
+        self._ui.highlightsBWAVG.removeAxis(self.dateaxis)
+        self._ui.highlightsBWAVG.removeAxis(self.value_axis)
+
+        self._ui.highlightsScatterChart.removeAllSeries()
+        self._ui.highlightsScatterChart.removeAxis(self.scattervalue_axis)
+        self._ui.highlightsScatterChart.removeAxis(self.scattervalue_axisbot)
+
+        self._ui.highlightsScatterChart250.removeAllSeries()
+        self._ui.highlightsScatterChart250.removeAxis(self.scattervalue_axis2)
+        self._ui.highlightsScatterChart250.removeAxis(self.scattervalue_axisbot2)
+
+        self._ui.highlightsQChart.removeAllSeries()
 
     def load_home_data(self):
 
@@ -124,10 +162,14 @@ class AirController(object):
     def load_single_circle_home(self):
         start_time, end_time = self.getTimeframe()
 
-        fg = folium.FeatureGroup(name="Single Circles")
+        fg = folium.FeatureGroup(name="Single Sensors", show=False)
+        fgO500 = folium.FeatureGroup(name="Single Sensors over PM2 AVG 500", show=False)
+
         sfgList = []
+        sfgList0500 = []
 
         sensorCount = 0
+        sensorCountFiltered = 0
         pm2_avgList = []
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
@@ -138,31 +180,44 @@ class AirController(object):
             geo = {'$geometry': area['geometry']}
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
-            sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single points " + area["properties"]["NAME_2"])
+            sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single Sensors " + area["properties"]["NAME_2"])
+            sfgo500 = folium.plugins.FeatureGroupSubGroup(fgO500, name="Single Sensors over 500 " + area["properties"]["NAME_2"])
 
             for i, sensor in enumerate(cursor):
                 lon, lat = sensor["location"]["coordinates"]
                 popup = pformat({"Bezirk":area["properties"]["NAME_2"],**sensor})
 
-                if sensor["PM2_avg"] is not None and 0 < sensor["PM2_avg"] < 999:
-                    pm2_avgList.append(sensor["PM2_avg"])
+                self.setFoliumCircle(lat=lat, long=lon, popup=popup, color='blue').add_to(sfg)
 
-                self.setFoliumCircle(lat=lat, long=lon, popup=popup).add_to(sfg)
+                # Roter Kreis wenn PM2_avg wert über 500
+                if sensor["PM2_avg"] is not None and sensor["PM2_avg"] > 500:
+                    self.setFoliumCircle(lat=lat, long=lon, popup=popup, color='red').add_to(sfgo500)
+
                 sensorCount += 1
 
+                if sensor["PM2_avg"] is not None and 0 < sensor["PM2_avg"] < 999:
+                    pm2_avgList.append(sensor["PM2_avg"])
+                    sensorCountFiltered += 1
+
             sfgList.append(sfg)
+            sfgList0500.append(sfgo500)
 
         for item in sfgList:
             fg.add_child(item)
         self.singlePoints = fg
 
+        for item in sfgList0500:
+            fgO500.add_child(item)
+        self.singlePointsO500 = fgO500
+
         self.setLabelSensorCount(str(sensorCount))
-        self.setLabelMinimum(str(round(min(pm2_avgList), 4)))
-        self.setLabelMaximum(str(round(max(pm2_avgList), 4)))
-        self.setLabelAverag(str(round(sum(pm2_avgList)/len(pm2_avgList), 4)))
+        self.setLabelSensorCountFiltered(str(sensorCountFiltered))
+        self.setLabelMinimum(str(round(min(pm2_avgList), 3)))
+        self.setLabelMaximum(str(round(max(pm2_avgList), 3)))
+        self.setLabelAverag(str(round(sum(pm2_avgList)/len(pm2_avgList), 3)))
 
         pm2_avgList.sort()
-        self.setLabelMedian(str(round(statistics.median(pm2_avgList), 4)))
+        self.setLabelMedian(str(round(statistics.median(pm2_avgList), 3)))
 
     def load_cluster_circle_home(self):
         start_time, end_time = self.getTimeframe()
@@ -172,8 +227,12 @@ class AirController(object):
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
 
-        fg = folium.FeatureGroup(name="Cluster Circles")
+        fg = folium.FeatureGroup(name="Clustered Sensors", show=False)
         sfgList = []
+
+        listpm2max = []
+        listpm2min = []
+        listbezirk = []
 
         for area in areas["features"]:
             location_list = []
@@ -189,6 +248,12 @@ class AirController(object):
                 location_list.append([lat, lon])
                 popup_list.append(popup)
 
+                #scatter plot daten
+                if sensor is not None and area["properties"]["NAME_2"] is not None:
+                    listpm2min.append(sensor["PM2_min"])
+                    listpm2max.append(sensor["PM2_max"])
+                    listbezirk.append(str(area["properties"]["NAME_2"]))
+
             sfg = folium.plugins.FeatureGroupSubGroup(fg, name=area["properties"]["NAME_2"])
 
             cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
@@ -196,9 +261,100 @@ class AirController(object):
 
             sfgList.append(sfg)
 
+        data = {
+            'PM2MAX': listpm2max,
+            'PM2MIN': listpm2min,
+            'Bezirk': listbezirk
+        }
+
+        self.scatter_plot_all_sensors(data)
+
         for item in sfgList:
             fg.add_child(item)
         self.clusterPoints = fg
+
+    def load_line_chart(self):
+        pMax = 0
+
+        self._ui.highlightsBWAVG.setTitle('Compare Countrie Average ' + str(self.getHomeDateStart().toPython()))
+        series = QtCharts.QLineSeries()
+        self._ui.highlightsBWAVG.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+
+        #BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
+
+        # areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
+        bulas = [self._ui.highlightsCompareCombo1.currentText(), self._ui.highlightsCompareCombo2.currentText()]
+
+        for bula in bulas:
+            series = QtCharts.QLineSeries()
+            series.setName(bula)
+            listID = []
+            listAVG = []
+            areas = self.model.find_area_by(bundesland=bula, projection=None, as_ft_collection=True)
+
+            start_time, end_time = self.getTimeframe()
+
+            diff = end_time - start_time
+            hours = diff.days * 24 + diff.seconds // 3600
+
+            end_time = start_time + relativedelta(hours=1)
+
+            for i in range(1, hours + 2):
+
+                pAvg = 0
+                count = 0
+
+                for area in areas["features"]:
+                    geo = {"$geometry": area["geometry"]}
+                    cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
+
+                    for sensor in cursor:
+                        pAvg += sensor['PM2_avg']
+
+                count += 1
+
+                listID.append(start_time)
+                listAVG.append(pAvg/4)
+
+                if pMax < pAvg/count:
+                    pMax = pAvg/count
+
+                start_time = start_time + relativedelta(hours=1)
+                end_time = start_time + relativedelta(hours=1)
+
+            for date, avg in zip(listID, listAVG):
+                series.append(float(QDateTime(date.year, date.month, date.day, date.hour, 0, 0).toMSecsSinceEpoch()), avg)
+
+            self._ui.highlightsBWAVG.addSeries(series)
+
+        self.dateaxis = QtCharts.QDateTimeAxis()
+        self.dateaxis.setTickCount(10)
+
+        self.dateaxis.setTitleText('Hour')
+        if hours > 24:
+            self.dateaxis.setFormat('dd.MM hh:mm:ss')
+        else:
+            self.dateaxis.setFormat('hh:mm:ss')
+
+        self._ui.highlightsBWAVG.addAxis(self.dateaxis, Qt.AlignBottom)
+        series.attachAxis(self.dateaxis)
+
+        self.value_axis = QtCharts.QValueAxis()
+        self.value_axis.setRange(0, round(pMax, 0))
+        self.value_axis.setTickCount(5)
+        self.value_axis.setTitleText('PM2 Average')
+        self._ui.highlightsBWAVG.addAxis(self.value_axis, Qt.AlignLeft)
+
+        self._ui.highlightsCompareButton.setEnabled(True)
+
+    def reload_linechart(self):
+        self._ui.highlightsCompareButton.setEnabled(False)
+        self._ui.highlightsBWAVG.removeAllSeries()
+        self._ui.highlightsBWAVG.removeAxis(self.dateaxis)
+        self._ui.highlightsBWAVG.removeAxis(self.value_axis)
+        self.thread2 = QThreadData([self.load_line_chart])
+        self.thread2.start()
+        self.thread2.exit()
 
     def getTimeframe(self):
 
@@ -218,8 +374,62 @@ class AirController(object):
 
         return start_time, end_time
 
-    def load_analysis(self, listID:list, listAVG:list):
+    def scatter_plot_all_sensors(self, data:dict):
 
+        series = QtCharts.QScatterSeries()
+        series.setMarkerShape(QtCharts.QScatterSeries.MarkerShapeCircle)
+        series.setMarkerSize(15)
+
+        for pm2min, pm2max in zip(data['PM2MIN'], data['PM2MAX']):
+            if pm2min is not None and pm2max is not None:
+                series.append(pm2min, pm2max)
+
+        self._ui.highlightsScatterChart.addSeries(series)
+        self._ui.highlightsScatterChart.setTitle('Scatter of all Sensors PM2 min/max')
+        self._ui.highlightsScatterChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+
+        self.scattervalue_axis = QtCharts.QValueAxis()
+        self.scattervalue_axis.setRange(0, 1000)
+        self.scattervalue_axis.setTickCount(5)
+        self.scattervalue_axis.setTitleText('PM2 maximal')
+
+        self._ui.highlightsScatterChart.addAxis(self.scattervalue_axis, Qt.AlignLeft)
+
+        self.scattervalue_axisbot = QtCharts.QValueAxis()
+        self.scattervalue_axisbot.setRange(0, 1000)
+        self.scattervalue_axisbot.setTickCount(5)
+        self.scattervalue_axisbot.setTitleText('PM2 minimal')
+
+        self._ui.highlightsScatterChart.addAxis(self.scattervalue_axisbot, Qt.AlignBottom)
+
+        #250
+        series = QtCharts.QScatterSeries()
+        series.setMarkerShape(QtCharts.QScatterSeries.MarkerShapeCircle)
+        series.setMarkerSize(15)
+
+        for pm2min, pm2max in zip(data['PM2MIN'], data['PM2MAX']):
+            if pm2min is not None and pm2min < 250 and pm2max is not None and pm2max < 250:
+                series.append(pm2min, pm2max)
+
+        self._ui.highlightsScatterChart250.addSeries(series)
+        self._ui.highlightsScatterChart250.setTitle('Scatter of all Sensors PM2 min/max lower than 250')
+        self._ui.highlightsScatterChart250.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+
+        self.scattervalue_axis2 = QtCharts.QValueAxis()
+        self.scattervalue_axis2.setRange(0, 250)
+        self.scattervalue_axis2.setTickCount(5)
+        self.scattervalue_axis2.setTitleText('PM2 maximal')
+
+        self._ui.highlightsScatterChart250.addAxis(self.scattervalue_axis2, Qt.AlignLeft)
+
+        self.scattervalue_axisbot2 = QtCharts.QValueAxis()
+        self.scattervalue_axisbot2.setRange(0, 250)
+        self.scattervalue_axisbot2.setTickCount(5)
+        self.scattervalue_axisbot2.setTitleText('PM2 minimal')
+
+        self._ui.highlightsScatterChart250.addAxis(self.scattervalue_axisbot2, Qt.AlignBottom)
+
+    def load_analysis(self, listID:list, listAVG:list):
         listID = listID[:4]
         listAVG = listAVG[:4]
 
@@ -227,10 +437,10 @@ class AirController(object):
         for item in listAVG:
             dataSet2.append(item)
 
-        axisX = QtCharts.QBarCategoryAxis()
-        axisX.append(listID)
+        self.anaaxisX = QtCharts.QBarCategoryAxis()
+        self.anaaxisX.append(listID)
 
-        axisY = QtCharts.QValueAxis()
+        self.anaaxisY = QtCharts.QValueAxis()
         min = 0
         max = 0
         for item in listAVG:
@@ -239,40 +449,41 @@ class AirController(object):
             if max<item:
                 max=item
 
-        axisY.setRange(min, max)
+        self.anaaxisY.setRange(min, max)
 
         dataSeries = QtCharts.QBarSeries()
         dataSeries.append(dataSet2)
-        dataSeries.attachAxis(axisX)
-        dataSeries.attachAxis(axisY)
+        dataSeries.attachAxis(self.anaaxisX)
+        dataSeries.attachAxis(self.anaaxisY)
 
-        self._ui.analysisChart.addAxis(axisX, Qt.AlignBottom)
-        self._ui.analysisChart.addAxis(axisY, Qt.AlignLeft)
+        self._ui.analysisChart.addAxis(self.anaaxisX, Qt.AlignBottom)
+        self._ui.analysisChart.addAxis(self.anaaxisY, Qt.AlignLeft)
 
         self._ui.analysisChart.addSeries(dataSeries)
         self._ui.analysisChart.legend().setVisible(True)
         self._ui.analysisChart.legend().setAlignment(Qt.AlignBottom)
         self._ui.analysisChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+        self._ui.analysisChart.setTitle("Averages in Baden-Würtemberg")
 
     def load_highlights(self, listID: list, listAVG: list):
 
+        lavg, lbez = zip(*sorted(zip(listAVG, listID)))
+
         series = QtCharts.QPieSeries()
 
-        for itemID, itemAVG in zip(listID, listAVG):
-            series.append(itemID, itemAVG)
-
-        slice = QtCharts.QPieSlice()
+        for itemID, itemAVG in zip(lbez[:10], lavg[:10]):
+            series.append(itemID + ' ' + str(round(itemAVG, 3)), itemAVG)
 
         for i in range(0, series.count()):
             slice = series.slices()[i]
             slice.setLabelVisible(True)
 
-        self._ui.highlightsQChart.legend().setVisible(True)
+        self._ui.highlightsQChart.legend().setVisible(False)
         self._ui.highlightsQChart.legend().setAlignment(Qt.AlignBottom)
         self._ui.highlightsQChart.addSeries(series)
         self._ui.highlightsQChart.createDefaultAxes()
         self._ui.highlightsQChart.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
-        self._ui.highlightsQChart.setTitle("Pie Chart Example")
+        self._ui.highlightsQChart.setTitle("The 10 Highest PM2 Averages")
 
     def get_popup_str(self):
         pass
@@ -312,12 +523,12 @@ class AirController(object):
 
         #self._ui.homeWidgetMap.update()
 
-    def setFoliumCircle(self, lat:float, long:float, popup:str):
+    def setFoliumCircle(self, lat:float, long:float, popup:str, color:str):
         return folium.Circle(
             location=[lat, long],
             radius=50,
             popup=popup,
-            color='blue',
+            color=color,
             fill=True,
             fill_color='blue'
         )
@@ -347,12 +558,16 @@ class AirController(object):
         if self.singlePoints is not None:
             map.add_child(self.singlePoints)
 
+        if self.singlePointsO500 is not None:
+            map.add_child(self.singlePointsO500)
+
         folium.LayerControl().add_to(map)
         
         map.save('./data/html/map.html', close_file=False)
 
     def home_loading_start(self):
         self._ui.homeButtonSendData.setEnabled(False)
+        self._ui.highlightsCompareButton.setEnabled(False)
         self._ui.homeLineEditPosition.setEnabled(False)
         self._ui.homeLoadingLabel.show()
         self._ui.homeLoadingMovie.start()
@@ -361,6 +576,7 @@ class AirController(object):
         self._ui.homeLoadingLabel.hide()
         self._ui.homeLoadingMovie.stop()
         self._ui.homeLineEditPosition.setEnabled(True)
+        self._ui.highlightsCompareButton.setEnabled(True)
         self._ui.homeButtonSendData.setEnabled(True)
 
     def homeButtonSendClicked(self):
@@ -371,6 +587,11 @@ class AirController(object):
 
         self.load_view_util()
         #self.thread_test()
+
+    def combochecker(self):
+        self._ui.highlightsCompareCombo2.clear()
+        self._ui.highlightsCompareCombo2.addItems(['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH'])
+        self._ui.highlightsCompareCombo2.removeItem(self._ui.highlightsCompareCombo1.currentIndex())
 
     def setHomeDateStart(self):
         logger.debug(self._ui.homeDateEditStart.date())
@@ -420,6 +641,9 @@ class AirController(object):
 
     def setLabelSensorCount(self, sensorCount:str):
         self._ui.homeLabelSencorCount.setText("Sensor Count: " + sensorCount)
+
+    def setLabelSensorCountFiltered(self, sensorCountf: str):
+        self._ui.homeLabelSencorCountfiltered.setText("Sensor Count Filtered: " + sensorCountf)
 
     def getCoordinates(self, name):
         key = "3803f50ca47344bf87e9c165d4e7fa94"

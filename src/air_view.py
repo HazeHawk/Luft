@@ -39,10 +39,6 @@ class AirView(QMainWindow):
         self.widgetHome = QWidget()
         tabWidget.addTab(self.buildHome(self.widgetHome), "Home")
 
-        #Analysis tab
-        self.widgetAnalysis = QWidget()
-        tabWidget.addTab(self.buildAnalysis(self.widgetAnalysis), "Analysis")
-
         # Highlights tab
         self.widgetHighlights = QWidget()
         tabWidget.addTab(self.buildHighlights(self.widgetHighlights), "Highlights")
@@ -91,6 +87,10 @@ class AirView(QMainWindow):
         self.homeLineEditPosition = inputPosition
 
         medianLabel = QLabel()
+        medianLabel.setText("PM2 Value")
+        verticalLayoutWidgetMenuTop.addWidget(medianLabel)
+
+        medianLabel = QLabel()
         medianLabel.setText("Median:")
         verticalLayoutWidgetMenuTop.addWidget(medianLabel)
         self.homeLabelMedian = medianLabel
@@ -114,6 +114,11 @@ class AirView(QMainWindow):
         sensorCountLabel.setText("Sensor Count:")
         verticalLayoutWidgetMenuTop.addWidget(sensorCountLabel)
         self.homeLabelSencorCount = sensorCountLabel
+
+        sensorCountLabelf = QLabel()
+        sensorCountLabelf.setText("Sensor Count Filtered:")
+        verticalLayoutWidgetMenuTop.addWidget(sensorCountLabelf)
+        self.homeLabelSencorCountfiltered = sensorCountLabelf
 
         loading = QLabel()
         movie = QMovie('./data/gif/ajax-loader.gif')
@@ -143,7 +148,7 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuBottom.addWidget(startTimeLabel)
 
         timeEditStart = QTimeEdit()
-        timeEditStart.setTime(QTime(9, 0, 0))
+        timeEditStart.setTime(QTime(6, 0, 0))
         verticalLayoutWidgetMenuBottom.addWidget(timeEditStart)
         self.homeTimeEditStart = timeEditStart
 
@@ -162,7 +167,7 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuBottom.addWidget(endTimeLabel)
 
         timeEditEnd = QTimeEdit()
-        timeEditEnd.setTime(QTime(10, 0, 0))
+        timeEditEnd.setTime(QTime(18, 0, 0))
         verticalLayoutWidgetMenuBottom.addWidget(timeEditEnd)
         self.homeTimeEditEnd = timeEditEnd
 
@@ -192,15 +197,11 @@ class AirView(QMainWindow):
 
         verticalLayout.addWidget(widgetMap)
 
-        verticalLayout.setStretch(0, 5)
-        verticalLayout.setStretch(1, 1)
-
         horizontalLayout.addWidget(mapWidget)
 
         horizontalLayout.setStretch(1, 4)
 
         return home
-
 
     def buildAnalysis(self, analysis):
 
@@ -248,43 +249,74 @@ class AirView(QMainWindow):
         widgetAnalysis.plot(hour, temperature)
         '''
 
-        self.analysisChart = QtCharts.QChart()
 
-
-        widgetAnalysis = QtCharts.QChartView(self.analysisChart)
-
-
-        self.analysisPlotWidget = widgetAnalysis
-
-        horizontalLayout_2.addWidget(widgetAnalysis)
-
-        horizontalLayout_2.setStretch(0, 1)
-        horizontalLayout_2.setStretch(1, 4)
 
 
         return analysis
 
 
     def buildHighlights(self, highlights):
-        scroll = QScrollArea()
         highlightsWidget = QWidget()
         vBox = QGridLayout()
 
-        self.highlightsQChart = QtCharts.QChart()
+        #Compare Chart
+        compareChart = QWidget()
+        verLay = QVBoxLayout(compareChart)
+        compareChart.setLayout(verLay)
 
+        controlls = QWidget()
+        horiLay = QHBoxLayout(controlls)
+        controlls.setLayout(horiLay)
+
+        BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
+        cb1 = QComboBox(controlls)
+        cb1.addItems(BL_OPTIONS)
+        self.highlightsCompareCombo1 = cb1
+
+        horiLay.addWidget(cb1)
+
+        button = QPushButton()
+        button.setText("Compare")
+        self.highlightsCompareButton = button
+        horiLay.addWidget(button)
+
+        cb2 = QComboBox(controlls)
+        cb2.addItems(BL_OPTIONS)
+        self.highlightsCompareCombo2 = cb2
+
+        horiLay.addWidget(cb2)
+
+        verLay.addWidget(controlls)
+
+        self.highlightsBWAVG = QtCharts.QChart()
+        chartviewbwavg = QtCharts.QChartView(self.highlightsBWAVG)
+        verLay.addWidget(chartviewbwavg)
+
+        vBox.addWidget(compareChart)
+
+        #Scatter Chart
+        self.highlightsScatterChart = QtCharts.QChart()
+        chartviewsc = QtCharts.QChartView(self.highlightsScatterChart)
+        vBox.addWidget(chartviewsc)
+
+        self.highlightsScatterChart250 = QtCharts.QChart()
+        chartviewsc250 = QtCharts.QChartView(self.highlightsScatterChart250)
+        vBox.addWidget(chartviewsc250)
+
+        self.highlightsQChart = QtCharts.QChart()
         chartview = QtCharts.QChartView(self.highlightsQChart)
         vBox.addWidget(chartview)
-        '''
-        for i in range(1, 10):
-            object = pyqtgraph.PlotWidget(highlights)
-            hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-            temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
-            object.plot(hour, temperature)
-            vBox.setRowMinimumHeight(i - 1, 500)
-            vBox.addWidget(object)
-        '''
+
+        self.analysisChart = QtCharts.QChart()
+        widgetAnalysis = QtCharts.QChartView(self.analysisChart)
+        vBox.addWidget(widgetAnalysis)
+
+        for i in range(0, vBox.rowCount()):
+            vBox.setRowMinimumHeight(i, 700)
+
         highlightsWidget.setLayout(vBox)
 
+        scroll = QScrollArea()
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setWidgetResizable(True)
