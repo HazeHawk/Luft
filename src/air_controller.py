@@ -191,7 +191,7 @@ class AirController(object):
                     data['location'] = str(data['location']['coordinates'])
                     df = pd.DataFrame(data, index=[0])
                     html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
-                    popup = folium.Popup(html)
+                    popup = html
                 self.popup_list.append(popup)
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup, color='blue').add_to(sfg)
@@ -525,7 +525,7 @@ class AirController(object):
         return cluster
 
 
-    def get_sensor_popup(self, sensor_id, timeframe, time_group, as_html):
+    def get_sensor_popup(self, sensor_id, timeframe, time_group):
         """Return a `folium.Popup` Object, which has a multiline lineplot for a single sensor.
 
         group_by
