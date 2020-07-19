@@ -81,9 +81,9 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
-        tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
+        #tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home]
         #tasks = [self.load_home_data]
-        #tasks = [self.load_single_circle_home]
+        tasks = [self.load_cluster_circle_home]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
@@ -205,6 +205,8 @@ class AirController(object):
 
                 location_list.append([lat, lon])
                 popup_list.append(popup)
+                #if (i==10):
+                    #break
 
             sfg = folium.plugins.FeatureGroupSubGroup(fg, name=area["properties"]["NAME_2"])
 
@@ -298,11 +300,23 @@ class AirController(object):
         options_dict = {"showCoverageOnHover":True, "removeOutsideVisibleBounds":False,
                         "spiderfyOnMaxZoom":True, "maxClusterRadius":80}
         #cluster = folium.plugins.FastMarkerCluster(data=coordinates, popups=popup, name="SensorClusterLayer")
+        icons = []
 
-        cluster = MarkerCluster(locations=coordinates, popups=popup)
+        for i in range(len(popup)):
+            icon = folium.map.Icon(icon='pagelines', prefix='fa', color='darkgreen')
+            icons.append(icon)
+
+        icon_create_function = '''
+        function(cluster) {
+        return L.divIcon({html: '<b>' + cluster.getChildCount() + '</b>',
+                        className: 'marker-cluster marker-cluster-small',
+                        iconSize: new L.Point(20, 20)});
+        }
+        '''
+        cluster = MarkerCluster(locations=coordinates, popups=popup, icons=icons)
 
         return cluster
-        pass
+
 
     def get_sensor_popup(self, sensor_id, timeframe, time_group, as_html):
         """Return a `folium.Popup` Object, which has a multiline lineplot for a single sensor.
@@ -536,9 +550,9 @@ class AirController(object):
             self.home_loading_end()
             self.messageBox.show()
 
-    def date_to_datetime(self, date: datetime.date):
-        if isinstance(date, datetime.date):
-            new_date = datetime.datetime(date.year, date.month, date.day)
+    def date_to_datetime(self, in_date: date):
+        if isinstance(in_date, date):
+            new_date = datetime(in_date.year, in_date.month, in_date.day)
             return new_date
         else:
-            return date
+            return in_date
