@@ -278,6 +278,7 @@ class AirController(object):
 
         self._ui.highlightsBWAVG.setTitle('Compare Countrie Average ' + str(self.getHomeDateStart().toPython()))
         series = QtCharts.QLineSeries()
+        self._ui.highlightsBWAVG.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
 
         #BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
 
@@ -291,24 +292,14 @@ class AirController(object):
             listAVG = []
             areas = self.model.find_area_by(bundesland=bula, projection=None, as_ft_collection=True)
 
-            start_time = self.getHomeDateStart().toPython()
-            start_time = start_time + relativedelta(
-                hour=0,
-                minute=0,
-                second=0
-            )
-
-            d2 = datetime(2020, 6, 30, 0, 0, 0)
-
-            if start_time > d2:
-                start_time = d2
-
-            end_time = start_time + relativedelta(hours=1)
+            start_time, end_time = self.getTimeframe()
 
             diff = end_time - start_time
             hours = diff.days * 24 + diff.seconds // 3600
 
-            for i in range(1, 26):
+            end_time = start_time + relativedelta(hours=1)
+
+            for i in range(1, hours + 2):
 
                 pAvg = 0
                 count = 0
@@ -337,9 +328,14 @@ class AirController(object):
             self._ui.highlightsBWAVG.addSeries(series)
 
         self.dateaxis = QtCharts.QDateTimeAxis()
-        self.dateaxis.setTickCount(13)
+        self.dateaxis.setTickCount(10)
+
         self.dateaxis.setTitleText('Hour')
-        self.dateaxis.setFormat('hh:mm:ss')
+        if hours > 24:
+            self.dateaxis.setFormat('dd.MM hh:mm:ss')
+        else:
+            self.dateaxis.setFormat('hh:mm:ss')
+
         self._ui.highlightsBWAVG.addAxis(self.dateaxis, Qt.AlignBottom)
         series.attachAxis(self.dateaxis)
 
@@ -349,9 +345,10 @@ class AirController(object):
         self.value_axis.setTitleText('PM2 Average')
         self._ui.highlightsBWAVG.addAxis(self.value_axis, Qt.AlignLeft)
 
-        self._ui.highlightsBWAVG.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
+        self._ui.highlightsCompareButton.setEnabled(True)
 
     def reload_linechart(self):
+        self._ui.highlightsCompareButton.setEnabled(False)
         self._ui.highlightsBWAVG.removeAllSeries()
         self._ui.highlightsBWAVG.removeAxis(self.dateaxis)
         self._ui.highlightsBWAVG.removeAxis(self.value_axis)
@@ -570,6 +567,7 @@ class AirController(object):
 
     def home_loading_start(self):
         self._ui.homeButtonSendData.setEnabled(False)
+        self._ui.highlightsCompareButton.setEnabled(False)
         self._ui.homeLineEditPosition.setEnabled(False)
         self._ui.homeLoadingLabel.show()
         self._ui.homeLoadingMovie.start()
@@ -578,6 +576,7 @@ class AirController(object):
         self._ui.homeLoadingLabel.hide()
         self._ui.homeLoadingMovie.stop()
         self._ui.homeLineEditPosition.setEnabled(True)
+        self._ui.highlightsCompareButton.setEnabled(True)
         self._ui.homeButtonSendData.setEnabled(True)
 
     def homeButtonSendClicked(self):
