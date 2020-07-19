@@ -525,7 +525,7 @@ class AirController(object):
         return cluster
 
 
-    def get_sensor_popup(self, sensor_id, timeframe, time_group, as_html):
+    def get_sensor_popup(self, sensor_id, timeframe, time_group, as_html=False):
         """Return a `folium.Popup` Object, which has a multiline lineplot for a single sensor.
 
         group_by
