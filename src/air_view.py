@@ -87,6 +87,10 @@ class AirView(QMainWindow):
         self.homeLineEditPosition = inputPosition
 
         medianLabel = QLabel()
+        medianLabel.setText("PM2 Value")
+        verticalLayoutWidgetMenuTop.addWidget(medianLabel)
+
+        medianLabel = QLabel()
         medianLabel.setText("Median:")
         verticalLayoutWidgetMenuTop.addWidget(medianLabel)
         self.homeLabelMedian = medianLabel
@@ -278,7 +282,6 @@ class AirView(QMainWindow):
 
         cb2 = QComboBox(controlls)
         cb2.addItems(BL_OPTIONS)
-        cb2.setCurrentIndex(1)
         self.highlightsCompareCombo2 = cb2
 
         horiLay.addWidget(cb2)

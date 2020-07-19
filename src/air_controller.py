@@ -55,7 +55,6 @@ class AirController(object):
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
         self._ui.highlightsCompareButton.clicked.connect(self.reload_linechart)
         self._ui.highlightsCompareCombo1.activated.connect(self.combochecker)
-        self.combochecker()
 
         self.location = [48.77915707462204, 9.175987243652344]
 
@@ -91,6 +90,8 @@ class AirController(object):
     def run(self):
 
         self.widget.show()
+
+        self.combochecker()
 
         self._ui.homeButtonSendData.setEnabled(False)
         self.load_view_util()
@@ -302,9 +303,13 @@ class AirController(object):
             if start_time > d2:
                 start_time = d2
 
+            end_time = start_time + relativedelta(hours=1)
+
+            diff = end_time - start_time
+            hours = diff.days * 24 + diff.seconds // 3600
+
             for i in range(1, 26):
 
-                end_time = start_time + relativedelta(hours=1)
                 pAvg = 0
                 count = 0
 
@@ -324,6 +329,7 @@ class AirController(object):
                     pMax = pAvg/count
 
                 start_time = start_time + relativedelta(hours=1)
+                end_time = start_time + relativedelta(hours=1)
 
             for date, avg in zip(listID, listAVG):
                 series.append(float(QDateTime(date.year, date.month, date.day, date.hour, 0, 0).toMSecsSinceEpoch()), avg)
