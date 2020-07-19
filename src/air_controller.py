@@ -291,7 +291,7 @@ class AirController(object):
     def load_line_chart(self):
         pMax = 0
 
-        self._ui.highlightsBWAVG.setTitle('Compare Countrie Average ' + str(self.getHomeDateStart().toPython()) + '-' + str(self.getHomeDateEnd().toPython()))
+        self._ui.highlightsBWAVG.setTitle('Compare Countrie Average ' + str(self.getHomeDateStart().toPython()) + 'until' + str(self.getHomeDateEnd().toPython()))
         series = QtCharts.QLineSeries()
         self._ui.highlightsBWAVG.setAnimationOptions(QtCharts.QChart.AnimationOption.SeriesAnimations)
 
