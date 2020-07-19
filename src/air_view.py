@@ -288,9 +288,15 @@ class AirView(QMainWindow):
 
         horiLay.addWidget(cb1)
 
+        button = QPushButton()
+        button.setText("Compare")
+        self.highlightsCompareButton = button
+        horiLay.addWidget(button)
+
         cb2 = QComboBox(controlls)
         for item in BL_OPTIONS:
             cb2.addItem(item)
+        cb2.setCurrentIndex(1)
         self.highlightsCompareCombo2 = cb2
 
         horiLay.addWidget(cb2)

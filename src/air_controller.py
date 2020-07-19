@@ -53,6 +53,7 @@ class AirController(object):
         self._homeTimeEnd = self._ui.homeTimeEditEnd.time()
 
         self._ui.homeButtonSendData.clicked.connect(self.homeButtonSendClicked)
+        self._ui.highlightsCompareButton.clicked.connect(self.reload_linechart)
 
         self.location = [48.77915707462204, 9.175987243652344]
 
@@ -67,8 +68,6 @@ class AirController(object):
         self.clusterPoints = None
         self.singlePoints = None
         self.singlePointsO500 = None
-
-        alt.data_transformers.disable_max_rows()
 
         self.model = AirModel()
 
@@ -90,11 +89,16 @@ class AirController(object):
     def load_view_util(self):
         self.home_loading_start()
 
+        self.clear_diagramms()
+
         tasks = [self.load_home_data, self.load_cluster_circle_home, self.load_single_circle_home, self.load_line_chart]
         self.thread = QThreadData(tasks)
         self.thread.start()
         self._ui.connect(self.thread, SIGNAL("finished()"), self.refresh_home_util)
         self.thread.exit()
+
+    def clear_diagramms(self):
+        self._ui.analysisChart
 
     def load_home_data(self):
 
@@ -254,59 +258,71 @@ class AirController(object):
         if start_time > d2:
             start_time = d2
 
-        listID = []
-        listAVG = []
         pMax = 0
 
-        self._ui.highlightsBWAVG.setTitle('Baden Würtemberg Average ' + str(start_time.date()))
+        self._ui.highlightsBWAVG.setTitle('Compare Countrie Average ' + str(start_time.date()))
         series = QtCharts.QLineSeries()
 
         #BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
 
         # areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
-        areas = self.model.find_area_by(bundesland="BW", projection=None, as_ft_collection=True)
+        bulas = [self._ui.highlightsCompareCombo1.currentText(), self._ui.highlightsCompareCombo2.currentText()]
 
-        for i in range(1, 26):
+        for bula in bulas:
+            series = QtCharts.QLineSeries()
+            series.setName(bula)
+            listID = []
+            listAVG = []
+            areas = self.model.find_area_by(bundesland=bula, projection=None, as_ft_collection=True)
 
-            end_time = start_time + relativedelta(hours=1)
-            pAvg = 0
-            count = 0
+            for i in range(1, 26):
 
-            for area in areas["features"]:
-                geo = {"$geometry": area["geometry"]}
-                cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
+                end_time = start_time + relativedelta(hours=1)
+                pAvg = 0
+                count = 0
 
-                for sensor in cursor:
-                    pAvg += sensor['PM2_avg']
+                for area in areas["features"]:
+                    geo = {"$geometry": area["geometry"]}
+                    cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by=0)
 
-            count += 1
+                    for sensor in cursor:
+                        pAvg += sensor['PM2_avg']
 
-            listID.append(start_time)
-            listAVG.append(pAvg/4)
+                count += 1
 
-            if pMax < pAvg/count:
-                pMax = pAvg/count
+                listID.append(start_time)
+                listAVG.append(pAvg/4)
 
-            start_time = start_time + relativedelta(hours=1)
+                if pMax < pAvg/count:
+                    pMax = pAvg/count
 
-        for date, avg in zip(listID, listAVG):
-            series.append(float(QDateTime(date.year, date.month, date.day, date.hour, 0, 0).toMSecsSinceEpoch()), avg)
+                start_time = start_time + relativedelta(hours=1)
 
-        self._ui.highlightsBWAVG.addSeries(series)
+            for date, avg in zip(listID, listAVG):
+                series.append(float(QDateTime(date.year, date.month, date.day, date.hour, 0, 0).toMSecsSinceEpoch()), avg)
 
-        dateaxis = QtCharts.QDateTimeAxis()
-        dateaxis.setTickCount(13)
-        dateaxis.setTitleText('Hour')
-        dateaxis.setFormat('hh:mm:ss')
-        self._ui.highlightsBWAVG.addAxis(dateaxis, Qt.AlignBottom)
-        series.attachAxis(dateaxis)
+            self._ui.highlightsBWAVG.addSeries(series)
 
-        value_axis = QtCharts.QValueAxis()
-        value_axis.setRange(0, round(pMax, 0))
-        value_axis.setTickCount(5)
-        value_axis.setTitleText('PM2 Average')
-        self._ui.highlightsBWAVG.addAxis(value_axis, Qt.AlignLeft)
+        self.dateaxis = QtCharts.QDateTimeAxis()
+        self.dateaxis.setTickCount(13)
+        self.dateaxis.setTitleText('Hour')
+        self.dateaxis.setFormat('hh:mm:ss')
+        self._ui.highlightsBWAVG.addAxis(self.dateaxis, Qt.AlignBottom)
+        series.attachAxis(self.dateaxis)
 
+        self.value_axis = QtCharts.QValueAxis()
+        self.value_axis.setRange(0, round(pMax, 0))
+        self.value_axis.setTickCount(5)
+        self.value_axis.setTitleText('PM2 Average')
+        self._ui.highlightsBWAVG.addAxis(self.value_axis, Qt.AlignLeft)
+
+    def reload_linechart(self):
+        self._ui.highlightsBWAVG.removeAllSeries()
+        self._ui.highlightsBWAVG.removeAxis(self.dateaxis)
+        self._ui.highlightsBWAVG.removeAxis(self.value_axis)
+        self.thread2 = QThreadData([self.load_line_chart])
+        self.thread2.start()
+        self.thread2.exit()
 
     def getTimeframe(self):
 
