@@ -258,6 +258,7 @@ class AirController(object):
         listAVG = []
         pMax = 0
 
+        self._ui.highlightsBWAVG.setTitle('Baden Würtemberg Average ' + str(start_time.date()))
         series = QtCharts.QLineSeries()
 
         #BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
@@ -292,7 +293,6 @@ class AirController(object):
             series.append(float(QDateTime(date.year, date.month, date.day, date.hour, 0, 0).toMSecsSinceEpoch()), avg)
 
         self._ui.highlightsBWAVG.addSeries(series)
-        self._ui.highlightsBWAVG.setTitle('Baden Würtemberg Average one Day')
 
         dateaxis = QtCharts.QDateTimeAxis()
         dateaxis.setTickCount(13)

@@ -271,10 +271,39 @@ class AirView(QMainWindow):
         highlightsWidget = QWidget()
         vBox = QGridLayout()
 
+        #Compare Chart
+        compareChart = QWidget()
+        verLay = QVBoxLayout(compareChart)
+        compareChart.setLayout(verLay)
+
+        controlls = QWidget()
+        horiLay = QHBoxLayout(controlls)
+        controlls.setLayout(horiLay)
+
+        BL_OPTIONS = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH']
+        cb1 = QComboBox(controlls)
+        for item in BL_OPTIONS:
+            cb1.addItem(item)
+        self.highlightsCompareCombo1 = cb1
+
+        horiLay.addWidget(cb1)
+
+        cb2 = QComboBox(controlls)
+        for item in BL_OPTIONS:
+            cb2.addItem(item)
+        self.highlightsCompareCombo2 = cb2
+
+        horiLay.addWidget(cb2)
+
+        verLay.addWidget(controlls)
+
         self.highlightsBWAVG = QtCharts.QChart()
         chartviewbwavg = QtCharts.QChartView(self.highlightsBWAVG)
-        vBox.addWidget(chartviewbwavg)
+        verLay.addWidget(chartviewbwavg)
 
+        vBox.addWidget(compareChart)
+
+        #Scatter Chart
         self.highlightsScatterChart = QtCharts.QChart()
         chartviewsc = QtCharts.QChartView(self.highlightsScatterChart)
         vBox.addWidget(chartviewsc)
