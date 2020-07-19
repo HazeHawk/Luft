@@ -256,7 +256,7 @@ class AirController(object):
                 data['location'] = str(data['location']['coordinates'])
                 df = pd.DataFrame(data, index=[0])
                 html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
-                popup = folium.Popup(html)
+                popup = html
 
                 location_list.append([lat, lon])
                 popup_list.append(popup)
