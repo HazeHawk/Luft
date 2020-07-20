@@ -385,8 +385,14 @@ class AirView(QMainWindow):
         inputPositionLable3.setAlignment(Qt.AlignCenter)
         vLayout_5.addWidget(inputPositionLable3)
 
+        imgsourceLabel = QLabel()
+        imgsourceLabel.setText('''<a href='https://env.kernelit.gr/2019/02/23/making-sense-of-the-data-air-quality-index-aqi/'>Bildquelle aufgerufen am 20.07.2020</a>''')
+        imgsourceLabel.setAlignment(Qt.AlignCenter)
+        imgsourceLabel.setOpenExternalLinks(True)
+        vLayout_5.addWidget(imgsourceLabel)
+
         caqiLinkLabel = QLabel()
-        caqiLinkLabel.setText('''<a href='http://www.airqualitynow.eu/index.php'>http://www.airqualitynow.eu/index.php</a>''')
+        caqiLinkLabel.setText('''Mehr Informationen finden sie unter <a href='http://www.airqualitynow.eu/index.php'>http://www.airqualitynow.eu/index.php</a>''')
         caqiLinkLabel.setAlignment(Qt.AlignCenter)
         caqiLinkLabel.setOpenExternalLinks(True)
         caqiLinkLabel.setFixedHeight(15)
@@ -402,5 +408,6 @@ class AirView(QMainWindow):
         parentLayout.addWidget(scroll)
 
         info.setLayout(parentLayout)
+
 
         return info
