@@ -375,6 +375,10 @@ class AirView(QMainWindow):
         inputPositionLable3.setAlignment(Qt.AlignCenter)
         horizontalLayout_5.addWidget(inputPositionLable3)
 
-
+        inputPositionLable5 = QLabel()
+        inputPositionLable5.setText('''<a href='https://env.kernelit.gr/2019/02/23/making-sense-of-the-data-air-quality-index-aqi/'>Bildquelle aufgerufen am 20.07.2020</a>''')
+        inputPositionLable5.setAlignment(Qt.AlignCenter)
+        inputPositionLable5.setOpenExternalLinks(True)
+        horizontalLayout_5.addWidget(inputPositionLable5)
 
         return info
