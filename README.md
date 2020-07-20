@@ -30,6 +30,12 @@ Die folgenden Befehle sind in der Console deiner Wahl einzugeben (bash, cmd, Pow
 (Empfehlung ist es die virtuelle Umgebung in einem neuen Ordner im Git Repository zu erstellen)
       
             py -3.8 -m virtualenv <pfad/zum/env_ordner>
+
+- Alternativ folgenen Befehl testen. Wichtig Python3.8 muss installiert sein. "Python3" muss gewählt werden,
+so wie es in der Path Variable definiert ist.
+      
+            python3 -m virtualenv <pfad/zum/env_ordner>
+
 - Aktiviere deine virtuelle Umgebung, um in der virtualenv die relevanten Pakete zu installieren
 
             source <pfad/zum/env_ordner/Scripts/activate>
