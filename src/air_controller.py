@@ -58,7 +58,7 @@ class AirController(object):
         self._ui.highlightsCompareButton.clicked.connect(self.reload_linechart)
         self._ui.highlightsCompareCombo1.activated.connect(self.combochecker)
 
-        self.location = [48.77915707462204, 9.175987243652344]
+        self.location = [10, 51]
 
         self.messageBox = QMessageBox()
         self.messageBox.setIcon(QMessageBox.Information)
@@ -651,7 +651,7 @@ class AirController(object):
 
     def buildFoliumMap(self):
 
-        map = folium.Map(location=self.location, tiles="Stamen Toner", zoom_start=12)
+        map = folium.Map(location=self.location, tiles="Stamen Toner", zoom_start=5)
 
         if self.choropleth is not None:
             map.add_child(self.choropleth)
@@ -673,6 +673,7 @@ class AirController(object):
         self._ui.homeButtonSendData.setEnabled(False)
         self._ui.highlightsCompareButton.setEnabled(False)
         self._ui.homeLineEditPosition.setEnabled(False)
+        #self._ui.check.setEnabled(False)
         self._ui.homeLoadingLabel.show()
         self._ui.homeLoadingMovie.start()
 
@@ -680,6 +681,7 @@ class AirController(object):
         self._ui.homeLoadingLabel.hide()
         self._ui.homeLoadingMovie.stop()
         self._ui.homeLineEditPosition.setEnabled(True)
+        #self._ui.check.setEnabled(True)
         self._ui.highlightsCompareButton.setEnabled(True)
         self._ui.homeButtonSendData.setEnabled(True)
 
