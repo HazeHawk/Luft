@@ -335,31 +335,84 @@ class AirView(QMainWindow):
         return highlights
 
     def buildInfo(self, info):
-        horizontalLayout_5 = QVBoxLayout(info)
+        widgetInfoMenu = QWidget()
+        vLayout_5 = QVBoxLayout(widgetInfoMenu)
 
-        widgetInfoMenu = QWidget(info)
 
-       # horizontalLayout_5.addWidget(widgetInfoMenu)
-
-        widget_3 = QWidget(info)
-
-        verticalLayout_2 = QVBoxLayout(widget_3)
-
-        inputPositionLable1 = QLabel()
-        inputPositionLable1.setText("This program visualizes sensor data from Luftdaten.info."
-        " Luftdaten.info is a community project that follows the determination of the fine dust content in Stuttgart. In the meantime, the sensors can also be found outside Stuttgart."
-        " Users build themselves a measuring station with the ability to measure particulate emissions. In addition, temperature, humidity and air pressure can also be measured.However, these options are optional and it is up to the builder to implement them. In this project only the fine dust content is visualized."
-        " The project started in 2015 and there are now over 12000 active measuring stations. The measuring stations measure every 2.5 minutes and transmit the current values to the server."
-        " There are different sensors. The SDS011 and the SPS30 are responsible for the fine dust."
-        " For more information feel free to visit the Website luftdaten.info and have a look.")
-        inputPositionLable1.setAlignment(Qt.AlignLeft)
-        inputPositionLable1.setWordWrap(True);
-        horizontalLayout_5.addWidget(inputPositionLable1)
+        font = QFont("Open Sans", 12)
+        generalLabel = QLabel()
+        generalLabel.setText("General:\n"
+            "This program visualizes sensor data from Luftdaten.info."
+            " Luftdaten.info is a community project that follows the determination of the particle matter concentration in Stuttgart."
+            " In the meantime, the sensors can also be found outside Stuttgart."
+            " Based on a given blueprint users build themselves a measuring station with the ability to measure particulate emissions."
+            " In addition, temperature, humidity and air pressure can also be measured."
+            " However, these options are optional and it is up to the builder to implement them. The subject of this project is the particle matter emissions."
+            " The project started in 2015 and there are now over 14000 active measuring stations. The measuring stations measure every 2.5 minutes and transmit the current values to the server."
+            " There are different sensors and for this dataset primarily the SDS011 SPS30 are analyzed."
+            " Due to data loading issues, we include only data inbetween the 01.03.2020 and 30.06.2020."
+            " For more information feel free to visit the Website luftdaten.info and have a look.")
+        generalLabel.setAlignment(Qt.AlignLeft)
+        generalLabel.setWordWrap(True)
+        generalLabel.setFont(font)
+        vLayout_5.addWidget(generalLabel)
 
         inputPositionLable2 = QLabel()
         inputPositionLable2.setText('''<a href='http://luftdaten.info'>luftdaten.info</a>''')
         inputPositionLable2.setAlignment(Qt.AlignCenter)
         inputPositionLable2.setOpenExternalLinks(True)
-        horizontalLayout_5.addWidget(inputPositionLable2)
+        inputPositionLable2.setMaximumHeight(15)
+        vLayout_5.addWidget(inputPositionLable2)
+
+        pmLabel = QLabel()
+        pmLabel.setText(
+            "Particulate Matter:\n"
+            "Patriculate Matter (PM) originates from the american Environmental Protection Agency (EPA)."
+            " With PM the goverment can categorize the emissions from industry etc. and keep an eye on the air pollution."
+            " PM_10 means that the value includes any particulate matter which is less or equal than 10µm."
+            " Likewise PM_2 or rather PM_2.5 contains any matter which is smaller than 2.5µm."
+            " The daily limit value is 50 µg/m3"
+            " and must not be exceeded more than 35 times a year. The permitted annual mean value"
+            " is 40 µg/m3. For the even smaller particles PM2.5, a target value of 25 µg/m3 as"
+            " an annual average has been in force throughout Europe since 2008 and is to be"
+            " complied with from 1 January 2010. Since 1 January 2015, this value is mandatory."
+            " In order to get a better grasp we provide this table which contains the relevant values, which are defined"
+            " by the Common Air Quality Index (CAQI) in Europe.")
+        pmLabel.setFont(font)
+        pmLabel.setAlignment(Qt.AlignLeft)
+        pmLabel.setWordWrap(True)
+        vLayout_5.addWidget(pmLabel)
+
+        pixmap = QPixmap('data/caqi.png')
+        inputPositionLable3 = QLabel()
+        inputPositionLable3.setPixmap(pixmap)
+        inputPositionLable3.show()
+        inputPositionLable3.setAlignment(Qt.AlignCenter)
+        vLayout_5.addWidget(inputPositionLable3)
+
+        imgsourceLabel = QLabel()
+        imgsourceLabel.setText('''<a href='https://env.kernelit.gr/2019/02/23/making-sense-of-the-data-air-quality-index-aqi/'>Bildquelle aufgerufen am 20.07.2020</a>''')
+        imgsourceLabel.setAlignment(Qt.AlignCenter)
+        imgsourceLabel.setOpenExternalLinks(True)
+        vLayout_5.addWidget(imgsourceLabel)
+
+        caqiLinkLabel = QLabel()
+        caqiLinkLabel.setText('''Mehr Informationen finden sie unter <a href='http://www.airqualitynow.eu/index.php'>http://www.airqualitynow.eu/index.php</a>''')
+        caqiLinkLabel.setAlignment(Qt.AlignCenter)
+        caqiLinkLabel.setOpenExternalLinks(True)
+        caqiLinkLabel.setFixedHeight(15)
+        vLayout_5.addWidget(caqiLinkLabel)
+
+        scroll = QScrollArea()
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(widgetInfoMenu)
+
+        parentLayout = QVBoxLayout()
+        parentLayout.addWidget(scroll)
+
+        info.setLayout(parentLayout)
+
 
         return info
