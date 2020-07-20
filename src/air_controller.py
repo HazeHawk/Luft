@@ -189,8 +189,9 @@ class AirController(object):
                 else:
                     data = {"Bundesland":area["properties"]["NAME_2"],**sensor}
                     data['location'] = str(data['location']['coordinates'])
-                    df = pd.DataFrame(data, index=[0])
-                    html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
+                    #df = pd.DataFrame(data, index=[0])
+                    #html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')   braucht 0.03
+                    html = f'<table border="1" class="dataframe table table-striped table-hover table-condensed table-responsive">\n  <thead>\n    <tr style="text-align: right;">\n      <th></th>\n      <th>Bundesland</th>\n      <th>_id</th>\n      <th>sensor_type</th>\n      <th>location</th>\n      <th>PM2_avg</th>\n      <th>PM2_min</th>\n      <th>PM2_max</th>\n      <th>PM2_std</th>\n      <th>PM10_avg</th>\n      <th>PM10_min</th>\n      <th>PM10_max</th>\n      <th>PM10_std</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>{data["Bundesland"]}</td>\n      <td>{data["_id"]}</td>\n      <td>{data["sensor_type"]}</td>\n      <td>{data["location"]}</td>\n      <td>{data["PM2_avg"]}</td>\n      <td>{data["PM2_min"]}</td>\n      <td>{data["PM2_max"]}</td>\n      <td>{data["PM2_std"]}</td>\n      <td>{data["PM10_avg"]}</td>\n      <td>{data["PM10_min"]}</td>\n      <td>{data["PM10_max"]}</td>\n      <td>{data["PM10_std"]}</td>\n    </tr>\n  </tbody>\n</table>'
                     popup = html
                 self.popup_list.append(popup)
 
@@ -525,7 +526,7 @@ class AirController(object):
         return cluster
 
 
-    def get_sensor_popup(self, sensor_id, timeframe, time_group):
+    def get_sensor_popup(self, sensor_id, timeframe, time_group, as_html=False):
         """Return a `folium.Popup` Object, which has a multiline lineplot for a single sensor.
 
         group_by
