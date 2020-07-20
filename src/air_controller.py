@@ -152,7 +152,7 @@ class AirController(object):
         self.load_highlights(listID, listAVG)
 
         dataFrameData = pd.DataFrame.from_dict(data)
-        self.choropleth = self.choroplethTest(geometry=areas, data=dataFrameData)
+        self.choropleth = self.getChoropleth(geometry=areas, data=dataFrameData)
 
         logger.debug("load_home_data Done")
 
@@ -602,7 +602,7 @@ class AirController(object):
         return popup
 
 
-    def choroplethTest(self, geometry, data):
+    def getChoropleth(self, geometry, data):
         choro = folium.Choropleth(
             geo_data=geometry,
             name='choropleth',

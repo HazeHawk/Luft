@@ -19,9 +19,7 @@ logger = _cfg.LOGGER
 q_logger = _cfg.Q_LOGGER
 
 class AirModel(metaclass=Singleton):
-    """Docstring Tests
-    >>> Rando Docstring
-    ``asd``    `aa`wert
+    """Das Air Model enthält alle Methoden zu der DB.
     """
     def __init__(self):
 

@@ -4,12 +4,12 @@ import time
 
 import folium
 import pyqtgraph
-
 from PySide2.QtCharts import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWebEngineWidgets import *
 from PySide2.QtWidgets import *
+
 from src.config import Configuration
 
 _cfg = Configuration()
