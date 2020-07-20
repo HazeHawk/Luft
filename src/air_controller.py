@@ -1,14 +1,11 @@
 import json
 import statistics
 import sys
-import threading
 import time
 from datetime import date, datetime
-from pprint import pformat
 
 import altair.vegalite.v3 as alt
 import folium
-import numpy as np
 import pandas as pd
 from dateutil.relativedelta import *
 from folium.plugins import MarkerCluster
@@ -736,16 +733,16 @@ class AirController(object):
         return self._homeTimeEnd
 
     def setLabelMedian(self, median: str):
-        self._ui.homeLabelMedian.setText("Median: " + median)
+        self._ui.homeLabelMedian.setText("Median: " + median + " µg/m3")
 
     def setLabelMaximum(self, maximum: str):
-        self._ui.homeLabelMaximal.setText("Maximum: " + maximum)
+        self._ui.homeLabelMaximal.setText("Maximum: " + maximum + " µg/m3")
 
     def setLabelMinimum(self, minimum: str):
-        self._ui.homeLabelMinimal.setText("Minimum: " + minimum)
+        self._ui.homeLabelMinimal.setText("Minimum: " + minimum + " µg/m3")
 
     def setLabelAverag(self, average:str):
-        self._ui.homeLabelAverage.setText("Average: " + average)
+        self._ui.homeLabelAverage.setText("Average: " + average + " µg/m3")
 
     def setLabelSensorCount(self, sensorCount:str):
         self._ui.homeLabelSencorCount.setText("Sensor Count: " + sensorCount)
