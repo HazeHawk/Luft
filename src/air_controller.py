@@ -81,6 +81,8 @@ class AirController(object):
         self.scattervalue_axis2 = QtCharts.QValueAxis()
         self.scattervalue_axisbot2 = QtCharts.QValueAxis()
 
+        self.zoom = 5
+
         self.model = AirModel()
 
     def run(self):
@@ -651,7 +653,7 @@ class AirController(object):
 
     def buildFoliumMap(self):
 
-        map = folium.Map(location=self.location, tiles="Stamen Toner", zoom_start=5)
+        map = folium.Map(location=self.location, tiles="Stamen Toner", zoom_start=self.zoom)
 
         if self.choropleth is not None:
             map.add_child(self.choropleth)
@@ -766,6 +768,7 @@ class AirController(object):
             coordinates = self.getCoordinates(city)
             #self._ui.m.location = [48.77915707462204, -9.175987243652344]
             self.location = coordinates
+            self.zoom = 13
             self.refresh_home_util()
         except:
             self.home_loading_end()
