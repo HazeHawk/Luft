@@ -347,7 +347,7 @@ class AirView(QMainWindow):
         " The project started in 2015 and there are now over 12000 active measuring stations. The measuring stations measure every 2.5 minutes and transmit the current values to the server."
         " There are different sensors. The SDS011 and the SPS30 are responsible for the fine dust."
         " For more information feel free to visit the Website luftdaten.info and have a look.")
-        inputPositionLable1.setAlignment(Qt.AlignLeft)
+        inputPositionLable1.setAlignment(Qt.AlignCenter)
         inputPositionLable1.setWordWrap(True);
         horizontalLayout_5.addWidget(inputPositionLable1)
 
@@ -356,5 +356,25 @@ class AirView(QMainWindow):
         inputPositionLable2.setAlignment(Qt.AlignCenter)
         inputPositionLable2.setOpenExternalLinks(True)
         horizontalLayout_5.addWidget(inputPositionLable2)
+
+        inputPositionLable4 = QLabel()
+        inputPositionLable4.setText("To protect human health, limit values for the PM10 fine dust fraction have been"
+                                    "applicable across Europe since January 1, 2005. The daily limit value is 50 µg/m3"
+                                    "and must not be exceeded more than 35 times a year. The permitted annual mean value"
+                                    "is 40 µg/m3. For the even smaller particles PM2.5, a target value of 25 µg/m3 as"
+                                    "an annual average has been in force throughout Europe since 2008 and is to be"
+                                    "complied with from 1 January 2010. Since 1 January 2015, this value is mandatory.")
+        inputPositionLable4.setAlignment(Qt.AlignCenter)
+        inputPositionLable4.setWordWrap(True);
+        horizontalLayout_5.addWidget(inputPositionLable4)
+
+        pixmap = QPixmap('data/image-4.png')
+        inputPositionLable3 = QLabel()
+        inputPositionLable3.setPixmap(pixmap)
+        inputPositionLable3.show()
+        inputPositionLable3.setAlignment(Qt.AlignCenter)
+        horizontalLayout_5.addWidget(inputPositionLable3)
+
+
 
         return info
