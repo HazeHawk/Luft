@@ -58,7 +58,7 @@ class AirController(object):
         self._ui.highlightsCompareButton.clicked.connect(self.reload_linechart)
         self._ui.highlightsCompareCombo1.activated.connect(self.combochecker)
 
-        self.location = [10, 51]
+        self.location = [51, 10]
 
         self.messageBox = QMessageBox()
         self.messageBox.setIcon(QMessageBox.Information)
