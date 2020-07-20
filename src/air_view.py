@@ -54,7 +54,7 @@ class AirView(QMainWindow):
 
     def foliumStandardLocation(self):
         self.m = folium.Map(
-            location=[48.77915707462204, 9.175987243652344], tiles="Stamen Toner", zoom_start=12
+            location=[51, 10], tiles="Stamen Toner", zoom_start=5
         )
 
     def saveFoliumToHtmlInDirectory(self):
@@ -171,8 +171,13 @@ class AirView(QMainWindow):
         verticalLayoutWidgetMenuBottom.addWidget(timeEditEnd)
         self.homeTimeEditEnd = timeEditEnd
 
+        '''        self.check = QCheckBox("Line plot popups for every sensor (caution very slow, 12h ~20 min build time)")
+        self.check.setChecked(False)
+        verticalLayoutWidgetMenuBottom.addWidget(self.check)
+        '''
+
         button = QPushButton()
-        button.setText('Click Me')
+        button.setText('Get Data')
         verticalLayoutWidgetMenuBottom.addWidget(button)
         self.homeButtonSendData = button
 

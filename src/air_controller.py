@@ -58,7 +58,7 @@ class AirController(object):
         self._ui.highlightsCompareButton.clicked.connect(self.reload_linechart)
         self._ui.highlightsCompareCombo1.activated.connect(self.combochecker)
 
-        self.location = [48.77915707462204, 9.175987243652344]
+        self.location = [51, 10]
 
         self.messageBox = QMessageBox()
         self.messageBox.setIcon(QMessageBox.Information)
@@ -154,20 +154,22 @@ class AirController(object):
         dataFrameData = pd.DataFrame.from_dict(data)
         self.choropleth = self.choroplethTest(geometry=areas, data=dataFrameData)
 
+        logger.debug("load_home_data Done")
+
     def load_single_circle_home(self):
         start_time, end_time = self.getTimeframe()
 
         fg = folium.FeatureGroup(name="Single Sensors", show=False)
         fgO500 = folium.FeatureGroup(name="Single Sensors over PM2 AVG 500", show=False)
+        fgClust = folium.FeatureGroup(name="Clustered Sensors", show=False)
 
+        sfgClustList = []
         sfgList = []
         sfgList0500 = []
 
         sensorCount = 0
         sensorCountFiltered = 0
         pm2_avgList = []
-
-        self.popup_list = []
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
         with open('data/areas/bezirke.json', encoding='utf-8') as f:
@@ -179,6 +181,10 @@ class AirController(object):
 
             sfg = folium.plugins.FeatureGroupSubGroup(fg, name="Single Sensors " + area["properties"]["NAME_2"])
             sfgo500 = folium.plugins.FeatureGroupSubGroup(fgO500, name="Single Sensors over 500 " + area["properties"]["NAME_2"])
+            sfgClust = folium.plugins.FeatureGroupSubGroup(fg, name=area["properties"]["NAME_2"])
+
+            location_list = []
+            popup_list = []
 
             for i, sensor in enumerate(cursor):
                 #t0 = time.time()
@@ -193,7 +199,10 @@ class AirController(object):
                     #html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')   braucht 0.03
                     html = f'<table border="1" class="dataframe table table-striped table-hover table-condensed table-responsive">\n  <thead>\n    <tr style="text-align: right;">\n      <th></th>\n      <th>Bundesland</th>\n      <th>_id</th>\n      <th>sensor_type</th>\n      <th>location</th>\n      <th>PM2_avg</th>\n      <th>PM2_min</th>\n      <th>PM2_max</th>\n      <th>PM2_std</th>\n      <th>PM10_avg</th>\n      <th>PM10_min</th>\n      <th>PM10_max</th>\n      <th>PM10_std</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>{data["Bundesland"]}</td>\n      <td>{data["_id"]}</td>\n      <td>{data["sensor_type"]}</td>\n      <td>{data["location"]}</td>\n      <td>{data["PM2_avg"]}</td>\n      <td>{data["PM2_min"]}</td>\n      <td>{data["PM2_max"]}</td>\n      <td>{data["PM2_std"]}</td>\n      <td>{data["PM10_avg"]}</td>\n      <td>{data["PM10_min"]}</td>\n      <td>{data["PM10_max"]}</td>\n      <td>{data["PM10_std"]}</td>\n    </tr>\n  </tbody>\n</table>'
                     popup = html
-                self.popup_list.append(popup)
+                popup_list.append(popup)
+
+                lon, lat = sensor["location"]["coordinates"]
+                location_list.append([lat, lon])
 
                 self.setFoliumCircle(lat=lat, long=lon, popup=popup, color='blue').add_to(sfg)
 
@@ -209,6 +218,10 @@ class AirController(object):
                     pm2_avgList.append(sensor["PM2_avg"])
                     sensorCountFiltered += 1
 
+            cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
+            cluster.add_to(sfgClust)
+
+            sfgClustList.append(sfgClust)
             sfgList.append(sfg)
             sfgList0500.append(sfgo500)
 
@@ -220,6 +233,10 @@ class AirController(object):
             fgO500.add_child(item)
         self.singlePointsO500 = fgO500
 
+        for item in sfgClustList:
+            fgClust.add_child(item)
+        self.clusterPoints = fgClust
+
         self.setLabelSensorCount(str(sensorCount))
         self.setLabelSensorCountFiltered(str(sensorCountFiltered))
         self.setLabelMinimum(str(round(min(pm2_avgList), 3)))
@@ -229,6 +246,8 @@ class AirController(object):
         pm2_avgList.sort()
         self.setLabelMedian(str(round(statistics.median(pm2_avgList), 3)))
 
+        logger.debug("load_single_circle_home Done")
+
     def load_cluster_circle_home(self):
         start_time, end_time = self.getTimeframe()
 
@@ -236,9 +255,6 @@ class AirController(object):
             areas = json.load(f)
 
         #areas = self.model.find_area_by(bundesland="BW", projection={"_id":0, "properties.NAME_2":1,"geometry":1})
-
-        fg = folium.FeatureGroup(name="Clustered Sensors", show=False)
-        sfgList = []
 
         listpm2max = []
         listpm2min = []
@@ -252,30 +268,12 @@ class AirController(object):
             cursor = self.model.find_sensors_by(geometry=geo, timeframe=(start_time, end_time), group_by='sensor_id')
 
             for i, sensor in enumerate(cursor):
-                lon, lat = sensor["location"]["coordinates"]
-                data = {"Bundesland":area["properties"]["NAME_2"],**sensor}
-                data['location'] = str(data['location']['coordinates'])
-                df = pd.DataFrame(data, index=[0])
-                html = df.to_html(classes='table table-striped table-hover table-condensed table-responsive')
-                popup = html
-
-                location_list.append([lat, lon])
-                popup_list.append(popup)
-                #if (i==10):
-                    #break
 
                 #scatter plot daten
                 if sensor is not None and area["properties"]["NAME_2"] is not None:
                     listpm2min.append(sensor["PM2_min"])
                     listpm2max.append(sensor["PM2_max"])
                     listbezirk.append(str(area["properties"]["NAME_2"]))
-
-            sfg = folium.plugins.FeatureGroupSubGroup(fg, name=area["properties"]["NAME_2"])
-
-            cluster = self.setFoliumMarkerCluster(coordinates=location_list, popup=popup_list)
-            cluster.add_to(sfg)
-
-            sfgList.append(sfg)
 
         data = {
             'PM2MAX': listpm2max,
@@ -285,9 +283,7 @@ class AirController(object):
 
         self.scatter_plot_all_sensors(data)
 
-        for item in sfgList:
-            fg.add_child(item)
-        self.clusterPoints = fg
+        logger.debug("load_cluster_circle_home Done")
 
     def load_line_chart(self):
         pMax = 0
@@ -362,6 +358,8 @@ class AirController(object):
         self._ui.highlightsBWAVG.addAxis(self.value_axis, Qt.AlignLeft)
 
         self._ui.highlightsCompareButton.setEnabled(True)
+
+        logger.debug("load_line_chart Done")
 
     def reload_linechart(self):
         self._ui.highlightsCompareButton.setEnabled(False)
@@ -653,7 +651,7 @@ class AirController(object):
 
     def buildFoliumMap(self):
 
-        map = folium.Map(location=self.location, tiles="Stamen Toner", zoom_start=12)
+        map = folium.Map(location=self.location, tiles="Stamen Toner", zoom_start=5)
 
         if self.choropleth is not None:
             map.add_child(self.choropleth)
@@ -675,6 +673,7 @@ class AirController(object):
         self._ui.homeButtonSendData.setEnabled(False)
         self._ui.highlightsCompareButton.setEnabled(False)
         self._ui.homeLineEditPosition.setEnabled(False)
+        #self._ui.check.setEnabled(False)
         self._ui.homeLoadingLabel.show()
         self._ui.homeLoadingMovie.start()
 
@@ -682,6 +681,7 @@ class AirController(object):
         self._ui.homeLoadingLabel.hide()
         self._ui.homeLoadingMovie.stop()
         self._ui.homeLineEditPosition.setEnabled(True)
+        #self._ui.check.setEnabled(True)
         self._ui.highlightsCompareButton.setEnabled(True)
         self._ui.homeButtonSendData.setEnabled(True)
 
