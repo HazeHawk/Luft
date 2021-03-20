@@ -21,7 +21,7 @@ future==0.18.2
 geckodriver-autoinstaller==0.1.0
 idna==2.9
 isort==4.3.21
-Jinja2==2.11.2
+Jinja2==2.11.3
 jsonschema==3.2.0
 lazy-object-proxy==1.4.3
 MarkupSafe==1.1.1
