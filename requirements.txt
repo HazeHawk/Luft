@@ -8,7 +8,7 @@ attrs==19.3.0
 backoff==1.10.0
 beautifulsoup4==4.9.1
 branca==0.4.1
-certifi==2020.4.5.1
+certifi==2022.12.7
 cffi==1.14.0
 chardet==3.0.4
 chromedriver-install==1.0.3
